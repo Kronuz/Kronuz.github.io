@@ -6,9 +6,7 @@ categories: Interesting
 author:     Kronuz
 tags:       screencast, licecap, animated gifs
 identifier: animated-licecap-gifs-the-hard-way
-redirect_from:
-	- /animated-licecap-gifs-the-hard-way
-	- /animated-licecap-gifs-the-hard-way.html
+redirect_from: /animated-licecap-gifs-the-hard-way.html
 ---
 
 LICEcap can record the screen to LCF which can then be converted to animated

@@ -6,9 +6,7 @@ category:   Sublime Text
 author:     Kronuz
 tags:       codeintel, komodo, sublime, sublimetext, sublimecodeintel
 identifier: using-sublimecodeintel-v30
-redirect_from:
-	- /using-sublimecodeintel-v30
-	- /using-sublimecodeintel-v30.html
+redirect_from: /using-sublimecodeintel-v30.html
 ---
 
 Installing SublimeCodeIntel v3.0.
