@@ -1,24 +1,40 @@
 ---
-layout: default
+layout: error
+permalink: /404.html
+sitemap: false
 ---
 
-<style type="text/css" media="screen">
-  .container {
-    margin: 10px auto;
-    max-width: 600px;
-    text-align: center;
-  }
-  h1 {
-    margin: 30px 0;
-    font-size: 4em;
-    line-height: 1;
-    letter-spacing: -1px;
-  }
-</style>
+<section class="intro">
+	<div class="grid">
+		<div class="unit whole align-center">
+			<p class="first">The requested page<br>could not be found!</p>
+		</div>
+	</div>
+</section>
 
-<div class="container">
-  <h1>404</h1>
-
-  <p><strong>Page not found :(</strong></p>
-  <p>The requested page could not be found.</p>
-</div>
+<section class="error">
+	<div class="grid">
+		<div class="unit whole align-center">
+			<p>The resource you requested was not found.<br>Here are some links to help you find your way:</p>
+			<nav class="main-nav">
+				<ul>
+					<li>
+						<a href="{{ '/' | relative_url }}">Home</a>
+					</li>
+					<li>
+						<a href="{{ '/docs/home/' | relative_url }}">Docs</a>
+					</li>
+					<li>
+						<a href="{{ '/news/' | relative_url }}">News</a>
+					</li>
+					<li>
+						<a href="{{ '/help/' | relative_url }}">Help</a>
+					</li>
+					<li>
+						<a href="{{ '/about/' | relative_url }}">About</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</section>

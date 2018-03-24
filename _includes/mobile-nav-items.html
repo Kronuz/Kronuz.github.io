@@ -1,0 +1,11 @@
+<ul>
+	<li class="{% if page.author %}current{% endif %}">
+		<a href="{{ '/news/' | relative_url }}">Blog</a>
+	</li>
+	<li class="{% if page.url contains '/docs/' %}current{% endif %}">
+		<a href="{{ '/docs/home/' | relative_url }}">Projects</a>
+	</li>
+	<li class="{% if page.url contains '/about/' %}current{% endif %}">
+		<a href="{{ '/about/' | relative_url }}">About</a>
+	</li>
+</ul>

@@ -1,0 +1,28 @@
+<header>
+	<div class="flexbox">
+		<div class="center-on-mobiles">
+			<h1>
+				<a href="{{ '/' | relative_url }}" class="logo">
+					<img src="{{ site.logo | relative_url }}" width="65" height="65" alt="{{ site.name }} Logo">
+					<span>{{ site.name }}</span>
+				</a>
+			</h1>
+		</div>
+		<nav class="main-nav hide-on-mobiles">
+			{% include primary-nav-items.html %}
+		</nav>
+		<div class="search hide-on-mobiles">
+			{% include search/input.html %}
+		</div>
+		<div class="meta hide-on-mobiles">
+			<ul>
+				<li>
+					<a href="{{ site.repository }}"><i class="fa fa-github"></i> GitHub</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<nav class="mobile-nav show-on-mobiles">
+		{% include mobile-nav-items.html %}
+	</nav>
+</header>
