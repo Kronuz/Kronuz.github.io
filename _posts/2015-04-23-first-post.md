@@ -6,6 +6,9 @@ categories: Blog
 author:     Kronuz
 tags:       pelican
 identifier: first-post
+redirect_from:
+	- /first-post
+	- /first-post.html
 ---
 
 This is my first post using Pelican.

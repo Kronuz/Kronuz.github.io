@@ -6,6 +6,9 @@ categories: Python
 author:     Kronuz
 tags:       python, bug, exception, monkeypatch
 identifier: nasty-bugs-crawling-in-some-python-libraries
+redirect_from:
+	- /nasty-bugs-crawling-in-some-python-libraries
+	- /nasty-bugs-crawling-in-some-python-libraries.html
 ---
 
 Nasty bugs crawling down in some of my installed Python libraries.
