@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Germán Méndez Bravo
+permalink: /about/
 ---
 
 Senior Software Engineer, Programmer and IT Project Manager
