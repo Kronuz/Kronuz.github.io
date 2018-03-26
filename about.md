@@ -13,7 +13,7 @@ Senior Software Engineer, Programmer and IT Project Manager
 [<i class="fa fa-github"></i> Kronuz](https://github.com/Kronuz){:target="_blank"}
 
 
-Served as a programmer and software engineer since 1999. Repeatedly recognized for developing innovative solutions for deployed software and systems. Responsible for full lifecycle development of next-generation software, from initial requirement gathering to design, coding, testing, documentation and implementation.
+Serving as a programmer and software engineer since 1999. Repeatedly recognized for developing innovative solutions for deployed software and systems. Responsible for full lifecycle development of next-generation software, from initial requirement gathering to design, coding, testing, documentation and implementation.
 
 Avid contributor in open source including the creation of pyScss, SublimeCodeIntel, SublimeLinter, Xapiand, among others; and numerous contributions in many of other projects, most prominently to PostgreSQL, Memcache, Django and DOSBox.
 
