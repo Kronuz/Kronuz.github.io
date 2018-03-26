@@ -6,8 +6,7 @@ This directory contains the code for the Kronuz.io site, [kronuz.io](https://kro
 ## Running locally
 
 1. `gem install bundler`
-2. `bundle install`
-3. `jekyll serve --livereload`
+2. `bundle exec jekyll serve --livereload`
 
 
 ## Updating Font Awesome
