@@ -2,22 +2,20 @@
 layout: default
 ---
 
-	<section class="projects">
+	<section class="docs">
 		<div class="taller grid">
 
 			{% include docs/contents_mobile.html %}
 
 			<div class="unit four-fifths">
 				<article>
-					{% comment %}
 					{% unless page.read_only %}
 						<div class="improve right hide-on-mobiles">
-							<a href="{{ site.repository }}/edit/master/projects/{{ page.path }}">
+							<a href="{{ site.repository }}/edit/master/docs/{{ page.path }}">
 								<i class="fa fa-pencil"></i> &nbsp;Improve this page
 							</a>
 						</div>
 					{% endunless %}
-					{% endcomment %}
 					<h1>{{ page.title }}</h1>
 					{{ content }}
 					{% include docs/section_nav.html %}
