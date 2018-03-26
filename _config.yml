@@ -39,7 +39,7 @@ logo: "/img/logo-2x.png"
 markdown: kramdown
 
 collections:
-  docs:
+  projects:
     permalink: "/:collection/:path/"
     output: true
   posts:
@@ -50,10 +50,10 @@ collections:
 
 defaults:
   - scope:
-      path: _docs
-      type: docs
+      path: _projects
+      type: projects
     values:
-      layout: docs
+      layout: projects
   - scope:
       path: _posts
       type: posts

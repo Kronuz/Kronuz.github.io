@@ -3,10 +3,9 @@ layout: news
 title: News
 permalink: /news/
 author: all
-redirect_from:
-  - /
+redirect_from: /
 ---
 
 {% for post in site.posts %}
-	{% include news_item.html %}
+	{% include news/item.html %}
 {% endfor %}
