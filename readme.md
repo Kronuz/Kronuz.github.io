@@ -7,7 +7,7 @@ This directory contains the code for the Kronuz.io site, [kronuz.io](https://kro
 ## Running locally
 
 1. `gem install jekyll bundler`
-2. `bundle exec jekyll serve`
+2. `bundle exec jekyll serve --livereload`
 
 
 
