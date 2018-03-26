@@ -4,20 +4,14 @@
 			{{ post.title }}
 		</a>
 	</h2>
-	<span class="post-category">
-		<span class="label">
-			{{ post.categories | array_to_sentence_string }}
-		</span>
-	</span>
 	<div class="post-meta">
 		<span class="post-date">
 			{{ post.date | date_to_string }}
 		</span>
-		{% assign author = post.author %}
-		<a href="https://github.com/{{ author }}" class="post-author">
-			{% avatar user=author size=24 %}
-			{{ author }}
-		</a>
+		&nbsp;&nbsp;&bullet;&nbsp;&nbsp;
+		<span class="label">
+			{{ post.categories | array_to_sentence_string }}
+		</span>
 	</div>
 	<div class="post-content">
 		{{ post.excerpt }}
