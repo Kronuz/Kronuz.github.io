@@ -1,3 +1,10 @@
 - title: Projects
   docs:
     - home
+    - sublimecodeintel
+    - xapiand
+    - pyscss
+    - mech
+    - sublimelinter
+    - django_polymorphic
+    - django_gitlist
