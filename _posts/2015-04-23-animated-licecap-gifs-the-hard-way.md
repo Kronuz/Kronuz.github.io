@@ -32,10 +32,10 @@ format: `.LCF`. The proprietary format keeps the recorded screencast
 compressed in full color, I just needed a way to extract those and use
 Jon\'s `anim_encoder` to package those to a single PNG file and its
 corresponding Javascript so I started a fork of Jon\'s
-[anim\_encoder](https://github.com/sublimehq/anim_encoder) and went
+[anim\_encoder](https://github.com/sublimehq/anim_encoder){:target="_blank"} and went
 about adding LCF file format support to it.
 
-My GitHub [fork](https://github.com/Kronuz/anim_encoder) contains the
+My GitHub [fork](https://github.com/Kronuz/anim_encoder){:target="_blank"} contains the
 `.LCF` reader and processor and accepts LICEcap LCF files to produce the
 packaged files. The following is an example produced by running
 `./anim_encoder.py example.lcf`:

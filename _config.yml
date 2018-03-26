@@ -43,7 +43,7 @@ collections:
     permalink: "/:collection/:path/"
     output: true
   posts:
-    permalink: "/news/:year/:month/:day/:title/"
+    permalink: "/blog/:year/:month/:day/:title/"
     output: true
   tutorials:
     output: true
@@ -58,7 +58,7 @@ defaults:
       path: _posts
       type: posts
     values:
-      layout: news_item
+      layout: blog_item
       image: "/img/twitter-card.png"
 
 plugins:

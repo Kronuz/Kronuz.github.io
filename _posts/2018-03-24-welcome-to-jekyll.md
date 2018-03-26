@@ -5,7 +5,7 @@ categories: Blogging
 author:     Kronuz
 ---
 
-I switched the blog from Pelican to [Jekyll](https://jekyllrb.com).
+I switched the blog from Pelican to [Jekyll](https://jekyllrb.com){:target="_blank"}.
 
 ```sh
 ~/Kronuz.github.io $ gem install jekyll bundler

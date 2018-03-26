@@ -6,17 +6,11 @@ permalink: /about/
 
 Senior Software Engineer, Programmer and IT Project Manager
 
-<div id="webaddress">
-<i class="fa fa-envelope"></i> <a href="mailto:german.mb@gmail.com">german.mb@gmail.com</a>
-|
-<i class="fa fa-github"></i> <a href="http://github.com/Kronuz">Kronuz</a>
-|
-<i class="fa fa-twitter"></i> <a href="http://twitter.com/germbravo">@germbravo</a>
-|
-<i class="fa fa-linkedin"></i> <a href="https://www.linkedin.com/in/kronuz/">LinkedIn</a>
-|
-<i class="fa fa-stack-overflow"></i> <a href="https://stackoverflow.com/users/167522/kronuz">StackOverflow</a>
-</div>
+[<i class="fa fa-envelope"></i> german.mb@gmail.com](mailto:german.mb@gmail.com) |
+[<i class="fa fa-twitter"></i> @germbravo](https://twitter.com/germbravo){:target="_blank"} |
+[<i class="fa fa-linkedin"></i> LinkedIn](https://www.linkedin.com/in/kronuz/){:target="_blank"} |
+[<i class="fa fa-stack-overflow"></i> StackOverflow](https://stackoverflow.com/users/167522/kronuz){:target="_blank"} |
+[<i class="fa fa-github"></i> Kronuz](https://github.com/Kronuz){:target="_blank"}
 
 
 Served as a programmer and software engineer since 1999. Repeatedly recognized for developing innovative solutions for deployed software and systems. Responsible for full lifecycle development of next-generation software, from initial requirement gathering to design, coding, testing, documentation and implementation.
