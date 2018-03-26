@@ -1,11 +1,13 @@
 ---
 title:      Welcome to Jekyll!
 date:       2018-03-24 12:04:00 -0600
-categories: Blog
+categories: Blogging
 author:     Kronuz
 ---
 
 I switched the blog from Pelican to [Jekyll](https://jekyllrb.com).
 
-1. `gem install jekyll bundler`
-2. `bundle exec jekyll serve`
+```sh
+~/Kronuz.github.io $ gem install jekyll bundler
+~/Kronuz.github.io $ bundle exec jekyll serve
+```

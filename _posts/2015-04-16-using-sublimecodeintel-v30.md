@@ -19,7 +19,7 @@ using with Sublime Text and SublimeCodeIntel v3.0.
 To install you need a working Python and pip:
 
 ```sh
-pip install -U --pre codeintel
+~ $ pip install -U --pre codeintel
 ```
 
 If it all goes well, congratulations, you can now upgrade to and use

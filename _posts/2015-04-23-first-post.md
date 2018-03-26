@@ -2,7 +2,7 @@
 title:      First Post
 date:       2015-04-09 10:20:00 -0600
 modified:   2015-04-23 14:00:00 -0600
-categories: Blog
+categories: Blogging
 author:     Kronuz
 tags:       pelican
 identifier: first-post
@@ -19,7 +19,7 @@ the new directory with the pelican project.
 
 Added a script for publishing `publish.sh`:
 
-```sh
+```bash
 #!/bin/sh
 
 pelican content -o published -s publishconf.py && \
@@ -30,14 +30,14 @@ git push origin master
 Added a hook to `.git/hooks/post-commit`:
 
 ```sh
-sh publish.sh
+~ $ sh publish.sh
 ```
 
 Don't forget to set execution permissions to the scripts:
 
 ```sh
-chmod +x publish.sh
-chmod +x .git/hooks/post-commit
+~ $ chmod +x publish.sh
+~ $ chmod +x .git/hooks/post-commit
 ```
 
 It was really easy to setup, now with every commit, the blog gets

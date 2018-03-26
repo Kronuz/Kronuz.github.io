@@ -40,6 +40,7 @@ My GitHub [fork](https://github.com/Kronuz/anim_encoder) contains the
 packaged files. The following is an example produced by running
 `./anim_encoder.py example.lcf`:
 
+<style>.anim_target { width: 100% !important; height: auto !important; }</style>
 <div id="anim_fallback" class="anim_target"><canvas id="anim_target" class="anim_target"></canvas></div>
 <script src="/assets/anim.js"></script>
 <script src="/assets/example_anim.js"></script>
