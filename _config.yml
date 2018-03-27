@@ -32,7 +32,7 @@ theme_color_light: "#bfdd97"
 theme_color_dark: "#8fc44a"
 
 logo: "/img/logo-2x.png"
-logo_width: 180
+logo_width: 177
 logo_height: 230
 
 # google_analytics_id: UA-00000000-0
