@@ -1,6 +1,6 @@
 # Kronuz.io site
 
-This directory contains the code for the Kronuz.io site, [kronuz.io](https://kronuz.io).
+This directory contains the code for the [Kronuz.io site](https://kronuz.io).
 
 
 ## Running locally

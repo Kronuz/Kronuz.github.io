@@ -1,7 +1,6 @@
 ---
 title: Projects
-permalink: /projects/home/
-redirect_from: /projects/index.html
+permalink: /projects/
 ---
 
 Here you can find any information related to the projects I work on.
