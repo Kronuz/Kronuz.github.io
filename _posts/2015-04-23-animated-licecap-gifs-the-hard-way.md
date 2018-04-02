@@ -42,10 +42,10 @@ packaged files. The following is an example produced by running
 
 <style>.anim_target { width: 100% !important; height: auto !important; }</style>
 <div id="anim_fallback" class="anim_target"><canvas id="anim_target" class="anim_target"></canvas></div>
-<script src="/assets/anim.js"></script>
-<script src="/assets/example_anim.js"></script>
+<script src="{{ 'js/anim.js' | relative_url }}"></script>
+<script src="{{ 'assets/example_anim.js' | relative_url }}"></script>
 <script>
-  set_animation("/assets/example_packed.png", example_timeline, 'anim_target',
+  set_animation("{{ 'assets/example_packed.png' | relative_url }}", example_timeline, 'anim_target',
   'anim_fallback');
 </script>
 
