@@ -3,7 +3,8 @@ title: Xapiand
 permalink: /projects/xapiand/
 ---
 
-A Xapian RESTful server.
+**Search and Storage Engine**: Xapiand is a fast, simple and modern search and
+storage engine.
 
 [<i class="fa fa-globe"></i> Website](https://kronuz.io/Xapiand){:target="_blank"} |
 [<i class="fa fa-file-text"></i> Docs](https://kronuz.io/Xapiand/docs){:target="_blank"} |
