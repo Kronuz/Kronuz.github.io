@@ -1,5 +1,5 @@
 <ul>
-	<li class="{% if page.author %}current{% endif %}">
+	<li class="{% if page.url contains '/blog/' %}current{% endif %}">
 		<a href="{{ '/blog/' | relative_url }}">Blog</a>
 	</li>
 	<li class="{% if page.url contains '/projects/' %}current{% endif %}">
