@@ -16,7 +16,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-name: Kronuz.io
+name: Kronuz.github.io
 title: Kronuz
 owner: Germán Méndez Bravo (Kronuz)
 email: german.mb@gmail.com
