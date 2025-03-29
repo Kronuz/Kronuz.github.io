@@ -22,8 +22,9 @@ owner: Germán Méndez Bravo (Kronuz)
 email: german.mb@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   IO
+domain: Kronuz.github.io
+url: https://Kronuz.github.io
 baseurl: "" # the subpath of your site, e.g. /blog
-url: https://kronuz.io
 repository: https://github.com/Kronuz
 docs_branch: master/docs
 twitter_username: germbravo
