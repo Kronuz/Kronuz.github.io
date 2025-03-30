@@ -4,7 +4,10 @@ title: Germán Méndez Bravo
 permalink: /about/
 ---
 
-Software Engineer | Systems & Infrastructure at Scale | Python & C++ | Technical Innovator
+Software Engineer |
+Systems & Infrastructure at Scale |
+Python & C++ |
+Technical Innovator
 
 [<i class="fa fa-envelope"></i> german.mb@gmail.com](mailto:german.mb@gmail.com) |
 [<i class="fa fa-twitter"></i> @germbravo](https://twitter.com/germbravo){:target="_blank"} |
