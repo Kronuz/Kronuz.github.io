@@ -2,6 +2,7 @@
 layout: page
 title: Germán Méndez Bravo
 permalink: /about/
+redirect_from: /
 ---
 
 Software Engineer |
