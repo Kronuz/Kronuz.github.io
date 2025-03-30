@@ -18,7 +18,7 @@ Software Engineer | Systems & Infrastructure at Scale | Python & C++ | Technical
 
 Hey there! I'm **Germán Méndez Bravo**, though you might've crossed paths with me online as **Kronuz**. If you're curious enough to be here, grab your favorite beverage and let me tell you a story.
 
-My affair with technology kicked off as a bright-eyed kid in Mexico City, somewhere in the chaotic glow of the late '80s. Imagine an 8-year-old me hunched over a monochrome CRT screen, fingers dancing awkwardly on a stiff keyboard, trying to figure out how to make that mysterious blinking cursor do my bidding. Those early lines of BASIC opened doors I never knew existed, and I’ve been chasing that magic ever since.
+My affair with technology kicked off as a bright-eyed kid in Mexico City, somewhere in the chaotic glow of the late '80s. Imagine an 10-year-old me hunched over a monochrome CRT screen, fingers dancing awkwardly on a stiff keyboard, trying to figure out how to make that mysterious blinking cursor do my bidding. Those early lines of BASIC opened doors I never knew existed, and I’ve been chasing that magic ever since.
 
 Growing up through the vibrant yet strangely peaceful '80s and '90s, my fascination quickly spiraled outward. Dialing into BBSes like **"Tierras Extrañas"** became my early digital playground, where ASCII art and slow modem handshakes felt like secret portals into alternate universes. Alongside my cousin Victor, I crafted what we cheekily called a "digital ouija," a playful little hack that could make answers appear seemingly from nowhere, startling and delighting our friends into questioning reality itself.
 
