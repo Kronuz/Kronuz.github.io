@@ -51,6 +51,9 @@ export default defineConfig({
 			plugins: [
 				starlightBlog({
 					title: 'Blog',
+					// We own the header nav (Blog + Projects) via our ThemeSelect
+					// override, so disable the plugin's built-in single "Blog" link.
+					navigation: 'none',
 					authors: {
 						kronuz: {
 							name: 'Germán Méndez Bravo',
@@ -72,6 +75,7 @@ export default defineConfig({
 				MarkdownContent: './src/components/MarkdownContent.astro',
 				Footer: './src/components/Footer.astro',
 				SiteTitle: './src/components/SiteTitle.astro',
+				ThemeSelect: './src/components/ThemeSelect.astro',
 			},
 		}),
 	],
