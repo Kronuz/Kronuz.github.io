@@ -1,0 +1,32 @@
+---
+// Custom override of Starlight's PageTitle: renders the page <h1> and, when a
+// post provides a `subtitle` in its frontmatter, a smaller muted line below it.
+const { title, subtitle } = Astro.locals.starlightRoute.entry.data as {
+	title: string;
+	subtitle?: string;
+};
+---
+
+<h1 id="_top">{title}</h1>
+{subtitle && <p class="page-subtitle">{subtitle}</p>}
+
+<style>
+	@layer starlight.core {
+		h1 {
+			margin-top: 1rem;
+			font-size: var(--sl-text-h1);
+			line-height: var(--sl-line-height-headings);
+			font-weight: 600;
+			color: var(--sl-color-white);
+		}
+	}
+
+	.page-subtitle {
+		margin-top: 0.4rem;
+		margin-bottom: 0;
+		font-size: var(--sl-text-2xl);
+		font-weight: 400;
+		line-height: var(--sl-line-height-headings);
+		color: var(--sl-color-gray-3);
+	}
+</style>

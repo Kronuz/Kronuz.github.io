@@ -1,0 +1,50 @@
+---
+import EditLink from 'virtual:starlight/components/EditLink';
+import LastUpdated from 'virtual:starlight/components/LastUpdated';
+import Pagination from 'virtual:starlight/components/Pagination';
+import { Icon } from '@astrojs/starlight/components';
+
+// One <footer> for the whole site. We inline Starlight's default footer parts
+// (edit link, last-updated, prev/next pagination) instead of wrapping the
+// stock Footer, because that component exposes no slot — so the site footer
+// (copyright + social) can live *inside* the same <footer>, which is both more
+// semantic and means there's no separate empty footer pushing it down.
+// Same links as the header social bar, plus Email.
+const social = [
+	{ icon: 'github', label: 'GitHub', href: 'https://github.com/Kronuz' },
+	{ icon: 'linkedin', label: 'LinkedIn', href: 'https://www.linkedin.com/in/kronuz/' },
+	{ icon: 'x.com', label: 'X', href: 'https://twitter.com/germbravo' },
+	{ icon: 'stackOverflow', label: 'Stack Overflow', href: 'https://stackoverflow.com/users/167522/kronuz' },
+	{ icon: 'email', label: 'Email', href: 'mailto:german.mb@gmail.com' },
+];
+
+const year = new Date().getFullYear();
+---
+
+<footer class="sl-flex kz-footer">
+	<div class="meta sl-flex">
+		<EditLink />
+		<LastUpdated />
+	</div>
+	<Pagination />
+
+	<div class="kz-site-footer">
+		<p class="kz-copyright">&copy; {year} Germán Méndez Bravo</p>
+		<div class="kz-social">
+			{
+				social.map((s) => (
+					<a
+						href={s.href}
+						class="kz-social-link"
+						aria-label={s.label}
+						title={s.label}
+						rel="noopener noreferrer"
+						target={s.href.startsWith('http') ? '_blank' : undefined}
+					>
+						<Icon name={s.icon as any} />
+					</a>
+				))
+			}
+		</div>
+	</div>
+</footer>

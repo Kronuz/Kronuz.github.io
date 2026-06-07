@@ -1,19 +1,52 @@
-# Kronuz.io site
+# Kronuz.github.io
 
-This directory contains the code for the [Kronuz.github.io site](https://Kronuz.github.io).
+My personal blog and project notes — Python, C++, and systems at scale.
 
+**Live:** <https://kronuz.github.io>
 
-## Running locally
+Built with [Astro](https://astro.build) + [Starlight](https://starlight.astro.build) +
+[starlight-blog](https://github.com/HiDeoo/starlight-blog), with a custom *Kronuz* code
+theme, build-time [D2](https://d2lang.com) diagrams, and [giscus](https://giscus.app)
+comments. It deploys itself: push to the default branch and GitHub Actions builds and
+publishes to GitHub Pages.
 
-1. `gem install bundler`
-2. `bundle exec jekyll serve --livereload`
+## Local development
 
+```bash
+npm install
+npm run dev       # local dev server with hot reload
+npm run build     # build to dist/
+npm run preview   # serve the built dist/ locally
+```
 
-## Updating Font Awesome
-Only a handful of fonts are included in the include Font Awesome fonts. To add
-more, it's needed to modify `icomoon-selection.json` and regenerate the fonts:
+D2 diagrams render at build time by shelling out to the `d2` CLI, so install it locally if
+you write `​```d2` fences: <https://d2lang.com/tour/install>. CI installs it automatically.
 
-1. Go to <https://icomoon.io/app/>
-2. Choose Import Icons and load `icomoon-selection.json`
-3. Choose Generate Font → Download
-4. Copy the font files and adapt the CSS to the paths we use
+## Writing a post
+
+1. Add `src/content/docs/blog/<slug>.md` (or `.mdx`) with frontmatter:
+   ```yaml
+   ---
+   title: "Post title"
+   description: "One-line summary."
+   date: 2026-06-07
+   draft: true        # remove (or run npm run publish) when ready
+   authors: kronuz
+   tags: [python, systems]
+   ---
+   ```
+2. Preview with `npm run dev` (drafts show with a yellow badge).
+3. Publish: `npm run publish -- <slug>` — drops `draft`, stamps `date` to today, commits,
+   and pushes. GitHub Actions builds and deploys automatically.
+
+## Comments (giscus)
+
+Comments are [giscus](https://giscus.app), backed by GitHub Discussions on this repo. To
+turn them on: enable **Discussions**, install the **giscus app**, then paste the
+`repoId`/`categoryId` from <https://giscus.app> into `GISCUS` in `src/consts.ts`. The widget
+only renders once `categoryId` is set.
+
+## Deploy
+
+`.github/workflows/deploy.yml` builds on every push to the default branch (installs D2,
+`npm ci`, `npm run build`) and deploys to Pages via `actions/deploy-pages`. No manual step.

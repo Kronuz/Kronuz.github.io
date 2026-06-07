@@ -1,0 +1,53 @@
+---
+// Animates the landing hero's REPL: kronuz.whoami() "answers" by typing out a
+// rotating line that ends on the warm Kronuz caret (#kz-answer lives in the
+// splash <h1>, set via hero.title). Reduced-motion users keep the static answer.
+---
+
+<script>
+	const el = document.getElementById('kz-answer');
+	const answers = [
+		"'a Python engineer in the runtime layer'",
+		"'Germán offline, Kronuz online'",
+		"'co-author of PEP 810, lazy imports'",
+		"'out to make Python explain itself'",
+		"'the reason imports got lazy'",
+		"'named the line that froze the loop'",
+		"'runtime patches, no redeploy required'",
+		"'still convinced the GIL is optional'",
+		"'immortal objects, no refcount churn'",
+		"'keeps the GC out of the hot path'",
+		"'kept the CoW pages from stampeding'",
+		"'seconds off start-up, hours at scale'",
+		"'efficiency in dollars and watts'",
+		"'happiest a layer below the application'",
+		"'here for the stack traces'",
+		"'asking if the docs are still true'",
+		"'allergic to a blocking call in async'",
+	];
+	const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	if (el && !reduce) {
+		const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+		let i = Math.floor(Math.random() * answers.length);
+		el.textContent = '';
+		(async () => {
+			await sleep(400);
+			while (true) {
+				const next = answers[i];
+				for (let n = 1; n <= next.length; n++) {
+					el.textContent = next.slice(0, n);
+					await sleep(42);
+				}
+				await sleep(2500);
+				const cur = el.textContent ?? '';
+				for (let n = cur.length; n >= 0; n--) {
+					el.textContent = cur.slice(0, n);
+					await sleep(26);
+				}
+				let j;
+				do { j = Math.floor(Math.random() * answers.length); } while (j === i && answers.length > 1);
+				i = j;
+			}
+		})();
+	}
+</script>

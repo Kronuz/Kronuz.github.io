@@ -1,9 +1,0 @@
-- title: Projects
-  projects:
-    - url: sublimecodeintel
-    - url: xapiand
-    - url: pyscss
-    - url: mech
-    - url: sublimelinter
-    - url: django_polymorphic
-    - url: django_gitlist

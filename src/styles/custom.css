@@ -1,0 +1,264 @@
+/* Kronuz brand palette — greens pulled from the old Jekyll site
+   (theme_color_light #bfdd97, theme_color_dark #8fc44a, quickstart #689137). */
+
+:root {
+	--sl-color-accent-low: #d7eab9;
+	--sl-color-accent: #5d8a2c;
+	--sl-color-accent-high: #294012;
+}
+
+:root[data-theme='dark'] {
+	--sl-color-accent-low: #1d3007;
+	--sl-color-accent: #7aa83e;
+	--sl-color-accent-high: #c8e4a1;
+}
+
+/* Nudge Starlight's neutral ramp off its cool 224deg default. The dark surfaces
+   (page bg, elevated bg, borders) are neutral gray, anchored so the elevated
+   surface lands on the Kronuz editor bg #383838; the text grays keep a faint
+   warmth, mirroring the Kronuz UI (neutral surfaces, warmth in text/accents).
+   Green stays the accent. */
+:root {
+	--sl-color-white: hsl(22, 8%, 11%);
+	--sl-color-gray-1: hsl(22, 6%, 17%);
+	--sl-color-gray-2: hsl(20, 4%, 24%);
+	--sl-color-gray-3: hsl(20, 3%, 38%);
+	--sl-color-gray-4: hsl(20, 3%, 57%);
+	--sl-color-gray-5: hsl(28, 6%, 79%);
+	--sl-color-gray-6: hsl(32, 12%, 94%);
+	--sl-color-gray-7: hsl(32, 14%, 95%);
+	--sl-color-black: hsl(36, 22%, 99%);
+	/* sidebar + title bar match the (light) code-snippet background */
+	--sl-color-bg-sidebar: #faf8f5;
+	--sl-color-bg-nav: #faf8f5;
+}
+:root[data-theme='dark'] {
+	--sl-color-white: hsl(24, 7%, 93%);
+	--sl-color-gray-1: hsl(22, 6%, 88%);
+	--sl-color-gray-2: hsl(20, 4%, 77%);
+	--sl-color-gray-3: hsl(20, 3%, 56%);
+	--sl-color-gray-4: hsl(20, 3%, 36%);
+	--sl-color-gray-5: hsl(0, 0%, 23%);
+	--sl-color-gray-6: hsl(0, 0%, 15%);
+	--sl-color-gray-7: hsl(0, 0%, 18%); /* link-card hover lift (was leaking the light near-white) */
+	--sl-color-black: hsl(0, 0%, 10%);
+	/* Chrome steps like the editor: sidebar = activity bar (#242424),
+	   nav + code-frame titlebar = editor sidebar (#2b2b2b), over the
+	   #383838 code-snippet surface. */
+	--sl-color-bg-sidebar: #242424;
+	--sl-color-bg-nav: #2b2b2b;
+	--ec-frm-trmTtbBg: #2b2b2b;
+}
+
+/* Bigger brand logo. Starlight derives the logo height from the nav height
+   (logo = --sl-nav-height - 2*--sl-nav-pad-y), so growing the nav bar enlarges
+   the logo while keeping it vertically centered and within the header (no
+   overflow/clipping). The header height and the content offset both read
+   --sl-nav-height, so they stay in sync. The source PNG (528x600, a single
+   downscale from the 1920x2180 master) has far more pixels than the ~56px
+   display height needs, so it stays crisp at 2x/3x Retina. */
+:root {
+--sl-nav-height: 4rem; /* mobile: 64px bar -> ~40px logo (was 56px bar) */
+}
+
+@media (min-width: 50em) {
+:root {
+--sl-nav-height: 5rem; /* desktop: 80px bar -> ~56px logo (was 64px/40px) */
+}
+}
+
+/* Splash feature cards. We use our OWN grid wrapper (.hero-cards) instead of
+   Starlight's <CardGrid> to avoid a FOUC: Starlight's .card-grid base+2-column
+   rules and our customCss land in different stylesheet chunks that load in a
+   different order, so overriding .card-grid flickered 2-up -> 3-up on load.
+   With our own class there is a single source of truth for the layout, so no
+   competing rule to flicker through. The <Card> children keep their own
+   styling (border colors, padding) from Starlight. */
+.hero-cards {
+	display: grid;
+	grid-template-columns: 1fr; /* mobile: stacked */
+	gap: 1rem;
+}
+
+.hero-cards > * {
+	margin-top: 0 !important; /* match Starlight's .card-grid > * reset */
+}
+
+@media (min-width: 50rem) {
+	.hero-cards {
+		grid-template-columns: 1fr 1fr 1fr; /* desktop: equal thirds */
+		gap: 1rem;
+	}
+}
+
+/* Tighten the gap between the hero and the cards. Starlight's desktop hero uses
+   padding-block: clamp(2.5rem, calc(1rem + 10vmin), 10rem); shrink it hard so the
+   splash (big logo + REPL + cards + footer) fits one screen without scrolling. */
+@media (min-width: 50rem) {
+.hero {
+padding-block: clamp(0.5rem, calc(0.25rem + 2vmin), 2rem);
+}
+}
+
+/* Larger feature-card titles (Starlight defaults to --sl-text-h4). */
+.card .title {
+font-size: var(--sl-text-h3);
+}
+
+/* Theme-aware diagrams. We render D2 diagrams to two SVGs (a light and a dark
+   variant) and swap them by theme, the same trick as the logo. Both are
+   transparent-background so they float on the page. */
+figure.diagram {
+margin: 1.75rem 0;
+text-align: center;
+}
+@media (min-width: 50rem) {
+figure.diagram {
+margin: 1.75rem 4rem;
+}
+}
+figure.diagram img {
+display: block;
+margin-inline: auto;
+width: auto;
+height: auto;
+max-width: 100%;
+max-height: 88vh;
+}
+figure.diagram .diagram-dark {
+display: none;
+}
+[data-theme='dark'] figure.diagram .diagram-light {
+display: none;
+}
+[data-theme='dark'] figure.diagram .diagram-dark {
+display: block;
+margin-inline: auto;
+}
+.sl-markdown-content table {
+width: -moz-fit-content;
+width: fit-content;
+max-width: 100%;
+margin-inline: auto;
+}
+
+/* Landing REPL hero. The splash <h1> holds a small Python REPL (set:html);
+   kronuz.whoami() "answers" with a typed, rotating line that ends on the warm
+   Kronuz caret. Colors track the editor theme (keyword orange, string green,
+   warm caret), light vs dark. */
+:root {
+--kz-repl-prompt: #9a9690;
+--kz-repl-kw: #b46a2d;
+--kz-repl-str: #67871c;
+--kz-repl-caret: #b3611f;
+}
+:root[data-theme='dark'] {
+--kz-repl-prompt: #7a7775;
+--kz-repl-kw: #cc7833;
+--kz-repl-str: #a5c261;
+--kz-repl-caret: #d08040;
+}
+.kz-repl {
+display: block;
+max-width: 100%;
+font-family: var(--__sl-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+font-weight: 400;
+font-size: clamp(0.95rem, 0.8rem + 1.1vw, 1.5rem);
+line-height: 1.7;
+text-align: left;
+letter-spacing: 0;
+}
+.kz-line { display: block; white-space: nowrap; }
+/* The answer reserves the width + height of the longest answer (a hidden
+   sizer in the same font), so typing it out never reflows the hero, and it is
+   free to wrap on narrow screens without forcing the font tiny. */
+.kz-out { position: relative; display: inline-block; max-width: 100%; white-space: nowrap; overflow: hidden; vertical-align: top; }
+.kz-sizer { visibility: hidden; padding-inline-end: 0.7ch; }
+.kz-answerwrap { position: absolute; inset-block-start: 0; inset-inline-start: 0; }
+.kz-prompt { color: var(--kz-repl-prompt); }
+.kz-kw { color: var(--kz-repl-kw); }
+.kz-str { color: var(--kz-repl-str); }
+.kz-out { min-height: 1.7em; }
+.kz-caret {
+display: inline-block;
+width: 0.55ch;
+height: 1.05em;
+margin-left: 0.08em;
+vertical-align: -0.16em;
+background: var(--kz-repl-caret);
+border-radius: 1px;
+}
+@media (prefers-reduced-motion: no-preference) {
+.kz-caret { animation: kz-blink 1.05s steps(1, end) infinite; }
+}
+@keyframes kz-blink { 50% { opacity: 0; } }
+
+/* Breathing room between the REPL hero and its tagline (kept modest so the
+   splash fits one screen). */
+.hero h1:has(.kz-repl) { margin-bottom: 0.85rem; }
+/* Tighten the hero's vertical rhythm (title / tagline / actions) on the splash. */
+.hero .stack { gap: clamp(0.9rem, calc(0.9rem + 0.4vw), 1.4rem); }
+
+/* Splash feature cards: compact padding, smaller titles, and tight paragraph
+   rhythm so three cards + the footer clear the fold under the big logo. Scoped
+   to .hero-cards so doc-page <Card>s keep their roomier sizing. */
+.hero-cards { margin-top: 0.5rem; }
+.hero-cards .card {
+padding: 0.95rem 1.2rem;
+}
+.hero-cards .card .title {
+font-size: var(--sl-text-h3);
+margin-bottom: 0.3rem;
+}
+.hero-cards .card p { margin-block: 0.3rem; }
+
+/* Site footer. We render our own single <footer> (src/components/Footer.astro)
+   inlining Starlight's edit-link / last-updated / pagination parts, so the
+   copyright + social bar live inside the same <footer>. Re-add the small bit of
+   layout the stock (scoped) footer styles used to provide. */
+.kz-footer {
+flex-direction: column;
+gap: 1.5rem;
+}
+.kz-footer .meta {
+gap: 0.75rem 3rem;
+justify-content: space-between;
+flex-wrap: wrap;
+margin-top: 3rem;
+font-size: var(--sl-text-sm);
+color: var(--sl-color-gray-3);
+}
+.kz-footer .meta > p:only-child { margin-inline-start: auto; }
+/* On pages with no edit link / last-updated / pagination (the splash, About),
+   those subsections render empty. Drop them so they take no vertical space and
+   the copyright + social bar sit directly under the content. Content-based, so
+   real blog-post pagination is untouched. */
+.kz-footer .meta:not(:has(a)):not(:has(time)),
+.kz-footer .pagination-links:not(:has(a)) { display: none; }
+
+/* Copyright + social bar, now the last child inside <footer>. */
+.kz-site-footer {
+padding-top: 1rem;
+border-top: 1px solid var(--sl-color-gray-5);
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 0.85rem;
+text-align: center;
+}
+.kz-copyright {
+margin: 0;
+font-size: var(--sl-text-sm);
+color: var(--sl-color-gray-3);
+}
+.kz-social {
+display: flex;
+gap: 1.15rem;
+}
+.kz-social-link {
+color: var(--sl-color-gray-3);
+display: inline-flex;
+transition: color 0.15s ease;
+}
+.kz-social-link:hover { color: var(--sl-color-white); }
+.kz-social-link svg { width: 1.25rem; height: 1.25rem; }

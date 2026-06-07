@@ -1,0 +1,22 @@
+---
+// Wraps starlight-blog's MarkdownContent override (which renders the blog post
+// frame: metadata, body, tags, prev/next) and appends giscus comments on
+// individual blog posts only. Gated on `entry.data.date` (blog posts have it;
+// the splash and About/Projects pages don't), so it never appears in the "All
+// posts" list excerpts or on non-blog pages.
+//
+// Setting `components.MarkdownContent` makes starlight-blog log a one-line
+// build WARN ("you already have a MarkdownContent override") and skip its own
+// registration. That's expected: we re-import its override below, so the blog
+// frame still renders. The warning is harmless.
+import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
+import Giscus from './Giscus.astro';
+
+const { entry } = Astro.locals.starlightRoute;
+const isBlogPost = Boolean(entry?.data?.date);
+---
+
+<BlogMarkdownContent>
+	<slot />
+	{isBlogPost && <Giscus />}
+</BlogMarkdownContent>

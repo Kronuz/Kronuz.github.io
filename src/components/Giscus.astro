@@ -1,0 +1,50 @@
+---
+import { GISCUS } from '../consts';
+
+// giscus inline comments, on every blog post. Renders only when a category id
+// is configured (see src/consts.ts), so the build stays clean before giscus is
+// wired up. We emit the <script> via set:html so it lands in the served HTML
+// verbatim (and the browser executes it) without Astro trying to bundle it.
+const enabled = Boolean(GISCUS.categoryId);
+const attrs = {
+	src: 'https://giscus.app/client.js',
+	'data-repo': GISCUS.repo,
+	'data-repo-id': GISCUS.repoId,
+	'data-category': GISCUS.category,
+	'data-category-id': GISCUS.categoryId,
+	'data-mapping': 'pathname',
+	'data-strict': '1',
+	'data-reactions-enabled': '1',
+	'data-emit-metadata': '0',
+	'data-input-position': 'top',
+	'data-theme': 'preferred_color_scheme',
+	'data-lang': 'en',
+	crossorigin: 'anonymous',
+};
+const scriptTag = enabled
+	? `<script ${Object.entries(attrs)
+			.map(([k, v]) => `${k}="${String(v).replace(/"/g, '&quot;')}"`)
+			.join(' ')} async></script>`
+	: '';
+---
+
+{
+	enabled && (
+		<section class="kz-comments not-content" aria-label="Comments">
+			<h2 class="kz-comments-title">Comments</h2>
+			<Fragment set:html={scriptTag} />
+		</section>
+	)
+}
+
+<style>
+	.kz-comments {
+		margin-top: 2.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+	}
+	.kz-comments-title {
+		font-size: var(--sl-text-h4);
+		margin-bottom: 1rem;
+	}
+</style>
