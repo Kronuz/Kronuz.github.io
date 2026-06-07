@@ -1,37 +1,60 @@
 ---
 import Default from '@astrojs/starlight/components/ThemeSelect.astro';
+import { Icon } from '@astrojs/starlight/components';
 
-// Header site menu: Blog + Projects, shown before the theme selector (desktop
-// only — mobile uses the hamburger sidebar). This replaces starlight-blog's
+// Header site menu, shown before the theme selector. Replaces starlight-blog's
 // built-in single "Blog" injector (we set its `navigation: 'none'`), so we own
-// the links. Styling mirrors starlight-blog's nav (accent links, separator).
+// the links. Visible on every screen size: icon + text on desktop, icon-only on
+// mobile (so the menu stays reachable even on the splash, which has no sidebar
+// hamburger). aria-label keeps the labels for screen readers when text hides.
+const items = [
+{ label: 'Blog', href: '/blog/', icon: 'open-book' },
+{ label: 'Projects', href: '/projects/', icon: 'puzzle' },
+];
 ---
 
 <nav class="kz-topnav" aria-label="Site">
-	<a href="/blog/">Blog</a>
-	<a href="/projects/">Projects</a>
+{
+items.map((it) => (
+<a href={it.href} class="kz-topnav-link" aria-label={it.label}>
+<Icon name={it.icon as any} size="1.25rem" />
+<span class="kz-topnav-label">{it.label}</span>
+</a>
+))
+}
 </nav>
 <Default><slot /></Default>
 
 <style>
-	.kz-topnav {
-		border-inline-end: 1px solid var(--sl-color-gray-5);
-		display: none;
-		gap: 1rem;
-		padding-inline-end: 1rem;
-		align-items: center;
-	}
-	@media (min-width: 50rem) {
-		.kz-topnav {
-			display: flex;
-		}
-	}
-	.kz-topnav a {
-		color: var(--sl-color-text-accent);
-		font-weight: 600;
-		text-decoration: none;
-	}
-	.kz-topnav a:hover {
-		text-decoration: underline;
-	}
+.kz-topnav {
+display: flex;
+align-items: center;
+gap: 0.6rem;
+padding-inline-end: 0.85rem;
+border-inline-end: 1px solid var(--sl-color-gray-5);
+}
+.kz-topnav-link {
+display: inline-flex;
+align-items: center;
+gap: 0.3rem;
+color: var(--sl-color-text-accent);
+font-weight: 600;
+text-decoration: none;
+}
+.kz-topnav-link:hover {
+text-decoration: underline;
+}
+/* Mobile: icons only. Desktop (≥50rem): icon + text. */
+.kz-topnav-label {
+display: none;
+}
+@media (min-width: 50rem) {
+.kz-topnav {
+gap: 1rem;
+padding-inline-end: 1rem;
+}
+.kz-topnav-label {
+display: inline;
+}
+}
 </style>

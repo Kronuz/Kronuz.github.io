@@ -9,7 +9,8 @@ description: Germán Méndez Bravo (Kronuz) — Software Engineer working on Pyt
 [GitHub](https://github.com/Kronuz) ·
 [LinkedIn](https://www.linkedin.com/in/kronuz/) ·
 [X](https://twitter.com/germbravo) ·
-[Stack Overflow](https://stackoverflow.com/users/167522/kronuz)
+[Stack Overflow](https://stackoverflow.com/users/167522/kronuz) ·
+[PayPal.me](https://www.paypal.me/Kronuz)
 
 ## About Me
 
