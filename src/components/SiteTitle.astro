@@ -1,0 +1,67 @@
+---
+import { logos } from 'virtual:starlight/user-images';
+import config from 'virtual:starlight/user-config';
+
+// Two-tone header title: "Kronuz" in the brand green, ".github.io" muted.
+// Replicates Starlight's stock SiteTitle (logo + link) and swaps the plain
+// title span for the coloured one. Meta/<title> still comes from SITE_TITLE.
+const { siteTitleHref } = Astro.locals.starlightRoute;
+---
+
+<a href={siteTitleHref} class="site-title sl-flex">
+	{
+		config.logo && logos.dark && (
+			<>
+				<img
+					class:list={{ 'light:sl-hidden print:hidden': !('src' in config.logo) }}
+					alt={config.logo.alt}
+					src={logos.dark.src}
+					width={logos.dark.width}
+					height={logos.dark.height}
+				/>
+				{!('src' in config.logo) && (
+					<img
+						class="dark:sl-hidden print:block"
+						alt={config.logo.alt}
+						src={logos.light?.src}
+						width={logos.light?.width}
+						height={logos.light?.height}
+					/>
+				)}
+			</>
+		)
+	}
+	<span class:list={{ 'sr-only': config.logo?.replacesTitle }} translate="no">
+		<span class="kz-name">Kronuz</span><span class="kz-tld">.github.io</span>
+	</span>
+</a>
+
+<style>
+	@layer starlight.core {
+		.site-title {
+			align-items: center;
+			gap: var(--sl-nav-gap);
+			font-size: var(--sl-text-h4);
+			font-weight: 600;
+			text-decoration: none;
+			white-space: nowrap;
+			min-width: 0;
+		}
+		.site-title > span {
+			overflow: hidden;
+		}
+		.kz-name {
+			color: var(--sl-color-text-accent);
+		}
+		.kz-tld {
+			color: var(--sl-color-gray-3);
+		}
+		img {
+			height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));
+			width: auto;
+			max-width: 100%;
+			object-fit: contain;
+			object-position: 0 50%;
+		}
+	}
+</style>
