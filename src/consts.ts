@@ -16,5 +16,5 @@ export const GISCUS = {
 	repo: 'Kronuz/Kronuz.github.io',
 	repoId: 'MDEwOlJlcG9zaXRvcnkzMzY3MjcyMQ==',
 	category: 'Announcements',
-	categoryId: '', // DIC_… — paste from giscus.app to switch comments on
+	categoryId: 'DIC_kwDOAgHOEc4C-uYu',
 };
