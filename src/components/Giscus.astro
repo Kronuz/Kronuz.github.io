@@ -47,7 +47,6 @@ const syncTag = `<script>${syncJs}</script>`;
 {
 enabled && (
 <section class="kz-comments not-content" aria-label="Comments">
-<h2 class="kz-comments-title">Comments</h2>
 <Fragment set:html={scriptTag + syncTag} />
 </section>
 )
@@ -58,9 +57,5 @@ enabled && (
 margin-top: 2.5rem;
 padding-top: 1.5rem;
 border-top: 1px solid var(--sl-color-gray-5);
-}
-.kz-comments-title {
-font-size: var(--sl-text-h4);
-margin-bottom: 1rem;
 }
 </style>
