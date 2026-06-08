@@ -30,7 +30,7 @@ I should mention I was also drawing constantly in those years. Painting, sketchi
 
 ## The fellowship and the modem
 
-In 1992 my family sent me to spend a year in **Gaeta**, a small Italian town wedged between Naples and Rome, living with my aunt, uncle, and two little cousins. It was a strange and wonderful year for a lot of reasons, but here is the one that changed me: I watched the 1978 animated **Lord of the Rings**, the strange, rotoscoped Bakshi version, all shadows and feverish color, and something in me opened like a door.
+In 1991 my family sent me to spend a year in **Gaeta**, a small Italian town wedged between Naples and Rome, living with my aunt, uncle, and two little cousins. It was a strange and wonderful year for a lot of reasons, but here is the one that changed me: I watched the 1978 animated **Lord of the Rings**, the strange, rotoscoped Bakshi version, all shadows and feverish color, and something in me opened like a door.
 
 Fantasy. Worlds with their own rules, their own maps, their own history sitting just off the edge of the frame. I did not know yet that I would spend years of my life building exactly that, a world with an editor and a scripting language and hand-placed tiles. I just knew I wanted *in*.
 
