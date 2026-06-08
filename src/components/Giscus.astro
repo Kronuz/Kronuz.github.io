@@ -2,49 +2,65 @@
 import { GISCUS } from '../consts';
 
 // giscus inline comments, on every blog post. Renders only when a category id
-// is configured (see src/consts.ts), so the build stays clean before giscus is
-// wired up. We emit the <script> via set:html so it lands in the served HTML
-// verbatim (and the browser executes it) without Astro trying to bundle it.
+// is configured (see src/consts.ts). We emit the scripts via set:html so they
+// land in the served HTML verbatim (and the browser executes them) without
+// Astro trying to bundle them.
+//
+// Theming: giscus custom themes must be fetched from a live public URL (giscus
+// reads the CSS cross-origin), so the full Kronuz theme only resolves once the
+// site is deployed. We start on the built-in `transparent_dark` (blends with
+// our dark surface everywhere, including local dev), then the sync script
+// upgrades dark mode to our custom theme on production and follows the site's
+// light/dark toggle.
 const enabled = Boolean(GISCUS.categoryId);
+
 const attrs = {
-	src: 'https://giscus.app/client.js',
-	'data-repo': GISCUS.repo,
-	'data-repo-id': GISCUS.repoId,
-	'data-category': GISCUS.category,
-	'data-category-id': GISCUS.categoryId,
-	'data-mapping': 'pathname',
-	'data-strict': '1',
-	'data-reactions-enabled': '1',
-	'data-emit-metadata': '0',
-	'data-input-position': 'top',
-	'data-theme': 'preferred_color_scheme',
-	'data-lang': 'en',
-	crossorigin: 'anonymous',
+src: 'https://giscus.app/client.js',
+'data-repo': GISCUS.repo,
+'data-repo-id': GISCUS.repoId,
+'data-category': GISCUS.category,
+'data-category-id': GISCUS.categoryId,
+'data-mapping': 'pathname',
+'data-strict': '1',
+'data-reactions-enabled': '0',
+'data-emit-metadata': '0',
+'data-input-position': 'top',
+'data-theme': 'transparent_dark',
+'data-lang': 'en',
+crossorigin: 'anonymous',
 };
-const scriptTag = enabled
-	? `<script ${Object.entries(attrs)
-			.map(([k, v]) => `${k}="${String(v).replace(/"/g, '&quot;')}"`)
-			.join(' ')} async></script>`
-	: '';
+const scriptTag = `<script ${Object.entries(attrs)
+.map(([k, v]) => `${k}="${String(v).replace(/"/g, '&quot;')}"`)
+.join(' ')} async></script>`;
+
+const syncJs = `(function(){
+  var CUSTOM='https://kronuz.github.io/giscus/kronuz.css';
+  function light(){return document.documentElement.dataset.theme==='light';}
+  function theme(){return light()?'light':(location.hostname==='kronuz.github.io'?CUSTOM:'transparent_dark');}
+  function apply(){var f=document.querySelector('iframe.giscus-frame');if(f&&f.contentWindow){f.contentWindow.postMessage({giscus:{setConfig:{theme:theme()}}},'https://giscus.app');}}
+  window.addEventListener('message',function(e){if(e.origin==='https://giscus.app'&&e.data&&e.data.giscus)apply();});
+  new MutationObserver(apply).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();`;
+const syncTag = `<script>${syncJs}</script>`;
 ---
 
 {
-	enabled && (
-		<section class="kz-comments not-content" aria-label="Comments">
-			<h2 class="kz-comments-title">Comments</h2>
-			<Fragment set:html={scriptTag} />
-		</section>
-	)
+enabled && (
+<section class="kz-comments not-content" aria-label="Comments">
+<h2 class="kz-comments-title">Comments</h2>
+<Fragment set:html={scriptTag + syncTag} />
+</section>
+)
 }
 
 <style>
-	.kz-comments {
-		margin-top: 2.5rem;
-		padding-top: 1.5rem;
-		border-top: 1px solid var(--sl-color-gray-5);
-	}
-	.kz-comments-title {
-		font-size: var(--sl-text-h4);
-		margin-bottom: 1rem;
-	}
+.kz-comments {
+margin-top: 2.5rem;
+padding-top: 1.5rem;
+border-top: 1px solid var(--sl-color-gray-5);
+}
+.kz-comments-title {
+font-size: var(--sl-text-h4);
+margin-bottom: 1rem;
+}
 </style>
