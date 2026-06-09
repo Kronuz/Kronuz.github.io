@@ -19,9 +19,7 @@ const rawHref = `/snippets/${file}`;
 const id = `snip-${file.replace(/[^a-z0-9]+/gi, "-")}-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
-<a class="snippet-link" href={rawHref} data-snippet-open={id}><svg aria-hidden="true" class="snippet-link-icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6 2 12l6 6"></path><path d="M16 6l6 6-6 6"></path></svg><slot>{file}</slot></a><template data-snippet-tpl={id}><dialog class="snippet-dialog" aria-label={`Source: ${file}`}><figure class="snippet snippet--modal" data-lang={lang}><figcaption class="snippet-bar"><span class="snippet-title">{file}</span><span class="snippet-actions"><button class="snippet-btn snippet-copy" type="button" data-snippet-copy>Copy</button><a class="snippet-btn" href={rawHref} target="_blank" rel="noopener">Raw</a><button class="snippet-btn snippet-close" type="button" data-snippet-close aria-label="Close">Close</button></span></figcaption><div class="snippet-code" set:html={pre} /></figure></dialog></template>
-
-<script>
+<a class="snippet-link" href={rawHref} data-snippet-open={id}><slot>{file}</slot></a><template data-snippet-tpl={id}><dialog class="snippet-dialog" aria-label={`Source: ${file}`}><figure class="snippet snippet--modal" data-lang={lang}><figcaption class="snippet-bar"><span class="snippet-title">{file}</span><span class="snippet-actions"><button class="snippet-btn snippet-copy" type="button" data-snippet-copy>Copy</button><a class="snippet-btn" href={rawHref} target="_blank" rel="noopener">Raw</a><button class="snippet-btn snippet-close" type="button" data-snippet-close aria-label="Close">Close</button></span></figcaption><div class="snippet-code" set:html={pre} /></figure></dialog></template><script>
   // One delegated handler for every snippet link/modal on the page.
   document.addEventListener("click", (event) => {
     const target = event.target as HTMLElement;

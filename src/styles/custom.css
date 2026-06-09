@@ -301,13 +301,33 @@ transition: color 0.15s ease;
 	color: var(--sl-color-gray-3);
 	font-size: 0.8rem;
 }
-.snippet-code { overflow-x: auto; }
+.snippet-code { overflow: auto; }
 .snippet-code pre.shiki {
 	margin: 0;
 	padding: 0.8rem 0.9rem;
 	border-radius: 0;
 	font-size: 0.85rem;
 	line-height: 1.5;
+	/* Size to content so the highlighted background spans the full scroll
+	   width (otherwise horizontal scroll reveals the page/backdrop). */
+	min-width: 100%;
+	width: max-content;
+	box-sizing: border-box;
+}
+/* Line numbers, from the .line spans Shiki emits. */
+.snippet-code pre.shiki code {
+	counter-reset: sl-line;
+}
+.snippet-code pre.shiki .line::before {
+	counter-increment: sl-line;
+	content: counter(sl-line);
+	display: inline-block;
+	width: 3ch;
+	margin-right: 1.25rem;
+	text-align: right;
+	opacity: 0.35;
+	user-select: none;
+	-webkit-user-select: none;
 }
 .snippet-page-nav {
 	display: flex;
@@ -330,11 +350,6 @@ transition: color 0.15s ease;
 	font-family: var(--sl-font-mono, ui-monospace, monospace);
 	font-size: 0.9em;
 	white-space: nowrap;
-}
-.snippet-link-icon {
-	vertical-align: -0.15em;
-	margin-right: 0.2em;
-	opacity: 0.75;
 }
 .snippet-dialog {
 	width: min(900px, 92vw);
