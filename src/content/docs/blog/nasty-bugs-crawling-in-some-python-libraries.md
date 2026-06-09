@@ -1,31 +1,24 @@
 ---
-title: "Nasty Bugs in Python Libraries"
-description: "A months-long mystery: requests.get() kept catching an impossible exception. The hunt led through sys.modules and a Protected proxy to a Python 2 except-syntax trap. No bug was ever in requests."
-excerpt: "For weeks, requests.get() kept catching an exception nobody could explain, and the fantastic requests library was innocent. This is the hunt: wrapping sys.modules entries in a proxy to catch the real culprit, a Python 2 except-syntax trap."
+title: "Catching a Monkeypatch"
+subtitle: "For weeks, requests.get() kept catching an exception that made no sense. The library was innocent. The culprit was one comma in a Python 2 except clause."
+description: "A months-long bug hunt: requests.get() kept catching a KeyError where an Empty should have been. The fix was to replace a module in sys.modules with a write-protected proxy that raised the moment something tried to patch it, exposing a Python 2 except-syntax trap."
+excerpt: "For weeks, requests.get() kept catching an exception nobody could explain, and the library was innocent. This is the hunt: replacing a module in sys.modules with a proxy that screams when something patches it, and the one-comma Python 2 bug it caught."
 date: 2016-03-08
 draft: true
 authors: kronuz
+series: "Opening Boxes"
+seriesOrder: 5
 tags:
+  - opening-boxes
   - python
-  - bug
-  - exception
   - monkeypatch
 ---
 
-Nasty bugs crawling down in some of my installed Python libraries.
+*Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This one opens a box I did not want to open: someone else's monkeypatch, hiding in a dependency.*
 
-The Problem
------------
+For many weeks, a codebase I worked on had a bug where a plain `requests.get()` would end up catching an exception nobody could explain. I want to be clear before I start, because the traceback points at it and the traceback is lying: there was never any bug in the excellent [`requests`](https://github.com/kennethreitz/requests/issues/2935) library. It was the messenger.
 
-For many weeks I had a problem in one of our codebases using the
-`requests` Python library where doing a `requests.get()` would end up
-catching a weird exception nobody could figure out. See
-<https://github.com/kennethreitz/requests/issues/2935>
-
-**JUST TO BE CLEAR HERE, NO ACTUAL BUG WAS THERE IN THE FANTASTIC
-requests LIBRARY!**
-
-This is an example of exception we had been seeing:
+Here is the kind of exception we kept seeing:
 
 ```
 Traceback (most recent call last):
@@ -39,57 +32,38 @@ Traceback (most recent call last):
     v.close()
   File "/usr/local/lib/python2.7/site-packages/requests/adapters.py", line 264, in close
     self.poolmanager.clear()
-  File "/usr/local/lib/python2.7/site-packages/requests/packages/urllib3/poolmanager.py", line 99, in clear
+  File ".../urllib3/poolmanager.py", line 99, in clear
     self.pools.clear()
-  File "/usr/local/lib/python2.7/site-packages/requests/packages/urllib3/_collections.py", line 93, in clear
+  File ".../urllib3/_collections.py", line 93, in clear
     self.dispose_func(value)
-  File "/usr/local/lib/python2.7/site-packages/requests/packages/urllib3/poolmanager.py", line 65, in <lambda>
+  File ".../urllib3/poolmanager.py", line 65, in <lambda>
     dispose_func=lambda p: p.close())
-  File "/usr/local/lib/python2.7/site-packages/requests/packages/urllib3/connectionpool.py", line 410, in close
+  File ".../urllib3/connectionpool.py", line 410, in close
     conn = old_pool.get(block=False)
   File "/usr/local/lib/python2.7/Queue.py", line 176, in get
     raise Empty
 KeyError: (1, True)
 ```
 
-A `Empty` exception was being thrown, but a `KeyError` was being
-received.
+Read the bottom two lines slowly. The code does `raise Empty`, and what comes out is a `KeyError: (1, True)`. A `raise` statement raised one exception type and the caller received a completely different one. That is not supposed to be possible.
 
-The Diagnosis
--------------
+## The diagnosis
 
-I struggled hard trying to find the code that was, as many theorized,
-monkeypatching the `Queue` module. No luck there. The most commonly
-suggested suspect was `gevent`; however, I didn't even have `gevent`
-installed, so I kept looking for things that could be monkeyparching
-stuff. e.g. do a regex search of `\.(Empty|LifoQueue|get)\s*=` and
-`setattr\([^)]+["'] (Empty|LifoQueue|get)["']\)`. Nothing.
+The obvious theory was that something was monkeypatching the `Queue` module, swapping out its `Empty` for something else. The usual suspect for that kind of thing is `gevent`, which patches the standard library on purpose. Except I did not have `gevent` installed.
 
-Obviously something was \"patching\" the `Queue.Empty` variable, but
-there was no way of telling what, who, when or why\...
+So I went hunting by hand. I grepped the entire codebase for anything assigning to those names, patterns like `\.(Empty|LifoQueue|get)\s*=` and `setattr\([^)]+["'](Empty|LifoQueue|get)["']\)`. Nothing. Something was clearly patching `Queue.Empty`, but there was no visible code doing it, and no way to tell what, who, when, or why.
 
-The Solution
-------------
+## The trick: a module that screams when you touch it
 
-I had almost lost any hope, when I decided to go hunting again and then
-I remembered about IRC channels\... It was an aliviating moment when
-someone at Freenode's \#python (*Yhg1s*) suggested I could try
-protecting a Python module by directly modifying `sys.modules` and
-exchanging the module in question a tweaked object instead of a module,
-so when the bad guy was trying to modify `Empty` it would get exposed by
-throwing an exception. This is how I did it:
+I had nearly given up when I remembered IRC still exists. On Freenode's `#python`, *Yhg1s* suggested something I had never thought to do: protect a module by replacing it in `sys.modules` with an object that mimics the module but refuses to be modified, so that the moment the bad guy tries to assign to `Empty`, it raises and exposes itself in a traceback.
 
-First, I protected the Queue module. To do this, I renamed the original
-`Queue.py` to `_Queue.py`:
+First, I moved the real `Queue` module aside, renaming `Queue.py` to `_Queue.py`:
 
 ```
 mv /usr/local/lib/python2.7/Queue.py /usr/local/lib/python2.7/_Queue.py
 ```
 
-And then in its place, I created another `Queue.py` which would mimic
-the real `Queue` module, only with a protected object to which no
-attribute assignments would be allowed, so the whole new
-`/usr/local/lib/python2.7/Queue.py` ended up like this:
+Then, in its place, I wrote a new `Queue.py` that imports the original under its new name and exposes everything through a write-protected proxy. Any attribute read works; any attribute *write* raises immediately:
 
 ```python
 class Protected(dict):
@@ -101,35 +75,29 @@ class Protected(dict):
 
     def __setattr__(self, name, value):
         raise AttributeError("can't set attribute")
+
 import sys, _Queue
 sys.modules['Queue'] = Protected(_Queue.__dict__)
 ```
 
-As you see, I modified `sys.modules['Queue']`, so further imports of
-`Queue` would return the `Protected` object with all attributes from
-`_Queue` (the original `Queue`, only sort of immutable).
+Now any code that does `import Queue` gets the `Protected` object, carrying every attribute of the real module, but immutable. The first attempt to assign to any attribute on it raises an `AttributeError` right at the offending line.
 
-Finally, after doing that, I starting using the system, and I quickly
-saw a new exception:
+```d2 alt="Swap the real Queue module for a write-protected proxy in sys.modules; when the Python 2 except trap tries to assign to Queue.Empty, the proxy raises and the traceback points at the culprit"
+direction: down
+swap: "Swap the real Queue for a Protected proxy\nin sys.modules" {style.bold: true}
+bad: "except KeyError, Queue.Empty:  (a Python 2 trap)\nassigns the caught error to Queue.Empty" {style.stroke-dash: 3}
+trap: "Protected.__setattr__ raises AttributeError\non the illegal assignment" {style.bold: true}
+cul: "the traceback points straight at the culprit line"
+swap -> bad: "now run the app"
+bad -> trap
+trap -> cul
+```
+
+I started the system, used it for a minute, and the trap sprang:
 
 ```
 Traceback (most recent call last):
-  File "/usr/local/lib/python2.7/site-packages/rest_framework/views.py", line 463, in dispatch
-    response = handler(request, *args, **kwargs)
-  File "project/apis/base.py", line 1184, in create
-    self.perform_create(serializer)
-  File "project/apis/base.py", line 1243, in perform_create
-    return self._stamp_invoice(request, serializer)
-  File "project/apis/base.py", line 1272, in _stamp_invoice
-    serializer.save(**extra_kwargs)
-  File "/usr/local/lib/python2.7/site-packages/rest_framework/serializers.py", line 191, in save
-    self.instance = self.create(validated_data)
-  File "project/apis/base.py", line 520, in create
-    return self._issue_invoice(xml_etree)
-  File "project/apis/base.py", line 982, in _issue_invoice
-    with Balancer('dummy', owner, is_live) as ws:
-  File "project/backends/balancer.py", line 72, in __enter__
-    self.ws = self.get_pooler().get_stamper(self.owner, self.live)
+  ...
   File "project/backends/balancer.py", line 34, in get_stamper
     except KeyError, Queue.Empty:
   File "/usr/local/lib/python2.7/Queue.py", line 9, in __setattr__
@@ -137,7 +105,11 @@ Traceback (most recent call last):
 AttributeError: can't set attribute
 ```
 
-See the problem here:
+There it was, finally with a name and a line number.
+
+## The one-comma bug
+
+Look at the culprit:
 
 ```python
 try:
@@ -146,15 +118,11 @@ except KeyError, Queue.Empty:
     ...
 ```
 
-Someone decided to catch both `KeyError` and `Queue.Empty`
-exceptions\... only this isn't the right way of catching two exceptions
-in Python 2. What this someone did in this library was actually
-assigning any `KeyError` exception object onto `Queue.Empty`, so if for
-instance a `KeyError: (1, True)` was caught, it'd get assigned and
-would replace old `Queue.Empty` (effectively monkeypatching it without
-even knowing)
+Someone meant to catch *both* `KeyError` and `Queue.Empty`. But that is not how you catch two exception types in Python 2. The form `except SomeError, name:` means "catch `SomeError` and bind the caught instance to the variable `name`." So this code was not catching two exceptions at all. It was catching `KeyError` and **assigning the caught `KeyError` instance to `Queue.Empty`**.
 
-I fixed this, obviously, by simply changing the code to:
+Every time that handler ran, it monkeypatched `Queue.Empty`, silently, replacing the real `Empty` class with whatever `KeyError` had just been caught, for instance `KeyError: (1, True)`. After that, somewhere far away, `Queue.get()` would do `raise Empty`, only `Empty` was no longer the empty-queue sentinel, it was a stale `KeyError`. That is how a `raise Empty` surfaced as a `KeyError`, weeks of confusion from a missing pair of parentheses.
+
+The fix is exactly those parentheses:
 
 ```python
 try:
@@ -163,18 +131,6 @@ except (KeyError, Queue.Empty):
     ...
 ```
 
-The Verdict
------------
+## What it left me with
 
-After checking around all the code we use, we found there are quite a
-few libraries doing things like that one above\... producing bugs which
-end up overriding exception types, and these can hit you when you least
-expect it. Beware!
-
-What I Learned
---------------
-
-But most of all, this whole mess was a useful exercise to learn a good
-technique about how to \"protect\" a whole module from monkeypatching
-*and* being able to detect problems if you know something *must* be
-patching a module but you don't know what.
+Two things stuck. The first is a healthy paranoia: once I went looking, I found several installed libraries doing the same `except A, B:` thing, each one quietly capable of overriding an exception type at the worst possible moment. The second is the technique itself, which has earned its keep many times since. When you are certain *something* is patching a module but you cannot find what, do not keep grepping. Replace the module with a `Protected` proxy that refuses to be written to, run the program, and let the monkeypatch raise its own hand.
