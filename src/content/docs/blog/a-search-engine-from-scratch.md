@@ -6,7 +6,7 @@ excerpt: "Dubalu needed search, so I wrote one in C++. Xapiand is not a new inve
 date: 2026-06-08
 draft: true
 series: "Opening Boxes"
-seriesOrder: 4
+seriesOrder: 5
 tags:
   - opening-boxes
   - distributed-systems

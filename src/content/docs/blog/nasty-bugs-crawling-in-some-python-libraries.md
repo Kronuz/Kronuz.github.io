@@ -7,7 +7,7 @@ date: 2016-03-08
 draft: true
 authors: kronuz
 series: "Opening Boxes"
-seriesOrder: 5
+seriesOrder: 6
 tags:
   - opening-boxes
   - python

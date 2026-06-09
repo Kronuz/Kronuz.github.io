@@ -6,7 +6,7 @@ excerpt: "I tried to give lazy imports to all of Python. The Steering Council sa
 date: 2026-06-08
 draft: true
 series: "Opening Boxes"
-seriesOrder: 7
+seriesOrder: 8
 tags:
   - opening-boxes
   - python

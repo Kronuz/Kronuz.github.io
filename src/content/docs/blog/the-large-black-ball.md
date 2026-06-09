@@ -6,7 +6,7 @@ excerpt: "Instagram Server loaded 28,000 modules just to start, and its dependen
 date: 2026-06-08
 draft: true
 series: "Opening Boxes"
-seriesOrder: 6
+seriesOrder: 7
 tags:
   - opening-boxes
   - python
