@@ -397,25 +397,42 @@ transition: color 0.15s ease;
 	display: block;
 }
 .snippet-copy { position: relative; }
+/* "Copied!" bubble, matching Expressive Code's success tooltip look. */
 .snippet-copy::after {
 	content: "Copied!";
 	position: absolute;
-	top: calc(100% + 0.45rem);
+	top: calc(100% + 0.5rem);
 	left: 50%;
-	transform: translateX(-50%) translateY(-0.2rem);
-	z-index: 2;
-	padding: 0.12rem 0.5rem;
-	border-radius: 0.35rem;
-	background: var(--sl-color-accent);
-	color: var(--sl-color-white);
-	font-size: 0.7rem;
+	transform: translateX(-50%) translateY(-0.25rem);
+	z-index: 99;
+	padding: 0.125rem 0.75rem;
+	border-radius: 0.2rem;
+	background-color: #008900;
+	color: #fff;
+	font-size: 0.72rem;
 	line-height: 1.5;
 	white-space: nowrap;
 	opacity: 0;
 	pointer-events: none;
-	transition: opacity 0.15s ease, transform 0.15s ease;
+	transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
+.snippet-copy::before {
+	content: "";
+	position: absolute;
+	top: calc(100% + 0.16rem);
+	left: 50%;
+	transform: translateX(-50%);
+	border: 0.35rem solid transparent;
+	border-bottom-color: #008900;
+	z-index: 99;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.2s ease-in-out;
+}
+[data-theme='dark'] .snippet-copy::after { background-color: #098656; }
+[data-theme='dark'] .snippet-copy::before { border-bottom-color: #098656; }
 .snippet-copy.is-copied::after {
 	opacity: 1;
 	transform: translateX(-50%) translateY(0);
 }
+.snippet-copy.is-copied::before { opacity: 1; }
