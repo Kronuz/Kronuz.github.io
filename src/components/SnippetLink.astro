@@ -1,0 +1,80 @@
+---
+/**
+ * <SnippetLink file="statusline.sh">label</SnippetLink>
+ *
+ * An inline prose link to a source file. Clicking it opens a modal (native
+ * <dialog>) with the syntax-highlighted code and a Raw link; with JS disabled
+ * it falls back to the raw file. Link text defaults to the filename; override
+ * with children. Shares highlighting with <Snippet> and the ```snippet fence.
+ */
+import { readSnippet, langForFile, highlight } from "../lib/renderSnippet.mjs";
+
+const { file } = Astro.props;
+const code = readSnippet(file);
+const lang = langForFile(file);
+const pre = await highlight(code, lang);
+const rawHref = `/snippets/${file}`;
+const id = `snip-${file.replace(/[^a-z0-9]+/gi, "-")}-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<a class="snippet-link" href={rawHref} data-snippet-open={id} data-lang={lang}>
+  <svg
+    aria-hidden="true"
+    class="snippet-link-icon"
+    viewBox="0 0 24 24"
+    width="1em"
+    height="1em"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M8 6 2 12l6 6" />
+    <path d="M16 6l6 6-6 6" />
+  </svg><slot>{file}</slot>
+</a>
+
+<dialog id={id} class="snippet-dialog" aria-label={`Source: ${file}`}>
+  <figure class="snippet snippet--modal" data-lang={lang}>
+    <figcaption class="snippet-bar">
+      <span class="snippet-title">{file}</span>
+      <span class="snippet-actions">
+        <a class="snippet-btn" href={rawHref} target="_blank" rel="noopener">Raw</a>
+        <button class="snippet-btn snippet-close" type="button" data-snippet-close aria-label="Close">
+          Close
+        </button>
+      </span>
+    </figcaption>
+    <div class="snippet-code" set:html={pre} />
+  </figure>
+</dialog>
+
+<script>
+  // Delegated once for the whole page (Astro dedupes this module).
+  document.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement;
+
+    const opener = target.closest<HTMLAnchorElement>("[data-snippet-open]");
+    if (opener) {
+      const dialog = document.getElementById(
+        opener.getAttribute("data-snippet-open")!,
+      ) as HTMLDialogElement | null;
+      if (dialog && typeof dialog.showModal === "function") {
+        event.preventDefault();
+        dialog.showModal();
+      }
+      return;
+    }
+
+    if (target.closest("[data-snippet-close]")) {
+      target.closest("dialog")?.close();
+      return;
+    }
+
+    // Click on the backdrop (the dialog element itself) closes it.
+    if (target instanceof HTMLDialogElement && target.classList.contains("snippet-dialog")) {
+      target.close();
+    }
+  });
+</script>

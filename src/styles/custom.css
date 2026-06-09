@@ -324,3 +324,49 @@ transition: color 0.15s ease;
 [data-theme='dark'] .snippet .shiki,
 [data-theme='dark'] .snippet .shiki span { color: var(--shiki-dark); }
 [data-theme='dark'] .snippet .shiki { background-color: var(--shiki-dark-bg) !important; }
+
+/* Inline source link (<SnippetLink>) and its modal. */
+.snippet-link {
+	font-family: var(--sl-font-mono, ui-monospace, monospace);
+	font-size: 0.9em;
+	white-space: nowrap;
+}
+.snippet-link-icon {
+	vertical-align: -0.15em;
+	margin-right: 0.2em;
+	opacity: 0.75;
+}
+.snippet-dialog {
+	width: min(900px, 92vw);
+	max-height: 85vh;
+	padding: 0;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.6rem;
+	background: var(--sl-color-bg);
+	color: var(--sl-color-text);
+	overflow: hidden;
+}
+.snippet-dialog::backdrop {
+	background: rgba(0, 0, 0, 0.6);
+}
+.snippet-dialog .snippet {
+	margin: 0;
+	border: 0;
+	border-radius: 0;
+	max-height: 85vh;
+	display: flex;
+	flex-direction: column;
+}
+.snippet-dialog .snippet-bar {
+	position: sticky;
+	top: 0;
+}
+.snippet-dialog .snippet-code {
+	flex: 1;
+	overflow: auto;
+}
+.snippet-close {
+	cursor: pointer;
+	background: none;
+	font: inherit;
+}
