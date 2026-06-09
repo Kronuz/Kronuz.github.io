@@ -2,10 +2,12 @@
 /**
  * <SnippetLink file="statusline.sh">label</SnippetLink>
  *
- * An inline prose link to a source file. Clicking it opens a modal (native
- * <dialog>) with the syntax-highlighted code and a Raw link; with JS disabled
- * it falls back to the raw file. Link text defaults to the filename; override
- * with children. Shares highlighting with <Snippet> and the ```snippet fence.
+ * An inline prose link to a source file. Clicking it opens a centered modal
+ * (native <dialog>) with the highlighted code plus Copy / Raw / Close. The
+ * dialog markup lives in an inert <template> (valid inline, renders nothing, so
+ * it does not break the surrounding paragraph) and is cloned to <body> on click
+ * — that keeps the link truly inline and lets showModal() center it. With JS
+ * off, the link falls back to the raw file. Shares highlighting with <Snippet>.
  */
 import { readSnippet, langForFile, highlight } from "../lib/renderSnippet.mjs";
 
@@ -17,52 +19,41 @@ const rawHref = `/snippets/${file}`;
 const id = `snip-${file.replace(/[^a-z0-9]+/gi, "-")}-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
-<a class="snippet-link" href={rawHref} data-snippet-open={id} data-lang={lang}>
-  <svg
-    aria-hidden="true"
-    class="snippet-link-icon"
-    viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <path d="M8 6 2 12l6 6" />
-    <path d="M16 6l6 6-6 6" />
-  </svg><slot>{file}</slot>
-</a>
-
-<dialog id={id} class="snippet-dialog" aria-label={`Source: ${file}`}>
-  <figure class="snippet snippet--modal" data-lang={lang}>
-    <figcaption class="snippet-bar">
-      <span class="snippet-title">{file}</span>
-      <span class="snippet-actions">
-        <a class="snippet-btn" href={rawHref} target="_blank" rel="noopener">Raw</a>
-        <button class="snippet-btn snippet-close" type="button" data-snippet-close aria-label="Close">
-          Close
-        </button>
-      </span>
-    </figcaption>
-    <div class="snippet-code" set:html={pre} />
-  </figure>
-</dialog>
+<a class="snippet-link" href={rawHref} data-snippet-open={id}><svg aria-hidden="true" class="snippet-link-icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6 2 12l6 6"></path><path d="M16 6l6 6-6 6"></path></svg><slot>{file}</slot></a><template data-snippet-tpl={id}><dialog class="snippet-dialog" aria-label={`Source: ${file}`}><figure class="snippet snippet--modal" data-lang={lang}><figcaption class="snippet-bar"><span class="snippet-title">{file}</span><span class="snippet-actions"><button class="snippet-btn snippet-copy" type="button" data-snippet-copy>Copy</button><a class="snippet-btn" href={rawHref} target="_blank" rel="noopener">Raw</a><button class="snippet-btn snippet-close" type="button" data-snippet-close aria-label="Close">Close</button></span></figcaption><div class="snippet-code" set:html={pre} /></figure></dialog></template>
 
 <script>
-  // Delegated once for the whole page (Astro dedupes this module).
+  // One delegated handler for every snippet link/modal on the page.
   document.addEventListener("click", (event) => {
     const target = event.target as HTMLElement;
 
-    const opener = target.closest<HTMLAnchorElement>("[data-snippet-open]");
+    // Open: clone the template's dialog into <body>, then showModal() (centers it).
+    const opener = target.closest<HTMLElement>("[data-snippet-open]");
     if (opener) {
-      const dialog = document.getElementById(
-        opener.getAttribute("data-snippet-open")!,
-      ) as HTMLDialogElement | null;
-      if (dialog && typeof dialog.showModal === "function") {
+      const tpl = document.querySelector<HTMLTemplateElement>(
+        `template[data-snippet-tpl="${opener.getAttribute("data-snippet-open")}"]`,
+      );
+      const node = tpl?.content.firstElementChild?.cloneNode(true);
+      if (node instanceof HTMLDialogElement && typeof node.showModal === "function") {
         event.preventDefault();
-        dialog.showModal();
+        document.body.appendChild(node);
+        node.addEventListener("close", () => node.remove());
+        node.showModal();
+      }
+      return;
+    }
+
+    // Copy: the highlighted <pre>'s textContent is the original source.
+    const copyBtn = target.closest<HTMLButtonElement>("[data-snippet-copy]");
+    if (copyBtn) {
+      const pre = copyBtn.closest(".snippet")?.querySelector(".snippet-code pre");
+      if (pre && navigator.clipboard) {
+        navigator.clipboard.writeText(pre.textContent ?? "").then(() => {
+          const previous = copyBtn.textContent;
+          copyBtn.textContent = "Copied";
+          window.setTimeout(() => {
+            copyBtn.textContent = previous;
+          }, 1500);
+        });
       }
       return;
     }
