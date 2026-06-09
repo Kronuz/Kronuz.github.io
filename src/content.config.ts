@@ -16,6 +16,10 @@ export const collections = {
 						// GitHub Discussion number backing this post's comments
 						// (link-out). Stamped when the post is published.
 						discussion: z.number().optional(),
+						// Name of the article series this post belongs to (e.g.
+						// "Opening Boxes"), and its position within that series.
+						series: z.string().optional(),
+						seriesOrder: z.number().optional(),
 					}),
 				),
 		}),
