@@ -142,6 +142,15 @@ max-width: 100%;
 margin-inline: auto;
 }
 
+/* Blockquotes read as quoted voice: italic prose, but keep inline code upright
+   so monospace doesn't slant. */
+.sl-markdown-content blockquote {
+font-style: italic;
+}
+.sl-markdown-content blockquote code {
+font-style: normal;
+}
+
 /* Landing REPL hero. The splash <h1> holds a small Python REPL (set:html);
    kronuz.whoami() "answers" with a typed, rotating line that ends on the warm
    Kronuz caret. Colors track the editor theme (keyword orange, string green,
