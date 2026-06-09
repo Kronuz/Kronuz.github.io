@@ -49,12 +49,12 @@ The first is a **source-line cache**: a copy of the previous frame's source pixe
 ```d2 alt="The patched render path: a previous-frame cache feeds a chunked diff that produces a BlockMap of changed spans and a changed Rect; the scaler runs only on changed spans, and only the Rect is uploaded"
 direction: down
 emu: "Emulated VGA frame"
-cache: "Previous-frame\nsource cache" { style.stroke-dash: 3 }
-keeper: "CacheKeeper\nchunked diff" { style.bold: true }
-bm: "BlockMap\n(changed spans)"
-rect: "Changed Rect\n(bounding box)"
-scaler: "Scaler kernel\n(changed spans only)" { style.bold: true }
-out: "SDL / OpenGL\n(upload Rect only)"
+cache: "Previous-frame source cache" { style.stroke-dash: 3 }
+keeper: "CacheKeeper (chunked diff)" { style.bold: true }
+bm: "BlockMap (changed spans)"
+rect: "Changed Rect (bounding box)"
+scaler: "Scaler kernel: changed spans only" { style.bold: true }
+out: "SDL / OpenGL: upload Rect only"
 emu -> keeper
 cache -> keeper: "compare"
 keeper -> bm
