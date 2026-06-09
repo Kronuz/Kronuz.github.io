@@ -8,7 +8,7 @@
  * the /snippets/view full page all match. Either pass `file=` (read from
  * public/snippets/, also gets Open + Raw buttons) or inline `code=`.
  */
-import { readSnippet, langForFile, highlight } from "../lib/renderSnippet.mjs";
+import { readSnippet, langForFile, highlight, rawHref } from "../lib/renderSnippet.mjs";
 
 const { file, title, lang: langProp, collapse = false, code: inlineCode } = Astro.props;
 
@@ -16,7 +16,7 @@ const code = inlineCode !== undefined ? inlineCode : readSnippet(file);
 const lang = langForFile(file || "", langProp);
 const pre = await highlight(code, lang);
 const lineCount = code.split("\n").length;
-const rawHref = file ? `/snippets/${file}` : null;
+const raw = file ? rawHref(file) : null;
 const viewHref = file ? `/snippets/view/${file}/` : null;
 const displayTitle = title || file || lang;
 ---
@@ -26,7 +26,7 @@ const displayTitle = title || file || lang;
     <span class="snippet-title">{displayTitle}</span>
     <span class="snippet-actions">
       {viewHref && <a class="snippet-btn" href={viewHref}>Open</a>}
-      {rawHref && <a class="snippet-btn" href={rawHref} target="_blank" rel="noopener">Raw</a>}
+      {raw && <a class="snippet-btn" href={raw} target="_blank" rel="noopener">Raw</a>}
     </span>
   </figcaption>
   {

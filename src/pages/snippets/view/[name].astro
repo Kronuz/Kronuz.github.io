@@ -7,26 +7,17 @@
  * Raw link. The ```snippet fences in posts link here via their "Open" button.
  * (Route segment is [name] to avoid clashing with Astro's internal $$file.)
  */
-import { readdirSync } from "node:fs";
-import path from "node:path";
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
-import { readSnippet, langForFile, highlight } from "../../../lib/renderSnippet.mjs";
+import { listSnippets, readSnippet, langForFile, highlight, rawHref } from "../../../lib/renderSnippet.mjs";
 
 export function getStaticPaths() {
-  const dir = path.resolve("public/snippets");
-  let files = [];
-  try {
-    files = readdirSync(dir).filter((f) => !f.startsWith("."));
-  } catch {
-    files = [];
-  }
-  return files.map((file) => ({ params: { name: file }, props: { file } }));
+  return listSnippets().map((file) => ({ params: { name: file }, props: { file } }));
 }
 
 const { file } = Astro.props;
 const lang = langForFile(file);
 const pre = await highlight(readSnippet(file), lang);
-const raw = `/snippets/${file}`;
+const raw = rawHref(file);
 ---
 
 <StarlightPage frontmatter={{ title: file, tableOfContents: false }}>

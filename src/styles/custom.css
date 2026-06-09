@@ -396,3 +396,25 @@ transition: color 0.15s ease;
 	height: 1.05em;
 	display: block;
 }
+.snippet-copy { position: relative; }
+.snippet-copy::after {
+	content: "Copied!";
+	position: absolute;
+	bottom: calc(100% + 0.45rem);
+	left: 50%;
+	transform: translateX(-50%) translateY(0.2rem);
+	padding: 0.12rem 0.5rem;
+	border-radius: 0.35rem;
+	background: var(--sl-color-accent);
+	color: var(--sl-color-white);
+	font-size: 0.7rem;
+	line-height: 1.5;
+	white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.snippet-copy.is-copied::after {
+	opacity: 1;
+	transform: translateX(-50%) translateY(0);
+}

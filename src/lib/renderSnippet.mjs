@@ -7,7 +7,7 @@
  * matches the rest of the site and follows the light/dark toggle. See custom.css
  * for the `.snippet .shiki` rules that pick the right variable per `data-theme`.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { createHighlighter } from "shiki";
 import lightTheme from "../styles/kronuz-light.json";
@@ -43,10 +43,27 @@ export function langForFile(file, explicit) {
   return EXT_LANG[ext] || "text";
 }
 
-/** Read a snippet file from public/snippets, trimming a single trailing newline. */
+// Snippet source files live here (NOT in public/), so the only public raw URL is
+// the charset-correct /snippets/raw/<file>.txt endpoint below.
+const SNIPPETS_DIR = path.resolve("src/snippets");
+
+/** List snippet filenames (skipping dotfiles). */
+export function listSnippets() {
+  try {
+    return readdirSync(SNIPPETS_DIR).filter((f) => !f.startsWith("."));
+  } catch {
+    return [];
+  }
+}
+
+/** Read a snippet file, trimming a single trailing newline. */
 export function readSnippet(file) {
-  const full = path.resolve("public/snippets", file);
-  return readFileSync(full, "utf8").replace(/\n$/, "");
+  return readFileSync(path.join(SNIPPETS_DIR, file), "utf8").replace(/\n$/, "");
+}
+
+/** Public URL for a snippet's raw text (served as text/plain; charset=utf-8). */
+export function rawHref(file) {
+  return `/snippets/raw/${file}.txt`;
 }
 
 /** Highlight code to dual-theme Shiki HTML (a <pre class="shiki ...">). */

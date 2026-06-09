@@ -15,7 +15,7 @@
  * Rendering is shared with the full-page route via ../lib/renderSnippet.mjs.
  */
 import { visit } from "unist-util-visit";
-import { snippetFigure, langForFile, readSnippet } from "../lib/renderSnippet.mjs";
+import { snippetFigure, langForFile, readSnippet, rawHref } from "../lib/renderSnippet.mjs";
 
 function parseMeta(meta) {
   const out = {};
@@ -42,7 +42,7 @@ export default function remarkSnippet() {
           code: readSnippet(meta.file),
           lang: langForFile(meta.file, meta.lang),
           title: meta.title || meta.file,
-          rawHref: `/snippets/${meta.file}`,
+          rawHref: rawHref(meta.file),
           viewHref: `/snippets/view/${meta.file}/`,
           collapse: !!meta.collapse,
         };
