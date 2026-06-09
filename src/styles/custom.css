@@ -400,9 +400,10 @@ transition: color 0.15s ease;
 .snippet-copy::after {
 	content: "Copied!";
 	position: absolute;
-	bottom: calc(100% + 0.45rem);
+	top: calc(100% + 0.45rem);
 	left: 50%;
-	transform: translateX(-50%) translateY(0.2rem);
+	transform: translateX(-50%) translateY(-0.2rem);
+	z-index: 2;
 	padding: 0.12rem 0.5rem;
 	border-radius: 0.35rem;
 	background: var(--sl-color-accent);
