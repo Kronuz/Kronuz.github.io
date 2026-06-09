@@ -290,11 +290,15 @@ transition: color 0.15s ease;
 	padding: 0.05rem 0.5rem;
 	border: 1px solid var(--sl-color-gray-5);
 	border-radius: 0.3rem;
+	background: transparent;
 	color: var(--sl-color-text-accent);
+	font: inherit;
 	font-size: 0.75rem;
+	cursor: pointer;
 	white-space: nowrap;
 }
 .snippet-btn:hover { background: var(--sl-color-gray-5); }
+.snippet-btn:focus:not(:focus-visible) { outline: none; }
 .snippet-details > summary {
 	cursor: pointer;
 	padding: 0.4rem 0.6rem;
@@ -380,11 +384,6 @@ transition: color 0.15s ease;
 .snippet-dialog .snippet-code {
 	flex: 1;
 	overflow: auto;
-}
-.snippet-close {
-	cursor: pointer;
-	background: none;
-	font: inherit;
 }
 .snippet-icon-btn {
 	display: inline-flex;
