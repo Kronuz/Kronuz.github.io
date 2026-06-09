@@ -1,6 +1,6 @@
 ---
 title: "Goodbye, Dr. Jekyll"
-subtitle: "Three lives of a blog, the monsters between them, and one comfortable old villain."
+subtitle: "Three lives of a blog, and one comfortable old villain."
 description: "The full origin story of this blog: a Pelican site in 2015, a Jekyll site in 2018, eight years of silence, and a 2026 rebuild in Astro. The friction that killed the first two, the monsters in the third, and the respectable old static-site generator who kept whispering that I should just come back."
 excerpt: "This blog has died twice. Pelican in 2015, Jekyll in 2018, then eight years of cobwebs. This is the story of its third life: the friction that killed the first two, the monsters in the rebuild, and the comfortable old villain who kept whispering I should come back to him."
 date: 2026-06-07

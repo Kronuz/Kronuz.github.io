@@ -1,6 +1,6 @@
 ---
 title: "Twice to the Steering Council"
-subtitle: "How lazy imports got rejected as PEP 690, came back as PEP 810, and ended up in the Python grammar without the part of the implementation I was proudest of."
+subtitle: "Rejected as PEP 690, accepted as PEP 810."
 description: "The standardization story behind lazy imports: PEP 690 proposed a global switch and was rejected by the Python Steering Council in 2022; PEP 810 proposed an explicit `lazy import` keyword and was accepted in 2025 for Python 3.15. Why the second attempt deliberately threw away the dict-internals trick."
 excerpt: "I tried to give lazy imports to all of Python. The Steering Council said no, for a good reason. So we did it again, properly: explicit, opt-in, and pointedly not touching the dictionary internals I had been so proud of. The second time, they said yes."
 date: 2026-06-08

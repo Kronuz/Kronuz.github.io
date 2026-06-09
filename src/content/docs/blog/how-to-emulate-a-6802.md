@@ -1,6 +1,6 @@
 ---
 title: "How to Emulate a 6802"
-subtitle: "I wrote a Motorola 6802 emulator in C as a student. It taught computer architecture to a thousand people. The source did not survive, so here is how it worked."
+subtitle: "A CPU emulator I wrote as a student, reconstructed from memory."
 description: "A reconstruction of Emu6802, a Motorola 6802 microprocessor emulator I wrote in C with Watcom and a DOS extender: a full 64K address space, memory-mapped ports redirected to LPT1, a built-in assembler, and single-step tracing. It became courseware at ITM for over a thousand students. The source is lost; this is the design, honestly reconstructed."
 excerpt: "As a student I wrote an emulator for the Motorola 6802 in C, with a built-in assembler and single-step tracing. The school adopted it to teach computer architecture to more than a thousand students. The source code did not survive, so this is how it worked, reconstructed."
 date: 2026-06-08

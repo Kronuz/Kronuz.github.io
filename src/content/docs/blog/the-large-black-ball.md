@@ -1,6 +1,6 @@
 ---
 title: "The Large, Black Ball"
-subtitle: "How I taught Python to be lazy, by moving the work into the one place you must never slow down."
+subtitle: "Making Python lazy, in the most dangerous part of the language."
 description: "The deep version of the Cinder Lazy Imports story: why Instagram Server's import graph was a solid black ball, how deferred objects defer module loading until first use, and why the mechanism had to live inside the dictionary internals. With the real numbers."
 excerpt: "Instagram Server loaded 28,000 modules just to start, and its dependency graph rendered as a solid black ball. The fix was to make Python lazy: import a thing only when you reach for it. Doing that safely meant going into the most dangerous part of the language."
 date: 2026-06-08

@@ -1,6 +1,6 @@
 ---
 title: "The Forbidden Layer"
-subtitle: "Before I ever wrote code I was paid for, I learned to read the layer of the machine you are not supposed to touch. Here is what it taught me, and what I am leaving out."
+subtitle: "Learning to read the machine you're told not to touch."
 description: "An honest, deliberately non-specific account of learning reverse engineering as a teenager in the 1990s: reading disassembly, the Ralf Brown Interrupt List, self-modifying and polymorphic code, and the run-disassemble-hypothesize-test loop that is the root of every technical thing I have done since. No targets, no how-to-do-harm."
 excerpt: "As a teenager I fell in love with the layer of the machine you are not supposed to touch: disassembly, interrupt lists, self-modifying code. This is the honest version, the method and the fascination, with the specific projects left where they belong, in the past."
 date: 2026-06-08

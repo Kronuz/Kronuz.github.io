@@ -1,6 +1,6 @@
 ---
 title: "Catching a Monkeypatch"
-subtitle: "For weeks, requests.get() kept catching an exception that made no sense. The library was innocent. The culprit was one comma in a Python 2 except clause."
+subtitle: "One comma in an except clause, and weeks of confusion."
 description: "A months-long bug hunt: requests.get() kept catching a KeyError where an Empty should have been. The fix was to replace a module in sys.modules with a write-protected proxy that raised the moment something tried to patch it, exposing a Python 2 except-syntax trap."
 excerpt: "For weeks, requests.get() kept catching an exception nobody could explain, and the library was innocent. This is the hunt: replacing a module in sys.modules with a proxy that screams when something patches it, and the one-comma Python 2 bug it caught."
 date: 2016-03-08

@@ -1,6 +1,6 @@
 ---
 title: "A Search Engine from Scratch"
-subtitle: "Xapiand: building a distributed, RESTful search and storage engine in C++, on top of Xapian."
+subtitle: "A distributed search engine in C++, built on Xapian."
 description: "A tour of Xapiand's real internals: a libev async core, Raft for cluster and shard-primary election, a Haystack-style LZ4 log store, and HTM geospatial indexing. With links to the actual code."
 excerpt: "Dubalu needed search, so I wrote one in C++. Xapiand is not a new inverted index, it is the distributed, RESTful, storage-backed daemon I wrapped around Xapian: Raft consensus, a log-structured store, and a triangular mesh for the whole planet. Here is how it really fits together."
 date: 2026-06-08

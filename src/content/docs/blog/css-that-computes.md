@@ -1,6 +1,6 @@
 ---
 title: "CSS That Computes"
-subtitle: "pyScss: building a Sass compiler in Python, where colors do arithmetic and 10px times 2 knows it is still pixels."
+subtitle: "Building a Sass compiler in Python."
 description: "A code-verified look at pyScss, the Sass compiler I wrote in Python: how Sass is really a small typed expression language, how Number carries units and cancels them like dimensional analysis, how Color does channel math, and why the scanner had to be rewritten in C. With links to the real source."
 excerpt: "Sass looks like CSS with variables, but it is really a small typed programming language: colors that add, numbers that carry units and cancel them. I rebuilt about 95% of it in Python. Here is how the compiler actually works, from the C scanner to the color math."
 date: 2026-06-08

@@ -1,6 +1,6 @@
 ---
 title: "Redraw Only What Changed"
-subtitle: "How a teenager made DOSBox's scalers up to 9,500% faster, and what the patch actually did."
+subtitle: "Making DOSBox's scalers up to 9,500% faster."
 description: "A deep look at my 2005 DOSBox scaler patch: a previous-frame source cache, chunked dirty-region detection, and scalers that only re-run on the pixels that moved. With the real code, the numbers, and what happened to it."
 excerpt: "DOSBox's scalers redrew the entire screen every single frame, even when almost nothing had changed. So I taught them to notice. This is how the patch actually worked, a source-line cache and a chunked dirty map, and the up-to-9,500% it bought."
 date: 2026-06-08
