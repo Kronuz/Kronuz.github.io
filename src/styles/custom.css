@@ -397,6 +397,3 @@ transition: color 0.15s ease;
 	height: 1.05em;
 	display: block;
 }
-.snippet-i-check { display: none; }
-.snippet-copy.is-copied .snippet-i-copy { display: none; }
-.snippet-copy.is-copied .snippet-i-check { display: block; color: #3fb950; }
