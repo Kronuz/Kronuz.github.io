@@ -30,10 +30,10 @@ So I taught the scalers to notice.
 DOSBox's render pipeline was simple and wasteful. Every frame, the whole emulated framebuffer went through the scaler kernel and the whole result was handed to SDL (or OpenGL) to put on screen.
 
 ```d2 alt="The original DOSBox render path: the whole frame is rescaled and uploaded every frame"
-direction: right
-emu: "Emulated VGA\nframebuffer\n(this frame)"
-scaler: "Scaler kernel\n(whole frame,\nevery frame)"
-out: "SDL / OpenGL\n(upload whole frame)"
+direction: down
+emu: "Emulated VGA framebuffer"
+scaler: "Scaler kernel (whole frame, every frame)"
+out: "SDL / OpenGL (upload whole frame)"
 emu -> scaler: "every pixel"
 scaler -> out: "every pixel"
 ```
@@ -47,13 +47,13 @@ What I wanted was for the scaler to remember the previous frame's *input*, compa
 The first is a **source-line cache**: a copy of the previous frame's source pixels, kept per line. The second is, for each line, a small list of the spans that actually changed, which I called the **BlockMap**. From the BlockMap I also kept a bounding box of the whole changed area, a `Rect`, to hand to the display layer so it would only upload the part of the screen that moved.
 
 ```d2 alt="The patched render path: a previous-frame cache feeds a chunked diff that produces a BlockMap of changed spans and a changed Rect; the scaler runs only on changed spans, and only the Rect is uploaded"
-direction: right
-emu: "Emulated VGA\nframe (this frame)"
+direction: down
+emu: "Emulated VGA frame"
 cache: "Previous-frame\nsource cache" { style.stroke-dash: 3 }
 keeper: "CacheKeeper\nchunked diff" { style.bold: true }
-bm: "BlockMap\n(changed spans\nper line)"
-scaler: "Scaler kernel\n(changed spans only)" { style.bold: true }
+bm: "BlockMap\n(changed spans)"
 rect: "Changed Rect\n(bounding box)"
+scaler: "Scaler kernel\n(changed spans only)" { style.bold: true }
 out: "SDL / OpenGL\n(upload Rect only)"
 emu -> keeper
 cache -> keeper: "compare"
@@ -137,20 +137,28 @@ if (*((Bit32u*)&cache[xx]) != *((Bit32u*)&src[xx]) ||
 
 The neighborhood scalers needed one more thing. Hq2x looks at a 3x3 grid, so to scale line *N* correctly the kernel needs lines *N-1*, *N*, and *N+1*. I keep three cached lines (`Cache_p1`, `Cache_p2`, `Cache_p3`) and the kernel reads its nine neighbors (`CA` through `CI`) from them, so a chunk is only re-scaled when its 3x3 neighborhood actually moved, not just its own row.
 
+## What it bought, and how to read the numbers
+
+The optimization is not really about scalers. It is about touching less of the screen: the copy, the scaling, and the upload to the GPU. The scalers are just where it shows up most violently, because their per-pixel kernel is the most expensive thing in the pipeline. The same change helps even the cheapest path: the plain `Normal` scaler, which is essentially a `memcpy`, **nearly doubled.**
+
+Here are the version-4 numbers on platform games (units are ms per ~5,000 frames, lower is better), with the speedup written as a plain ratio so there is no ambiguity:
+
+| Scaler     | Before | After | Speedup | "Percent faster" |
+| ---------- | -----: | ----: | ------: | ---------------: |
+| Normal     |  127.3 |    67 |  1.9×   |  +90%   |
+| Normal2x   |    356 |    69 |  5.2×   |  +416%  |
+| TV2x       |  413.5 |    71 |  5.8×   |  +482%  |
+| AdvMame2x  |  825.5 |    72 | 11.5×   | +1,047% |
+| AdvMame3x  |   1665 |    77 | 21.6×   | +2,062% |
+| **Hq2x**   | **10,480** | **109** | **96×** | **+9,515%** |
+
+A word on that math, because it is genuinely easy to trip on (I did, at the time). The "percent faster" column is `(before − after) / after`, which is just `speedup − 1` written as a percentage: 1.9× is "+90% faster." That is correct, but do not read "+90%" as "90% less time." The time *reduction* is `(before − after) / before`, which for `Normal` is 47%. Same fact, two framings: the new `Normal` is **1.9× as fast**, equivalently it runs the frame in **~53% of the time**. The ratio (×) is the least confusing, so that is what I lead with now.
+
+And there is the real insight, sitting in that very first row. The changed-region scan costs a roughly **fixed** amount per frame, no matter which scaler runs. So the payoff is proportional to how expensive the per-pixel work you get to *skip* is. For `Normal` (a copy) the scan overhead eats into the gain and you net about 2×. For `Hq2x` (a lookup over a 3x3 neighborhood, the priciest kernel) skipping the unchanged ~95% of the screen is the gap between 10,480 and 109, about **96×**. Cheapen the per-pixel work and this optimization matters less; make it more expensive and it matters enormously. The flashy 9,515% is real, but the quiet `+90%` on a plain copy is the one that tells you what is actually going on.
+
 ## Getting it right took eleven tries
 
-The first numbers were almost comical, and they are the ones people remember. Comparing the stock scalers to version 4 of the patch on platform games (units are ms per ~5,000 frames):
-
-| Scaler     | Before  | After | Improvement |
-| ---------- | ------: | ----: | ----------: |
-| Normal     |   127.3 |    67 |       +90%  |
-| Normal2x   |     356 |    69 |      +416%  |
-| AdvMame2x  |   825.5 |    72 |     +1,047% |
-| AdvMame3x  |    1665 |    77 |     +2,062% |
-| TV2x       |   413.5 |    71 |      +482%  |
-| **Hq2x**   | **10,480** | **109** | **+9,515%** |
-
-But "version 4" tells you it was not one clever idea, it was a grind. The [thread](https://www.vogons.org/viewtopic.php?t=10594) is a changelog of me arguing with the problem:
+That clean "version 4" hides a grind. The [thread](https://www.vogons.org/viewtopic.php?t=10594) is a running changelog of me arguing with the problem:
 
 - **v2** "greatly improves the speed" (the cache lands).
 - **v3** fixes artifacts and improves speed.
