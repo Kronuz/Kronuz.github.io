@@ -354,6 +354,22 @@ transition: color 0.15s ease;
 	font-family: var(--sl-font-mono, ui-monospace, monospace);
 	font-size: 0.9em;
 	white-space: nowrap;
+	--snippet-link-icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M10%209.5%208%2012l2%202.5'/%3E%3Cpath%20d='m14%209.5%202%202.5-2%202.5'/%3E%3Crect%20width='18'%20height='18'%20x='3'%20y='3'%20rx='2'/%3E%3C/svg%3E");
+}
+/* Affordance: a "code in a box" glyph hinting the link opens the source in a modal.
+   A CSS mask (not an <svg> element), so Starlight's content rule that forces
+   svg { display: block } can't break the inline flow. */
+.snippet-link::after {
+	content: "";
+	display: inline-block;
+	width: 0.9em;
+	height: 0.9em;
+	margin-left: 0.25em;
+	vertical-align: -0.12em;
+	background-color: currentColor;
+	opacity: 0.6;
+	-webkit-mask: var(--snippet-link-icon) no-repeat center / contain;
+	mask: var(--snippet-link-icon) no-repeat center / contain;
 }
 .snippet-dialog {
 	width: min(900px, 92vw);
