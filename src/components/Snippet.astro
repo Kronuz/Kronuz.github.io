@@ -1,0 +1,42 @@
+---
+/**
+ * <Snippet file="statusline.sh" title="statusline.sh" collapse />
+ *
+ * Source-code viewer for use in .mdx posts (real Astro elements, so it is
+ * robust where a raw-HTML fence is not). Shares rendering with the ```snippet
+ * remark fence via ../lib/renderSnippet.mjs, so the markup, classes, CSS, and
+ * the /snippets/view full page all match. Either pass `file=` (read from
+ * public/snippets/, also gets Open + Raw buttons) or inline `code=`.
+ */
+import { readSnippet, langForFile, highlight } from "../lib/renderSnippet.mjs";
+
+const { file, title, lang: langProp, collapse = false, code: inlineCode } = Astro.props;
+
+const code = inlineCode !== undefined ? inlineCode : readSnippet(file);
+const lang = langForFile(file || "", langProp);
+const pre = await highlight(code, lang);
+const lineCount = code.split("\n").length;
+const rawHref = file ? `/snippets/${file}` : null;
+const viewHref = file ? `/snippets/view/${file}/` : null;
+const displayTitle = title || file || lang;
+---
+
+<figure class="snippet" data-lang={lang}>
+  <figcaption class="snippet-bar">
+    <span class="snippet-title">{displayTitle}</span>
+    <span class="snippet-actions">
+      {viewHref && <a class="snippet-btn" href={viewHref}>Open</a>}
+      {rawHref && <a class="snippet-btn" href={rawHref} target="_blank" rel="noopener">Raw</a>}
+    </span>
+  </figcaption>
+  {
+    collapse ? (
+      <details class="snippet-details">
+        <summary>Show {lineCount} lines</summary>
+        <div class="snippet-code" set:html={pre} />
+      </details>
+    ) : (
+      <div class="snippet-code" set:html={pre} />
+    )
+  }
+</figure>
