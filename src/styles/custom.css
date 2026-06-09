@@ -386,3 +386,17 @@ transition: color 0.15s ease;
 	background: none;
 	font: inherit;
 }
+.snippet-icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.15rem 0.35rem;
+}
+.snippet-icon-btn .snippet-i {
+	width: 1.05em;
+	height: 1.05em;
+	display: block;
+}
+.snippet-i-check { display: none; }
+.snippet-copy.is-copied .snippet-i-copy { display: none; }
+.snippet-copy.is-copied .snippet-i-check { display: block; color: #3fb950; }
