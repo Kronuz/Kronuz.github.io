@@ -262,3 +262,65 @@ transition: color 0.15s ease;
 }
 .kz-social-link:hover { color: var(--sl-color-white); }
 .kz-social-link svg { width: 1.25rem; height: 1.25rem; }
+
+/* Source-code snippet viewer (```snippet fences + /snippets/view/<file>/). */
+.snippet {
+	margin: 1.25rem 0;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.5rem;
+	overflow: hidden;
+}
+.snippet-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 0.35rem 0.6rem;
+	background: var(--sl-color-gray-6);
+	border-bottom: 1px solid var(--sl-color-gray-5);
+	font-size: 0.8rem;
+}
+.snippet-title {
+	font-family: var(--sl-font-mono, ui-monospace, monospace);
+	color: var(--sl-color-gray-2);
+}
+.snippet-actions { display: flex; gap: 0.4rem; }
+.snippet-btn {
+	text-decoration: none;
+	padding: 0.05rem 0.5rem;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.3rem;
+	color: var(--sl-color-text-accent);
+	font-size: 0.75rem;
+	white-space: nowrap;
+}
+.snippet-btn:hover { background: var(--sl-color-gray-5); }
+.snippet-details > summary {
+	cursor: pointer;
+	padding: 0.4rem 0.6rem;
+	color: var(--sl-color-gray-3);
+	font-size: 0.8rem;
+}
+.snippet-code { overflow-x: auto; }
+.snippet-code pre.shiki {
+	margin: 0;
+	padding: 0.8rem 0.9rem;
+	border-radius: 0;
+	font-size: 0.85rem;
+	line-height: 1.5;
+}
+.snippet-page-nav {
+	display: flex;
+	gap: 1.25rem;
+	align-items: center;
+	margin: 0 0 1rem;
+	font-size: 0.9rem;
+}
+
+/* Shiki dual-theme: light by default, dark under [data-theme='dark']. */
+.snippet .shiki,
+.snippet .shiki span { color: var(--shiki-light); }
+.snippet .shiki { background-color: var(--shiki-light-bg) !important; }
+[data-theme='dark'] .snippet .shiki,
+[data-theme='dark'] .snippet .shiki span { color: var(--shiki-dark); }
+[data-theme='dark'] .snippet .shiki { background-color: var(--shiki-dark-bg) !important; }

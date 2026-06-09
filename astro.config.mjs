@@ -6,6 +6,7 @@ import starlightBlog from 'starlight-blog';
 import remarkGfm from 'remark-gfm';
 import rehypeExternalLinks from 'rehype-external-links';
 import remarkD2 from './src/plugins/remark-d2.mjs';
+import remarkSnippet from './src/plugins/remark-snippet.mjs';
 import kronuzDark from './src/styles/kronuz-dark.json';
 import kronuzLight from './src/styles/kronuz-light.json';
 
@@ -18,7 +19,7 @@ export default defineConfig({
 	// GFM tables in .mdx, and external links (http/https) open in a new tab.
 	// Internal relative links (/blog/...) and mailto are left alone.
 	markdown: {
-		remarkPlugins: [remarkGfm, remarkD2],
+		remarkPlugins: [remarkGfm, remarkD2, remarkSnippet],
 		rehypePlugins: [
 			[
 				rehypeExternalLinks,
