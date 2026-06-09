@@ -1,7 +1,7 @@
 ---
-title: "The Boy Who Kept Opening the Box"
-subtitle: "A life measured in machines, from a borrowed Commodore 64 in Mexico City to the heart of Python itself."
-description: "The full arc: a C64 in 1980s Mexico City, a digital ouija written in C, a modem worth months of waiting, the forbidden pleasures of assembly and SoftICE, a game engine Nintendo noticed, five servers named after a Forrest Gump memory, and an idea about laziness that rippled across Instagram and landed in the Python language."
+title: "The Boy Who Opened Boxes"
+subtitle: "A life measured in machines, from a borrowed Commodore 64 to the Python language."
+description: "From a borrowed Commodore 64 in 1980s Mexico City to a feature in the Python language itself: the full arc of one restless kid who could never leave a box unopened."
 excerpt: "I have spent my whole life opening boxes I was not supposed to open. This is the story of all of them, from a borrowed Commodore 64 to a feature in the Python language, and the same restless kid behind each one."
 date: 2026-06-07
 draft: true

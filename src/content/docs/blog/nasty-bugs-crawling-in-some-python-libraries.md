@@ -1,6 +1,7 @@
 ---
-title: "Nasty Bugs Crawling In Some Python Libraries"
-description: "Nasty Bugs Crawling In Some Python Libraries"
+title: "Nasty Bugs in Python Libraries"
+description: "A months-long mystery: requests.get() kept catching an impossible exception. The hunt led through sys.modules and a Protected proxy to a Python 2 except-syntax trap. No bug was ever in requests."
+excerpt: "For weeks, requests.get() kept catching an exception nobody could explain, and the fantastic requests library was innocent. This is the hunt: wrapping sys.modules entries in a proxy to catch the real culprit, a Python 2 except-syntax trap."
 date: 2016-03-08
 draft: true
 authors: kronuz

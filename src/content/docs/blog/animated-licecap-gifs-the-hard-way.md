@@ -1,6 +1,7 @@
 ---
 title: "Animated LICEcap GIFs, the Hard Way"
-description: "Animated LICEcap GIFs, the Hard Way"
+description: "Recording the screen with LICEcap and turning its lossless LCF capture into a clean animated GIF, the hard way, using Jon Skinner's method."
+excerpt: "Jon Skinner, of Sublime Text, once shared the trick behind those silky screencasts: animated GIFs, the hard way. Here is how I record them now with LICEcap and turn the lossless capture into a clean GIF."
 date: 2015-04-23
 draft: true
 authors: kronuz
