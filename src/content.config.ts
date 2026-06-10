@@ -20,6 +20,8 @@ export const collections = {
 						// "Opening Boxes"), and its position within that series.
 						series: z.string().optional(),
 						seriesOrder: z.number().optional(),
+						// Post type, shown as a small badge above the title.
+						category: z.enum(['announcement', 'article', 'tutorial', 'note']).optional(),
 					}),
 				),
 		}),

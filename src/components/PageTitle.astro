@@ -1,32 +1,48 @@
 ---
-// Custom override of Starlight's PageTitle: renders the page <h1> and, when a
-// post provides a `subtitle` in its frontmatter, a smaller muted line below it.
-const { title, subtitle } = Astro.locals.starlightRoute.entry.data as {
-	title: string;
-	subtitle?: string;
+// Custom override of Starlight's PageTitle: renders the page <h1> with an
+// optional category emoji just before the title (the post type, from the
+// `category` frontmatter), and an optional `subtitle` line below it.
+const { title, subtitle, category } = Astro.locals.starlightRoute.entry.data as {
+title: string;
+subtitle?: string;
+category?: string;
 };
+const CATEGORY = {
+announcement: { emoji: "📣", label: "Announcement" },
+article: { emoji: "📝", label: "Article" },
+tutorial: { emoji: "🛠️", label: "Tutorial" },
+note: { emoji: "💡", label: "Note" },
+} as const;
+const cat = category ? CATEGORY[category as keyof typeof CATEGORY] : undefined;
 ---
 
-<h1 id="_top">{title}</h1>
+<h1 id="_top">{cat && <span class="post-category" role="img" aria-label={`${cat.label}: `} title={cat.label}>{cat.emoji}</span>}{title}</h1>
 {subtitle && <p class="page-subtitle">{subtitle}</p>}
 
 <style>
-	@layer starlight.core {
-		h1 {
-			margin-top: 1rem;
-			font-size: var(--sl-text-h1);
-			line-height: var(--sl-line-height-headings);
-			font-weight: 600;
-			color: var(--sl-color-white);
-		}
-	}
+@layer starlight.core {
+h1 {
+margin-top: 1rem;
+font-size: var(--sl-text-h1);
+line-height: var(--sl-line-height-headings);
+font-weight: 600;
+color: var(--sl-color-white);
+}
+}
 
-	.page-subtitle {
-		margin-top: 0.4rem;
-		margin-bottom: 0;
-		font-size: var(--sl-text-2xl);
-		font-weight: 400;
-		line-height: var(--sl-line-height-headings);
-		color: var(--sl-color-gray-3);
-	}
+.post-category {
+margin-right: 0.35em;
+font-size: 0.85em;
+/* Emoji glyphs carry their own color; keep them off the heading's white. */
+vertical-align: 0.03em;
+}
+
+.page-subtitle {
+margin-top: 0.4rem;
+margin-bottom: 0;
+font-size: var(--sl-text-2xl);
+font-weight: 400;
+line-height: var(--sl-line-height-headings);
+color: var(--sl-color-gray-3);
+}
 </style>
