@@ -31,6 +31,14 @@
 	/* sidebar + title bar match the (light) code-snippet background */
 	--sl-color-bg-sidebar: #faf8f5;
 	--sl-color-bg-nav: #faf8f5;
+	/* Snippet bar borrows Expressive Code's terminal-frame look: theme-adaptive
+	   title-bar background, faint traffic-light dots, and the frame drop shadow.
+	   Values mirror EC's --ec-frm-trmTtbBg / --ec-frm-trmTtbDotsFg /
+	   --ec-frm-frameBoxShdCssVal so the two stay visually in family. */
+	--snip-bar-bg: #dddddd;
+	--snip-dots: #333333;
+	--snip-shadow: 0.1rem 0.1rem 0.2rem #00000028;
+	--snip-dots-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2060%2016'%20preserveAspectRatio%3D'xMidYMid%20meet'%3E%3Ccircle%20cx%3D'8'%20cy%3D'8'%20r%3D'8'%2F%3E%3Ccircle%20cx%3D'30'%20cy%3D'8'%20r%3D'8'%2F%3E%3Ccircle%20cx%3D'52'%20cy%3D'8'%20r%3D'8'%2F%3E%3C%2Fsvg%3E");
 }
 :root[data-theme='dark'] {
 	--sl-color-white: hsl(24, 7%, 93%);
@@ -48,6 +56,9 @@
 	--sl-color-bg-sidebar: #242424;
 	--sl-color-bg-nav: #2b2b2b;
 	--ec-frm-trmTtbBg: #2b2b2b;
+	--snip-bar-bg: #2b2b2b;
+	--snip-dots: #cccccc;
+	--snip-shadow: 0.1rem 0.1rem 0.2rem #0000005b;
 }
 
 /* Bigger brand logo. Starlight derives the logo height from the nav height
@@ -276,8 +287,9 @@ transition: color 0.15s ease;
 .snippet {
 	margin: 1.25rem 0;
 	border: 1px solid var(--sl-color-gray-5);
-	border-radius: 0.5rem;
+	border-radius: 0.45rem;
 	overflow: hidden;
+	box-shadow: var(--snip-shadow);
 }
 /* Starlight's markdown content adds margin-top between adjacent block siblings
    (:not(...) + :not(...)); neutralize it inside the figure so the code/summary
@@ -291,11 +303,27 @@ transition: color 0.15s ease;
 	justify-content: space-between;
 	gap: 0.5rem;
 	padding: 0.35rem 0.6rem;
-	background: var(--sl-color-gray-6);
+	background: var(--snip-bar-bg);
 	border-bottom: 1px solid var(--sl-color-gray-5);
 	font-size: 0.8rem;
 }
+/* Faint traffic-light dots on the left, matching Expressive Code's terminal
+   frame header (same 3-circle icon, theme dot color, and 0.15 opacity). */
+.snippet-bar::before {
+	content: "";
+	flex: 0 0 auto;
+	width: 2.1rem;
+	height: 0.56rem;
+	background-color: var(--snip-dots);
+	opacity: 0.15;
+	-webkit-mask-image: var(--snip-dots-icon);
+	-webkit-mask-repeat: no-repeat;
+	mask-image: var(--snip-dots-icon);
+	mask-repeat: no-repeat;
+}
 .snippet-title {
+	flex: 1;
+	text-align: center;
 	font-family: var(--sl-font-mono, ui-monospace, monospace);
 	color: var(--sl-color-gray-2);
 }
@@ -314,11 +342,26 @@ transition: color 0.15s ease;
 }
 .snippet-btn:hover { background: var(--sl-color-gray-5); }
 .snippet-btn:focus:not(:focus-visible) { outline: none; }
+/* The collapsed snippet is a <details> inside markdown content, so Starlight
+   insets it (left border + inline padding) and adds a summary margin. Strip that
+   chrome so an opened collapse looks like a normal snippet, flush in the figure. */
+.snippet-details {
+	border-inline-start: 0;
+	padding-inline-start: 0;
+}
 .snippet-details > summary {
 	cursor: pointer;
+	margin: 0;
 	padding: 0.4rem 0.6rem;
 	color: var(--sl-color-gray-3);
 	font-size: 0.8rem;
+}
+.snippet-details > .snippet-code { padding: 0; }
+
+/* Match the regular code blocks (Expressive Code) to the snippet's rounded
+   corners, so a ```fenced block and a <Snippet> read as the same family. */
+.sl-markdown-content .expressive-code .frame {
+	--ec-brdRad: 0.45rem;
 }
 .snippet-code { overflow: auto; }
 .snippet-code pre.shiki {
@@ -530,3 +573,60 @@ html.snippet-no-lines .snippet-code pre.shiki .line::before {
 	transform: translateX(-50%) translateY(0);
 }
 .snippet-copy.is-copied::before { opacity: 1; }
+
+/* Sidebar menu icons. Starlight's sidebar renders links as plain text, so we add
+   a leading icon via a CSS mask, reusing Starlight's own icon set (so they match
+   the top-nav icons exactly). The icon follows the link color (currentColor), so
+   it dims/highlights with the link, including the lit current page. Links opt in
+   with a data-icon="<name>" attr set in sidebar.mjs / Sidebar.astro. */
+a[data-icon] {
+display: flex;
+align-items: center;
+gap: 0.5em;
+}
+a[data-icon]::before {
+content: "";
+flex: 0 0 auto;
+width: 1.05em;
+height: 1.05em;
+background-color: currentColor;
+-webkit-mask: var(--kz-sb-ico) no-repeat center / contain;
+mask: var(--kz-sb-ico) no-repeat center / contain;
+}
+a[data-icon="information"]::before { --kz-sb-ico: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%22M12%2011a1%201%200%200%200-1%201v4a1%201%200%200%200%202%200v-4a1%201%200%200%200-1-1Zm.38-3.92a1%201%200%200%200-.76%200%201%201%200%200%200-.33.21%201.15%201.15%200%200%200-.21.33%201%201%200%200%200%20.21%201.09c.097.088.209.16.33.21A1%201%200%200%200%2013%208a1.05%201.05%200%200%200-.29-.71%201%201%200%200%200-.33-.21ZM12%202a10%2010%200%201%200%200%2020%2010%2010%200%200%200%200-20Zm0%2018a8%208%200%201%201%200-16.001A8%208%200%200%201%2012%2020Z%22%2F%3E%3C%2Fsvg%3E"); }
+a[data-icon="open-book"]::before { --kz-sb-ico: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%22M21.17%202.06A13.1%2013.1%200%200%200%2019%201.87a12.94%2012.94%200%200%200-7%202.05%2012.94%2012.94%200%200%200-7-2%2013.1%2013.1%200%200%200-2.17.19%201%201%200%200%200-.83%201v12a1%201%200%200%200%201.17%201%2010.9%2010.9%200%200%201%208.25%201.91l.12.07h.11a.91.91%200%200%200%20.7%200h.11l.12-.07A10.899%2010.899%200%200%201%2020.83%2016%201%201%200%200%200%2022%2015V3a1%201%200%200%200-.83-.94ZM11%2015.35a12.87%2012.87%200%200%200-6-1.48H4v-10c.333-.02.667-.02%201%200a10.86%2010.86%200%200%201%206%201.8v9.68Zm9-1.44h-1a12.87%2012.87%200%200%200-6%201.48V5.67a10.86%2010.86%200%200%201%206-1.8c.333-.02.667-.02%201%200v10.04Zm1.17%204.15a13.098%2013.098%200%200%200-2.17-.19%2012.94%2012.94%200%200%200-7%202.05%2012.94%2012.94%200%200%200-7-2.05c-.727.003-1.453.066-2.17.19A1%201%200%200%200%202%2019.21a1%201%200%200%200%201.17.79%2010.9%2010.9%200%200%201%208.25%201.91%201%201%200%200%200%201.16%200A10.9%2010.9%200%200%201%2020.83%2020a1%201%200%200%200%201.17-.79%201%201%200%200%200-.83-1.15Z%22%2F%3E%3C%2Fsvg%3E"); }
+a[data-icon="rss"]::before { --kz-sb-ico: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%22M2.88%2016.88a3%203%200%200%200%200%204.24%203%203%200%200%200%204.24%200%203%203%200%200%200-4.24-4.24Zm2.83%202.83a1%201%200%200%201-1.42-1.42%201%201%200%200%201%201.42%200%201%201%200%200%201%200%201.42ZM5%2012a1%201%200%200%200%200%202%205%205%200%200%201%205%205%201%201%200%200%200%202%200%207%207%200%200%200-7-7Zm0-4a1%201%200%200%200%200%202%209%209%200%200%201%209%209%201%201%200%200%200%202%200%2011.08%2011.08%200%200%200-3.22-7.78A11.08%2011.08%200%200%200%205%208Zm10.61.39A15.11%2015.11%200%200%200%205%204a1%201%200%200%200%200%202%2013%2013%200%200%201%2013%2013%201%201%200%200%200%202%200%2015.11%2015.11%200%200%200-4.39-10.61Z%22%2F%3E%3C%2Fsvg%3E"); }
+a[data-icon="rocket"]::before { --kz-sb-ico: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M1.44%208.855v-.001l3.527-3.516c.34-.344.802-.541%201.285-.548h6.649l.947-.947c3.07-3.07%206.207-3.072%207.62-2.868a1.821%201.821%200%200%201%201.557%201.557c.204%201.413.203%204.55-2.868%207.62l-.946.946v6.649a1.845%201.845%200%200%201-.549%201.286l-3.516%203.528a1.844%201.844%200%200%201-3.11-.944l-.858-4.275-4.52-4.52-2.31-.463-1.964-.394A1.847%201.847%200%200%201%20.98%2010.693a1.843%201.843%200%200%201%20.46-1.838Zm5.379%202.017-3.873-.776L6.32%206.733h4.638l-4.14%204.14Zm8.403-5.655c2.459-2.46%204.856-2.463%205.89-2.33.134%201.035.13%203.432-2.329%205.891l-6.71%206.71-3.561-3.56%206.71-6.711Zm-1.318%2015.837-.776-3.873%204.14-4.14v4.639l-3.364%203.374Z%22%20clip-rule%3D%22evenodd%22%2F%3E%3Cpath%20d%3D%22M9.318%2018.345a.972.972%200%200%200-1.86-.561c-.482%201.435-1.687%202.204-2.934%202.619a8.22%208.22%200%200%201-1.23.302c.062-.365.157-.79.303-1.229.415-1.247%201.184-2.452%202.62-2.935a.971.971%200%201%200-.62-1.842c-.12.04-.236.084-.35.13-2.02.828-3.012%202.588-3.493%204.033a10.383%2010.383%200%200%200-.51%202.845l-.001.016v.063c0%20.536.434.972.97.972H2.24a7.21%207.21%200%200%200%20.878-.065c.527-.063%201.248-.19%202.02-.447%201.445-.48%203.205-1.472%204.033-3.494a5.828%205.828%200%200%200%20.147-.407Z%22%2F%3E%3C%2Fsvg%3E"); }
+
+/* "About me" hero action reads icon-first. Starlight renders an action's icon
+   trailing; the kz-icon-first marker (set via attrs.class on that action) flips
+   just this one, leaving others (e.g. "Read the blog →") with a trailing icon. */
+.sl-link-button.kz-icon-first { flex-direction: row-reverse; }
+
+/* About-page lede: the role-descriptor line under the title. Styled as a quiet
+   italic deck (muted, a touch larger) so it reads as a subtitle rather than a
+   second heading competing with the "About" title. */
+.about-lede {
+margin-top: 0.25rem;
+font-size: var(--sl-text-lg);
+font-style: italic;
+color: var(--sl-color-gray-3);
+}
+/* Keep emphasized text (e.g. a name) prominent and upright inside the muted
+   italic lede, so the deck recedes but the name still pops. Inert where the
+   lede has no <strong> (e.g. the internal About page). */
+.about-lede strong {
+color: var(--sl-color-white);
+font-style: normal;
+}
+
+/* Keep the header search box in a stable spot across pages. Starlight sizes the
+   first header column (site title) to the sidebar width on doc pages but ~0 on
+   the splash (no sidebar), so the search jumps rightward when you go from the
+   home page to a doc page. Pin every page to the splash layout: the title takes
+   its natural width and the search sits right after it. */
+@media (min-width: 50rem) {
+.header {
+grid-template-columns: auto 1fr auto;
+}
+}
