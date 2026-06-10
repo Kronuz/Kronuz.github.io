@@ -36,7 +36,7 @@ const RSS = {
   href: "/blog/rss.xml",
   isCurrent: false,
   badge: undefined,
-  attrs: { target: "_blank" },
+  attrs: { target: "_blank", "data-icon": "rss" },
 };
 
 // Keep the blog post navigation (All posts, Recent/Featured, Tags); drop the
@@ -56,7 +56,9 @@ if (onBlog) {
   // relabeled "Blog" and lit for the whole blog section.
   menu = menu.filter((e) => !isBlogRoot(e));
   extras = blogPostNav(route.sidebar).map((e) =>
-    isBlogRoot(e) ? { ...e, label: "Blog", isCurrent: true } : e,
+    isBlogRoot(e)
+      ? { ...e, label: "Blog", isCurrent: true, attrs: { ...(e.attrs ?? {}), "data-icon": "open-book" } }
+      : e,
   );
 }
 route.sidebar = [...menu, ...extras, RSS];

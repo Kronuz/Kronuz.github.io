@@ -15,9 +15,9 @@
  */
 
 const MENU = [
-  { label: "About", href: "/about/" },
-  { label: "Projects", href: "/projects/", match: "section" },
-  { label: "Blog", href: "/blog/", match: "section" },
+  { label: "About", href: "/about/", icon: "information" },
+  { label: "Projects", href: "/projects/", match: "section", icon: "rocket" },
+  { label: "Blog", href: "/blog/", match: "section", icon: "open-book" },
 ];
 
 // Compare paths ignoring a trailing slash (Starlight serves with one); leave
@@ -34,7 +34,7 @@ function toLink(item, pathname) {
     href: item.href,
     isCurrent,
     badge: undefined,
-    attrs: item.attrs ?? {},
+    attrs: { ...(item.icon ? { "data-icon": item.icon } : {}), ...(item.attrs ?? {}) },
   };
 }
 

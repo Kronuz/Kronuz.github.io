@@ -8,15 +8,23 @@ import { Icon } from '@astrojs/starlight/components';
 // mobile (so the menu stays reachable even on the splash, which has no sidebar
 // hamburger). aria-label keeps the labels for screen readers when text hides.
 const items = [
+{ label: 'About', href: '/about/', icon: 'information' },
 { label: 'Blog', href: '/blog/', icon: 'open-book' },
-{ label: 'Projects', href: '/projects/', icon: 'puzzle' },
+{ label: 'RSS', href: '/blog/rss.xml', icon: 'rss', external: true },
 ];
 ---
 
 <nav class="kz-topnav" aria-label="Site">
 {
 items.map((it) => (
-<a href={it.href} class="kz-topnav-link" aria-label={it.label}>
+<a
+href={it.href}
+class="kz-topnav-link"
+aria-label={it.label}
+title={it.label}
+target={it.external ? '_blank' : undefined}
+rel={it.external ? 'noopener' : undefined}
+>
 <Icon name={it.icon as any} size="1.25rem" />
 <span class="kz-topnav-label">{it.label}</span>
 </a>
@@ -48,7 +56,8 @@ flex-shrink: 0;
 .kz-topnav-link:hover {
 text-decoration: underline;
 }
-/* Mobile: icons only. Desktop (≥50rem): icon + text. */
+/* Icons only at every size; the sidebar carries the labeled About / Blog / RSS,
+   so the header stays compact. Labels remain in aria-label + title (tooltip). */
 .kz-topnav-label {
 display: none;
 }
@@ -56,9 +65,6 @@ display: none;
 .kz-topnav {
 gap: 1rem;
 padding-inline-end: 1rem;
-}
-.kz-topnav-label {
-display: inline;
 }
 }
 </style>
