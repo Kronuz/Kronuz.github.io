@@ -1,0 +1,60 @@
+---
+/**
+ * <SnippetScript /> — the one delegated click handler that drives every snippet
+ * surface on a page: opening a <SnippetLink> modal, the Copy button (in the
+ * modal, the inline figure, and the full-page view), Close, and backdrop-click.
+ *
+ * It lives in its own component so the modal (SnippetLink) and the full-page
+ * viewer route can both pull in identical behavior without duplicating the
+ * script. Astro bundles it once even if rendered multiple times.
+ */
+---
+
+<script>
+  document.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement;
+
+    // Open: clone the template's dialog into <body>, then showModal() (centers it).
+    const opener = target.closest<HTMLElement>("[data-snippet-open]");
+    if (opener) {
+      const tpl = document.querySelector<HTMLTemplateElement>(
+        `template[data-snippet-tpl="${opener.getAttribute("data-snippet-open")}"]`,
+      );
+      const node = tpl?.content.firstElementChild?.cloneNode(true);
+      if (node instanceof HTMLDialogElement && typeof node.showModal === "function") {
+        event.preventDefault();
+        document.body.appendChild(node);
+        node.addEventListener("close", () => node.remove());
+        node.showModal();
+      }
+      return;
+    }
+
+    // Copy: the highlighted <pre>'s textContent is the original source.
+    const copyBtn = target.closest<HTMLButtonElement>("[data-snippet-copy]");
+    if (copyBtn) {
+      const pre = copyBtn.closest(".snippet")?.querySelector(".snippet-code pre");
+      if (pre && navigator.clipboard) {
+        navigator.clipboard.writeText(pre.textContent ?? "").then(() => {
+          copyBtn.classList.add("is-copied");
+          copyBtn.setAttribute("aria-label", "Copied");
+          window.setTimeout(() => {
+            copyBtn.classList.remove("is-copied");
+            copyBtn.setAttribute("aria-label", "Copy to clipboard");
+          }, 1500);
+        });
+      }
+      return;
+    }
+
+    if (target.closest("[data-snippet-close]")) {
+      target.closest("dialog")?.close();
+      return;
+    }
+
+    // Click on the backdrop (the dialog element itself) closes it.
+    if (target instanceof HTMLDialogElement && target.classList.contains("snippet-dialog")) {
+      target.close();
+    }
+  });
+</script>

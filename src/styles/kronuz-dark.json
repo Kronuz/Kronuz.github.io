@@ -4,7 +4,23 @@
   "colors": {
     "editor.background": "#383838",
     "editor.foreground": "#c8c6c5",
-    "editor.selectionBackground": "#3366ff55"
+    "editor.selectionBackground": "#3366ff55",
+    "terminal.ansiBlack": "#5a5755",
+    "terminal.ansiRed": "#da4939",
+    "terminal.ansiGreen": "#a5c261",
+    "terminal.ansiYellow": "#e8bf6a",
+    "terminal.ansiBlue": "#6e9cbe",
+    "terminal.ansiMagenta": "#d687bf",
+    "terminal.ansiCyan": "#5fb3b3",
+    "terminal.ansiWhite": "#c8c6c5",
+    "terminal.ansiBrightBlack": "#7f7b78",
+    "terminal.ansiBrightRed": "#ff6d5a",
+    "terminal.ansiBrightGreen": "#c7d87b",
+    "terminal.ansiBrightYellow": "#ffd68d",
+    "terminal.ansiBrightBlue": "#8fbce0",
+    "terminal.ansiBrightMagenta": "#e6a3d6",
+    "terminal.ansiBrightCyan": "#7fd0d0",
+    "terminal.ansiBrightWhite": "#f0eeec"
   },
   "tokenColors": [
     {

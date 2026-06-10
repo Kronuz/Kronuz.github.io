@@ -279,6 +279,12 @@ transition: color 0.15s ease;
 	border-radius: 0.5rem;
 	overflow: hidden;
 }
+/* Starlight's markdown content adds margin-top between adjacent block siblings
+   (:not(...) + :not(...)); neutralize it inside the figure so the code/summary
+   sits flush under the bar instead of leaving a gap. */
+.snippet > .snippet-code,
+.snippet > .snippet-details,
+.snippet-details > .snippet-code { margin-top: 0; }
 .snippet-bar {
 	display: flex;
 	align-items: center;
@@ -330,6 +336,20 @@ transition: color 0.15s ease;
 /* Line numbers, from the .line spans Shiki emits. */
 .snippet-code pre.shiki code {
 	counter-reset: sl-line;
+	/* Block container so the block .line rows below get a proper block formatting
+	   context (an inline <code> shouldn't wrap block children). */
+	display: block;
+	/* Collapse the inter-line newlines so the block .line rows below don't
+	   double-space; each .line restores `pre` for its own content. The newlines
+	   stay in the DOM text (Copy still reproduces them), they just don't render. */
+	white-space: normal;
+}
+/* Block rows so a highlighted line's background fills the full width, and blank
+   lines keep their height even when the gutter is hidden (?nolines). */
+.snippet-code pre.shiki .line {
+	display: block;
+	white-space: pre;
+	min-height: 1.5em;
 }
 .snippet-code pre.shiki .line::before {
 	counter-increment: sl-line;
@@ -342,12 +362,58 @@ transition: color 0.15s ease;
 	user-select: none;
 	-webkit-user-select: none;
 }
-.snippet-page-nav {
+/* Terminal captures still get line numbers; the standalone viewer can drop them
+   via ?nolines (an inline <head> script sets html.snippet-no-lines). */
+html.snippet-no-lines .snippet-code pre.shiki .line::before {
+	display: none;
+}
+/* Deep-linked lines (#L10, #L10-L20, or multiple #L10-L20,L30): a persistent
+   full-row band (slightly darker than the file background, per theme) plus an
+   accented gutter number. It survives clicks because it's a class, not a native
+   text selection. Token colors are untouched, so syntax/ANSI stays readable. */
+.snippet-code pre.shiki .line.is-highlit {
+	background-color: #ececec;
+}
+[data-theme='dark'] .snippet-code pre.shiki .line.is-highlit {
+	background-color: #3e3e2e;
+}
+.snippet-code pre.shiki .line.is-highlit::before {
+	opacity: 1;
+	color: var(--sl-color-text-accent);
+	font-weight: 700;
+}
+/* The actual text selection gets a distinct blue tint (the editor theme's
+   selection color), so a precise selection reads apart from the warm/gray line
+   band underneath it. */
+.snippet-code ::selection { background-color: #d3e1f7; }
+.snippet-code ::-moz-selection { background-color: #d3e1f7; }
+[data-theme='dark'] .snippet-code ::selection { background-color: #3b4a66; }
+[data-theme='dark'] .snippet-code ::-moz-selection { background-color: #3b4a66; }
+/* Snippet-project file menu: editor-style tabs to browse sibling files, shown
+   on the full-page view only when a project folder has more than one file. */
+.snippet-project {
 	display: flex;
-	gap: 1.25rem;
-	align-items: center;
-	margin: 0 0 1rem;
-	font-size: 0.9rem;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+	margin: 0 0 0.85rem;
+	font-family: var(--sl-font-mono, ui-monospace, monospace);
+	font-size: 0.85rem;
+}
+.snippet-tab {
+	text-decoration: none;
+	padding: 0.2rem 0.6rem;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.3rem;
+	background: var(--sl-color-gray-6);
+	color: var(--sl-color-text-accent);
+	white-space: nowrap;
+}
+.snippet-tab:hover { background: var(--sl-color-gray-5); }
+.snippet-tab[aria-current="page"] {
+	background: var(--sl-color-gray-5);
+	border-color: var(--sl-color-gray-4);
+	color: var(--sl-color-white);
+	font-weight: 600;
 }
 
 /* Shiki dual-theme: light by default, dark under [data-theme='dark']. */
@@ -357,6 +423,9 @@ transition: color 0.15s ease;
 [data-theme='dark'] .snippet .shiki,
 [data-theme='dark'] .snippet .shiki span { color: var(--shiki-dark); }
 [data-theme='dark'] .snippet .shiki { background-color: var(--shiki-dark-bg) !important; }
+/* Honor Shiki's per-token weight (bold ANSI / bold syntax), per theme. */
+.snippet .shiki span { font-weight: var(--shiki-light-font-weight, inherit); }
+[data-theme='dark'] .snippet .shiki span { font-weight: var(--shiki-dark-font-weight, inherit); }
 
 /* Inline source link (<SnippetLink>) and its modal. */
 .snippet-link {

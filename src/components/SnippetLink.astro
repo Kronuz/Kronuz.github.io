@@ -1,70 +1,26 @@
 ---
 /**
  * <SnippetLink file="statusline.sh">label</SnippetLink>
+ *   default        clicking opens a centered modal (native <dialog>) with the
+ *                  highlighted code plus Open / Raw / Copy / Close.
+ *   page (boolean) clicking goes straight to the full-page viewer
+ *                  (/snippets/view/<file>/) instead — a plain inline link.
  *
- * An inline prose link to a source file. Clicking it opens a centered modal
- * (native <dialog>) with the highlighted code plus Copy / Raw / Close. The
- * dialog markup lives in an inert <template> (valid inline, renders nothing, so
- * it does not break the surrounding paragraph) and is cloned to <body> on click
- * — that keeps the link truly inline and lets showModal() center it. With JS
- * off, the link falls back to the raw file. Shares highlighting with <Snippet>.
+ * The dialog markup lives in an inert <template> (valid inline, renders nothing,
+ * so it doesn't break the surrounding paragraph) and is cloned to <body> on
+ * click — that keeps the link truly inline and lets showModal() center it. With
+ * JS off, the modal link falls back to the raw file. Click handling (open / copy
+ * / close) is shared with the full-page view via <SnippetScript>.
  */
 import { readSnippet, langForFile, highlight, rawHref } from "../lib/renderSnippet.mjs";
+import SnippetScript from "./SnippetScript.astro";
 
-const { file } = Astro.props;
-const code = readSnippet(file);
+const { file, page } = Astro.props;
 const lang = langForFile(file);
-const pre = await highlight(code, lang);
 const raw = rawHref(file);
+const viewHref = `/snippets/view/${file}/`;
 const id = `snip-${file.replace(/[^a-z0-9]+/gi, "-")}-${Math.random().toString(36).slice(2, 8)}`;
+const pre = page ? "" : await highlight(readSnippet(file), lang);
 ---
 
-<a class="snippet-link" href={raw} data-snippet-open={id}><slot>{file}</slot></a><template data-snippet-tpl={id}><dialog class="snippet-dialog" aria-label={`Source: ${file}`}><figure class="snippet snippet--modal" data-lang={lang}><figcaption class="snippet-bar"><span class="snippet-title">{file}</span><span class="snippet-actions"><a class="snippet-btn" href={raw} target="_blank" rel="noopener">Raw</a><button class="snippet-btn snippet-icon-btn snippet-copy" type="button" data-snippet-copy aria-label="Copy to clipboard" title="Copy to clipboard"><svg class="snippet-i snippet-i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button><button class="snippet-btn snippet-icon-btn snippet-close" type="button" data-snippet-close aria-label="Close" title="Close"><svg class="snippet-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></span></figcaption><div class="snippet-code" set:html={pre} /></figure></dialog></template><script>
-  // One delegated handler for every snippet link/modal on the page.
-  document.addEventListener("click", (event) => {
-    const target = event.target as HTMLElement;
-
-    // Open: clone the template's dialog into <body>, then showModal() (centers it).
-    const opener = target.closest<HTMLElement>("[data-snippet-open]");
-    if (opener) {
-      const tpl = document.querySelector<HTMLTemplateElement>(
-        `template[data-snippet-tpl="${opener.getAttribute("data-snippet-open")}"]`,
-      );
-      const node = tpl?.content.firstElementChild?.cloneNode(true);
-      if (node instanceof HTMLDialogElement && typeof node.showModal === "function") {
-        event.preventDefault();
-        document.body.appendChild(node);
-        node.addEventListener("close", () => node.remove());
-        node.showModal();
-      }
-      return;
-    }
-
-    // Copy: the highlighted <pre>'s textContent is the original source.
-    const copyBtn = target.closest<HTMLButtonElement>("[data-snippet-copy]");
-    if (copyBtn) {
-      const pre = copyBtn.closest(".snippet")?.querySelector(".snippet-code pre");
-      if (pre && navigator.clipboard) {
-        navigator.clipboard.writeText(pre.textContent ?? "").then(() => {
-          copyBtn.classList.add("is-copied");
-          copyBtn.setAttribute("aria-label", "Copied");
-          window.setTimeout(() => {
-            copyBtn.classList.remove("is-copied");
-            copyBtn.setAttribute("aria-label", "Copy to clipboard");
-          }, 1500);
-        });
-      }
-      return;
-    }
-
-    if (target.closest("[data-snippet-close]")) {
-      target.closest("dialog")?.close();
-      return;
-    }
-
-    // Click on the backdrop (the dialog element itself) closes it.
-    if (target instanceof HTMLDialogElement && target.classList.contains("snippet-dialog")) {
-      target.close();
-    }
-  });
-</script>
+<a class:list={["snippet-link", page && "snippet-link--page"]} href={page ? viewHref : raw} data-snippet-open={page ? undefined : id}><slot>{file}</slot></a>{page ? null : (<template data-snippet-tpl={id}><dialog class="snippet-dialog" aria-label={`Source: ${file}`}><figure class="snippet snippet--modal" data-lang={lang}><figcaption class="snippet-bar"><span class="snippet-title">{file}</span><span class="snippet-actions"><a class="snippet-btn" href={viewHref}>Open</a><a class="snippet-btn" href={raw} target="_blank" rel="noopener">Raw</a><button class="snippet-btn snippet-icon-btn snippet-copy" type="button" data-snippet-copy aria-label="Copy to clipboard" title="Copy to clipboard"><svg class="snippet-i snippet-i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button><button class="snippet-btn snippet-icon-btn snippet-close" type="button" data-snippet-close aria-label="Close" title="Close"><svg class="snippet-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></span></figcaption><div class="snippet-code" set:html={pre} /></figure></dialog></template>)}<SnippetScript />

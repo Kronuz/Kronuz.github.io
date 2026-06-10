@@ -1,0 +1,210 @@
+---
+/**
+ * Full-page source viewer: /snippets/view/<file>/ (file may be nested).
+ *
+ * One page per file in src/snippets/, inside the full Starlight shell (site
+ * sidebar and menus). The snippet toolbar carries Raw and Copy. Every snippet
+ * file gets one of these automatically (listSnippets drives the static paths),
+ * so dropping a file into src/snippets/ makes it viewable at a stable URL.
+ *
+ * Snippet projects: a file in a subfolder (e.g. "demo/app.py") belongs to that
+ * folder's project. When the project has more than one file, a tab menu lists
+ * the siblings so you can browse across them; the page <h1> is the project name.
+ * A file in the root has no project and renders standalone (no menu).
+ *
+ * The view fills the main pane (wider than a normal article column) and shows
+ * line numbers by default; append ?nolines to hide the gutter. Deep-link to
+ * lines with #L10, #L10-L20, or #L10-L20,L30 (jumps there and highlights). The
+ * reverse also works: selecting code by hand updates the URL hash to match, so
+ * the address bar is always a shareable link to the current selection.
+ * (Route segment is [...name] to allow nested paths and avoid clashing with
+ * Astro's internal $$file.)
+ */
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import SnippetScript from "../../../components/SnippetScript.astro";
+import {
+  listSnippets, readSnippet, langForFile, snippetFigure, rawHref, projectFiles,
+} from "../../../lib/renderSnippet.mjs";
+
+export function getStaticPaths() {
+  return listSnippets().map((file) => ({ params: { name: file }, props: { file } }));
+}
+
+const { file } = Astro.props;
+const lang = langForFile(file);
+const figure = await snippetFigure({
+  code: readSnippet(file),
+  lang,
+  rawHref: rawHref(file),
+  copy: true,
+  bare: true,
+});
+
+const siblings = projectFiles(file);
+const inProject = siblings.length > 1;
+const projectName = file.slice(0, file.lastIndexOf("/"));
+const pageTitle = inProject ? projectName : file;
+
+// Runs in <head> before paint, so ?nolines hides the gutter with no flash.
+const noLinesHead = [{
+  tag: "script",
+  content:
+    "if(new URLSearchParams(location.search).has('nolines'))" +
+    "document.documentElement.classList.add('snippet-no-lines')",
+}];
+---
+
+<StarlightPage frontmatter={{ title: pageTitle, tableOfContents: false, head: noLinesHead }}>
+  {inProject && (
+    <nav class="snippet-project" aria-label={`Files in ${projectName}`}>
+      {siblings.map((f) => (
+        <a class="snippet-tab" href={`/snippets/view/${f}/`} aria-current={f === file ? "page" : undefined}>{f.split("/").pop()}</a>
+      ))}
+    </nav>
+  )}
+  <Fragment set:html={figure} />
+  <SnippetScript />
+</StarlightPage>
+
+<script>
+  // Lines deep-link, both directions.
+  //  URL -> view: #L10, #L10-L20, or several #L10-L20,L30 (also ?lines=/?line=)
+  //    highlight those lines (persistent: survives clicks) and scroll to the
+  //    first range listed.
+  //  selection -> URL: while you select code by hand, the highlight tracks the
+  //    selection live (band + gutter numbers) and the URL hash updates to match,
+  //    so the address bar is always a shareable link to the current selection.
+  //  click -> clear: with nothing selected, a click inside the code box clears
+  //    the highlight + hash. If text is selected, the first click only drops
+  //    that selection (the lines stay); a further click then clears. Clicks
+  //    outside the box (tabs/toolbar/sidebar) leave everything alone.
+  //  dblclick -> select the whole clicked line (not the browser's word-select,
+  //    which mis-selects an empty line into the next one) and update the hash.
+  const SEL = ".snippet-code pre.shiki .line";
+
+  function parseRanges(): Array<[number, number]> {
+    const params = new URLSearchParams(location.search);
+    const src = location.hash.replace(/^#/, "") || params.get("lines") || params.get("line") || "";
+    const ranges: Array<[number, number]> = [];
+    for (const part of src.split(",")) {
+      const m = part.trim().match(/^L?(\d+)(?:[-\u2013]L?(\d+))?$/i);
+      if (!m) continue;
+      let a = parseInt(m[1], 10);
+      let b = m[2] ? parseInt(m[2], 10) : a;
+      if (a > b) [a, b] = [b, a];
+      ranges.push([a, b]);
+    }
+    return ranges;
+  }
+
+  function paint(ranges: Array<[number, number]>, lines: HTMLElement[]) {
+    lines.forEach((el) => el.classList.remove("is-highlit"));
+    for (const [a, b] of ranges) {
+      const end = Math.min(b, lines.length);
+      for (let i = Math.max(a, 1) - 1; i < end; i++) lines[i].classList.add("is-highlit");
+    }
+  }
+
+  function clearHighlight() {
+    document.querySelectorAll<HTMLElement>(SEL).forEach((el) => el.classList.remove("is-highlit"));
+    if (location.hash) history.replaceState(null, "", `${location.pathname}${location.search}`);
+  }
+
+  function applyFromUrl() {
+    const lines = Array.from(document.querySelectorAll<HTMLElement>(SEL));
+    const ranges = parseRanges();
+    paint(ranges, lines);
+    if (ranges.length && lines.length) {
+      const startIdx = Math.min(Math.max(ranges[0][0], 1), lines.length) - 1;
+      lines[startIdx]?.scrollIntoView({ block: "center" });
+    }
+  }
+
+  function syncFromSelection() {
+    const sel = window.getSelection();
+    // Ignore plain clicks (collapsed) and selections outside the code, so an
+    // existing highlight survives a click and is only replaced by a real select.
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const code = document.querySelector(".snippet-code");
+    if (!code || (!code.contains(sel.anchorNode) && !code.contains(sel.focusNode))) return;
+
+    const lines = Array.from(document.querySelectorAll<HTMLElement>(SEL));
+    let a = 0;
+    let b = 0;
+    lines.forEach((line, i) => {
+      if (sel.containsNode(line, true)) {
+        if (!a) a = i + 1;
+        b = i + 1;
+      }
+    });
+    if (!a) return;
+
+    paint([[a, b]], lines);
+    const hash = a === b ? `L${a}` : `L${a}-L${b}`;
+    if (location.hash !== `#${hash}`) {
+      history.replaceState(null, "", `${location.pathname}${location.search}#${hash}`);
+    }
+  }
+
+  let raf = 0;
+  function onSelectionChange() {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      syncFromSelection();
+    });
+  }
+
+  // Double-click selects the whole clicked line (the browser's word-select
+  // mis-selects an empty line into the next one). A single click clears, but on
+  // a short delay so a following double-click can cancel it.
+  function selectWholeLine(line: HTMLElement) {
+    const lines = Array.from(document.querySelectorAll<HTMLElement>(SEL));
+    const i = lines.indexOf(line);
+    if (i < 0) return;
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(line);
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    paint([[i + 1, i + 1]], lines);
+    const hash = `L${i + 1}`;
+    if (location.hash !== `#${hash}`) {
+      history.replaceState(null, "", `${location.pathname}${location.search}#${hash}`);
+    }
+  }
+
+  const codeBox = document.querySelector(".snippet-code");
+  let clickTimer = 0;
+  let hadSelection = false;
+  // mousedown fires before the selection it collapses, so capture it here.
+  codeBox?.addEventListener("mousedown", () => {
+    const sel = window.getSelection();
+    hadSelection = !!sel && !sel.isCollapsed;
+  });
+  codeBox?.addEventListener("click", () => {
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed) return; // a real selection exists now: keep it
+    if (hadSelection) { hadSelection = false; return; } // this click only dropped the text selection: keep the lines
+    window.clearTimeout(clickTimer);
+    clickTimer = window.setTimeout(clearHighlight, 200);
+  });
+  codeBox?.addEventListener("dblclick", (event) => {
+    window.clearTimeout(clickTimer);
+    const line = (event.target as HTMLElement).closest<HTMLElement>(SEL);
+    if (line) {
+      event.preventDefault();
+      selectWholeLine(line);
+    }
+  });
+
+  applyFromUrl();
+  window.addEventListener("hashchange", applyFromUrl);
+  document.addEventListener("selectionchange", onSelectionChange);
+</script>
+
+<style is:global>
+  /* Standalone snippet view fills the main pane (the sidebar stays); long lines
+     scroll horizontally inside the code box rather than wrapping. */
+  .content-panel { --sl-content-width: 100%; }
+</style>
