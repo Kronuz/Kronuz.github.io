@@ -1,7 +1,8 @@
 ---
 // Custom override of Starlight's PageTitle: renders the page <h1> with an
-// optional category emoji just before the title (the post type, from the
-// `category` frontmatter), and an optional `subtitle` line below it.
+// optional category emoji just before the title (announcement / tutorial /
+// note). A post with no `category` is a plain article and gets no badge. Also
+// renders an optional `subtitle` line below the title.
 const { title, subtitle, category } = Astro.locals.starlightRoute.entry.data as {
 title: string;
 subtitle?: string;
@@ -9,7 +10,6 @@ category?: string;
 };
 const CATEGORY = {
 announcement: { emoji: "📣", label: "Announcement" },
-article: { emoji: "🖋️", label: "Article" },
 tutorial: { emoji: "🛠️", label: "Tutorial" },
 note: { emoji: "💡", label: "Note" },
 } as const;
