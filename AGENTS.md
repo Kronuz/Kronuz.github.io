@@ -108,3 +108,45 @@ npm run preview   # serve built dist/
 ```
 
 Do not add the `Co-authored-by: Copilot` trailer to commits.
+
+## Navigation, chrome & snippets
+
+The page chrome is shared byte-for-byte with the internal mirror (see "Two-blog sync"); the
+durable rules:
+
+- **One authoritative menu** in `src/lib/sidebar.mjs` (About · Projects · Blog), re-set on every
+  page by `Sidebar.astro`. Menu entries take a leading icon via `data-icon="<name>"`, masked in
+  `custom.css` from Starlight's own icon set.
+- **Top nav is icon-only** (`ThemeSelect.astro`): About · Blog · RSS, labels kept as
+  `aria-label`/`title`.
+- **RSS lives in the nav only.** starlight-blog auto-injects an `rss` social icon; a trailing
+  Starlight plugin in `astro.config.mjs` filters it out (the feed + `rel="alternate"` head tag stay).
+- **Snippets match Expressive Code's terminal frame** (theme-adaptive bar, faint dots, drop shadow,
+  `0.45rem` radius) — mirror EC's tokens, don't hard-code.
+- **About page:** no `## About me` heading, `tableOfContents: false`, role/intro line is a muted
+  italic `.about-lede` (the name stays upright/full-color via `.about-lede strong`).
+- **Header search is pinned** (`.header { grid-template-columns: auto 1fr auto }`) so it doesn't
+  jump from splash to doc pages.
+- **Hero icon-first:** `attrs.class: kz-icon-first` on a hero action renders its icon before the
+  text (the Projects and About actions use it).
+
+## Two-blog sync
+
+This repo and the **internal** mirror (`~/Development/LinkedIn/gmendezb-pages`, branch `main`,
+served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared components,
+`renderSnippet.mjs`, the snippet pages, `PageTitle.astro`, `Sidebar.astro`, `ThemeSelect.astro`,
+etc. After editing a shared file, copy it to the other repo and rebuild both. **Legitimately
+different:** content (posts, `about.md`, `index.mdx`, `projects.md`), `sidebar.mjs` (this side adds
+Projects), `content.config.ts`, `astro.config.mjs`, `consts.ts`, `SiteTitle.astro`, `Footer.astro`,
+`ReplHero.astro`, and the comment system — this (public) side uses `Giscus.astro`; the internal side
+uses a Discussion link-out (`PostCta.astro` + `MarkdownContent.astro`).
+
+## Deferred ideas
+
+- **Projects with a status lifecycle** (deferred 2026-06-10). A Projects section grouped by progress
+  state. Sketch: a `status` enum (`proposed | active | blocked | shipped`, maybe `paused`/`archived`)
+  kept *separate* from `draft` (draft = visibility, status = progress); projects as their own
+  `/projects/` pages (not blog posts, kept out of the writing RSS) with a status badge reusing the
+  `PageTitle` pattern; a `/projects/` index grouped by status. `projects.md` here is currently a flat
+  list. Open forks: page-per-project vs. a single grouped index; final status vocabulary. Deferred
+  because status earns its keep for in-flight work, less for a shipped-OSS portfolio.
