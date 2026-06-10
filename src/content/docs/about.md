@@ -1,9 +1,10 @@
 ---
 title: About
 description: Germán Méndez Bravo (Kronuz) — Software Engineer working on Python, C++, and systems at scale.
+tableOfContents: false
 ---
 
-**Germán Méndez Bravo** (*Germán* is pronounced **hehr-MAHN**) — Software Engineer · Systems & Infrastructure at Scale · Python & C++.
+<p class="about-lede"><strong>Germán Méndez Bravo</strong> (<em>Germán</em> is pronounced <strong>hehr-MAHN</strong>) — Software Engineer · Systems &amp; Infrastructure at Scale · Python &amp; C++.</p>
 
 [Email](mailto:german.mb@gmail.com) ·
 [GitHub](https://github.com/Kronuz) ·
@@ -11,8 +12,6 @@ description: Germán Méndez Bravo (Kronuz) — Software Engineer working on Pyt
 [X](https://twitter.com/germbravo) ·
 [Stack Overflow](https://stackoverflow.com/users/167522/kronuz) ·
 [PayPal.me](https://www.paypal.me/Kronuz)
-
-## About Me
 
 Hey there! I'm **Germán Méndez Bravo**, though you might've crossed paths with me online as **Kronuz**. If you're curious enough to be here, grab your favorite beverage and let me tell you a story.
 
