@@ -9,7 +9,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { createHighlighter } from "shiki";
+import { getSingletonHighlighter } from "shiki";
 import lightTheme from "../styles/kronuz-light.json";
 import darkTheme from "../styles/kronuz-dark.json";
 
@@ -37,7 +37,11 @@ const EXT_LANG = {
 
 let _hl;
 async function highlighter() {
-  if (!_hl) _hl = createHighlighter({ themes: [lightTheme, darkTheme], langs: LANGS });
+  // Shiki's singleton helper caches by themes+langs in its own (stable) module
+  // scope, so the remark plugin, the components, and the route loader all share
+  // ONE highlighter instead of each creating their own. Shiki warns once 10
+  // instances exist; this keeps us at one.
+  if (!_hl) _hl = getSingletonHighlighter({ themes: [lightTheme, darkTheme], langs: LANGS });
   return _hl;
 }
 
