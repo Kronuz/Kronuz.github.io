@@ -9,7 +9,7 @@ category?: string;
 };
 const CATEGORY = {
 announcement: { emoji: "📣", label: "Announcement" },
-article: { emoji: "📝", label: "Article" },
+article: { emoji: "🖋️", label: "Article" },
 tutorial: { emoji: "🛠️", label: "Tutorial" },
 note: { emoji: "💡", label: "Note" },
 } as const;
@@ -31,10 +31,9 @@ color: var(--sl-color-white);
 }
 
 .post-category {
-margin-right: 0.35em;
-font-size: 0.85em;
-/* Emoji glyphs carry their own color; keep them off the heading's white. */
-vertical-align: 0.03em;
+/* Match the title's size (not shrunk), with a clear gap before it. */
+margin-right: 0.55em;
+vertical-align: 0.02em;
 }
 
 .page-subtitle {
