@@ -65,6 +65,20 @@ export default defineConfig({
 						},
 					},
 				}),
+				// starlight-blog auto-adds an RSS icon to the social links whenever a
+				// feed exists. We surface RSS in the header nav and the post CTA
+				// instead, so strip it from the social row here. The feed itself and
+				// its <link rel="alternate"> head tag stay (rss remains enabled).
+				{
+					name: 'kz-drop-rss-social',
+					hooks: {
+						'config:setup'({ config, updateConfig }) {
+							updateConfig({
+								social: (config.social ?? []).filter((s) => s.icon !== 'rss'),
+							});
+						},
+					},
+				},
 			],
 			// One authoritative menu, defined in src/lib/sidebar.mjs and rendered on
 			// every page by the Sidebar override below. This config copy drives the
