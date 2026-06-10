@@ -11,6 +11,7 @@ import kronuzDark from './src/styles/kronuz-dark.json';
 import kronuzLight from './src/styles/kronuz-light.json';
 
 import { SITE_DESCRIPTION, SITE_TITLE } from './src/consts';
+import { sidebarConfig } from './src/lib/sidebar.mjs';
 
 // https://astro.build/config
 export default defineConfig({
@@ -65,18 +66,17 @@ export default defineConfig({
 					},
 				}),
 			],
-			sidebar: [
-				{ label: 'Blog', link: '/blog/' },
-				{ label: 'Projects', link: '/projects/' },
-				{ label: 'About', link: '/about/' },
-				{ label: 'RSS feed', link: '/blog/rss.xml', attrs: { target: '_blank' } },
-			],
+			// One authoritative menu, defined in src/lib/sidebar.mjs and rendered on
+			// every page by the Sidebar override below. This config copy drives the
+			// route-derived bits (e.g. pagination) on docs-style pages.
+			sidebar: sidebarConfig(),
 			components: {
 				PageTitle: './src/components/PageTitle.astro',
 				MarkdownContent: './src/components/MarkdownContent.astro',
 				Footer: './src/components/Footer.astro',
 				SiteTitle: './src/components/SiteTitle.astro',
 				ThemeSelect: './src/components/ThemeSelect.astro',
+				Sidebar: './src/components/Sidebar.astro',
 			},
 		}),
 	],

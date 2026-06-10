@@ -1,0 +1,65 @@
+---
+/**
+ * Sidebar override: one authoritative menu on every page, plus the blog's own
+ * post navigation kept intact on /blog/ pages, and a global RSS link pinned to
+ * the very bottom.
+ *
+ * starlight-blog's route middleware builds a dynamic blog sidebar (All posts,
+ * Recent posts with the current post highlighted, Tags with counts, RSS, ...),
+ * and Starlight's middleware ordering means a user route middleware can't
+ * reliably run after it. So here, after it has already run, we merge:
+ *   - outside the blog: the authoritative menu (About, [Projects,] Blog);
+ *   - inside the blog: the authoritative menu with its global "Blog" link
+ *     dropped, because the blog's own "All posts" (relabeled "Blog", kept
+ *     current for the whole section) stands in for it, followed by Recent posts
+ *     and Tags. The single-author Authors group is dropped.
+ * A single global RSS link is then appended last on every page (replacing
+ * starlight-blog's own RSS entry, which we drop to avoid a duplicate). Finally
+ * we render Starlight's stock Sidebar, so markup, styling, scroll persistence,
+ * the mobile menu, and the current-post highlight stay native.
+ */
+import Default from "@astrojs/starlight/components/Sidebar.astro";
+import { buildSidebar } from "../lib/sidebar.mjs";
+
+const route = Astro.locals.starlightRoute;
+const pathname = Astro.url.pathname;
+const onBlog = pathname === "/blog/" || pathname.startsWith("/blog/");
+
+const isBlogRoot = (e) => e.type === "link" && /\/blog\/?$/.test(e.href);
+const isRss = (e) => e.type === "link" && /rss\.xml$/.test(e.href);
+
+// Global RSS link, pinned to the very bottom of the menu on every page (so it
+// shows even outside the blog); replaces starlight-blog's own RSS entry.
+const RSS = {
+  type: "link",
+  label: "RSS",
+  href: "/blog/rss.xml",
+  isCurrent: false,
+  badge: undefined,
+  attrs: { target: "_blank" },
+};
+
+// Keep the blog post navigation (All posts, Recent/Featured, Tags); drop the
+// single-author Authors group and the RSS link (we pin our own RSS below).
+function blogPostNav(entries) {
+  const isAuthorsGroup = (e) =>
+    e.type === "group" &&
+    e.entries.length > 0 &&
+    e.entries.every((x) => x.type === "link" && /\/blog\/authors\//.test(x.href));
+  return entries.filter((e) => !isAuthorsGroup(e) && !isRss(e));
+}
+
+let menu = buildSidebar(pathname);
+let extras = [];
+if (onBlog) {
+  // Drop the global "Blog" link; the blog's own "All posts" takes its place,
+  // relabeled "Blog" and lit for the whole blog section.
+  menu = menu.filter((e) => !isBlogRoot(e));
+  extras = blogPostNav(route.sidebar).map((e) =>
+    isBlogRoot(e) ? { ...e, label: "Blog", isCurrent: true } : e,
+  );
+}
+route.sidebar = [...menu, ...extras, RSS];
+---
+
+<Default />
