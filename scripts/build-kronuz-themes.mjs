@@ -60,6 +60,26 @@ const DARK = {
   ins: "#219186", del: "#dc322f", chg: "#cb4b16", invalid: "#ff0b00",
 };
 
+// Integrated-terminal ANSI palette, used by Shiki's `ansi` grammar to color terminal
+// captures (.out/.ansi/.log snippets) in the Kronuz colors. Hand-tuned per variant
+// (the light set is not a mechanical toLight() of the dark set), so both are explicit.
+const ANSI_DARK = {
+  "terminal.ansiBlack": "#5a5755", "terminal.ansiRed": "#da4939", "terminal.ansiGreen": "#a5c261",
+  "terminal.ansiYellow": "#e8bf6a", "terminal.ansiBlue": "#6e9cbe", "terminal.ansiMagenta": "#d687bf",
+  "terminal.ansiCyan": "#5fb3b3", "terminal.ansiWhite": "#c8c6c5",
+  "terminal.ansiBrightBlack": "#7f7b78", "terminal.ansiBrightRed": "#ff6d5a", "terminal.ansiBrightGreen": "#c7d87b",
+  "terminal.ansiBrightYellow": "#ffd68d", "terminal.ansiBrightBlue": "#8fbce0", "terminal.ansiBrightMagenta": "#e6a3d6",
+  "terminal.ansiBrightCyan": "#7fd0d0", "terminal.ansiBrightWhite": "#f0eeec",
+};
+const ANSI_LIGHT = {
+  "terminal.ansiBlack": "#3a3837", "terminal.ansiRed": "#b5372a", "terminal.ansiGreen": "#5f7d1c",
+  "terminal.ansiYellow": "#a6791f", "terminal.ansiBlue": "#3a6ea5", "terminal.ansiMagenta": "#a4458b",
+  "terminal.ansiCyan": "#1f7a7a", "terminal.ansiWhite": "#5a5755",
+  "terminal.ansiBrightBlack": "#6f6b68", "terminal.ansiBrightRed": "#cf3b2c", "terminal.ansiBrightGreen": "#6f9322",
+  "terminal.ansiBrightYellow": "#b3851f", "terminal.ansiBrightBlue": "#2f6fb0", "terminal.ansiBrightMagenta": "#b8519f",
+  "terminal.ansiBrightCyan": "#2a9a9a", "terminal.ansiBrightWhite": "#2f2c2b",
+};
+
 function theme(variant) {
   const dark = variant === "dark";
   const c = dark ? DARK : Object.fromEntries(Object.entries(DARK).map(([k, v]) => [k, toLight(v)]));
@@ -117,6 +137,7 @@ function theme(variant) {
       "editor.background": c.bg,
       "editor.foreground": c.fg,
       "editor.selectionBackground": sel,
+      ...(dark ? ANSI_DARK : ANSI_LIGHT),
     },
     tokenColors,
   };
