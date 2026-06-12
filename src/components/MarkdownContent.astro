@@ -1,22 +1,147 @@
 ---
-// Wraps starlight-blog's MarkdownContent override (which renders the blog post
-// frame: metadata, body, tags, prev/next) and appends giscus comments on
-// individual blog posts only. Gated on `entry.data.date` (blog posts have it;
-// the splash and About/Projects pages don't), so it never appears in the "All
-// posts" list excerpts or on non-blog pages.
+// Wraps starlight-blog's MarkdownContent override (which renders the blog post frame:
+// metadata, body, tags, prev/next) and, on individual blog posts only, adds the
+// article-series UI (the sidebar stepper lives in the TableOfContents override; here:
+// a mobile-only series chip, the prev/next pagers, and an end-of-article divider) plus
+// giscus comments. Gated on `entry.data.date` (blog posts have it; the splash and
+// About/Projects pages don't), so none of it appears on non-blog pages.
 //
-// Setting `components.MarkdownContent` makes starlight-blog log a one-line
-// build WARN ("you already have a MarkdownContent override") and skip its own
-// registration. That's expected: we re-import its override below, so the blog
-// frame still renders. The warning is harmless.
+// Setting `components.MarkdownContent` makes starlight-blog log a one-line build WARN
+// ("you already have a MarkdownContent override") and skip its own registration.
+// That's expected: we re-import its override below, so the blog frame still renders.
 import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 import Giscus from './Giscus.astro';
+import { resolveSeries, resolveChronological } from '../lib/series.mjs';
 
 const { entry } = Astro.locals.starlightRoute;
 const isBlogPost = Boolean(entry?.data?.date);
+const term = (entry?.id ?? '').replace(/\.mdx?$/, '');
+
+// The full series stepper lives in the right sidebar (the TableOfContents override).
+// Here we keep only the in-content pieces: a mobile-only one-liner (the sidebar is
+// hidden on small screens) and the prev/next pagers.
+const series = isBlogPost ? await resolveSeries(term) : null;
+const inSeries = Boolean(series?.inSeries);
+const seriesPrev = series?.prev ?? null;
+const seriesNext = series?.next ?? null;
+// Render the chronological blog pager ourselves, below the article and next to the
+// series pager, instead of where starlight-blog puts it (the footer, below comments).
+// We hide that native one in CSS (.post-footer .pagination).
+const chrono = isBlogPost ? await resolveChronological(term) : null;
+const chronoPrev = chrono?.prev ?? null;
+const chronoNext = chrono?.next ?? null;
 ---
 
 <BlogMarkdownContent>
+	{
+		inSeries && (
+			<p class="series-mobile not-content">
+				<span class="series-mobile-num">Part {series.index + 1} of {series.total}</span>
+				<span class="series-mobile-of">of</span>
+				<span class="series-mobile-name">{series.name}</span>
+			</p>
+		)
+	}
 	<slot />
+	{
+		(seriesPrev || seriesNext) && (
+			<div class="post-pagers post-pagers-series">
+				<nav class="pagination series-pager" aria-label="Series navigation" data-pagefind-ignore>
+					<CardGrid>
+						{seriesPrev && (
+							<LinkCard href={`/blog/${seriesPrev.slug}/`} rel="prev" title={seriesPrev.title} />
+						)}
+						{seriesNext && (
+							<LinkCard href={`/blog/${seriesNext.slug}/`} rel="next" title={seriesNext.title} />
+						)}
+					</CardGrid>
+				</nav>
+			</div>
+		)
+	}
+	{isBlogPost && <div class="post-divider" role="presentation" />}
 	{isBlogPost && <Giscus />}
+	{
+		(chronoPrev || chronoNext) && (
+			<div class="post-pagers post-pagers-chrono">
+				<nav class="pagination" aria-label="Blog navigation" data-pagefind-ignore>
+					<CardGrid>
+						{chronoPrev && (
+							<LinkCard href={`/blog/${chronoPrev.slug}/`} rel="prev" title={chronoPrev.title} />
+						)}
+						{chronoNext && (
+							<LinkCard href={`/blog/${chronoNext.slug}/`} rel="next" title={chronoNext.title} />
+						)}
+					</CardGrid>
+				</nav>
+			</div>
+		)
+	}
 </BlogMarkdownContent>
+
+<style>
+	/* Mobile-only series indicator. The full stepper lives in the right sidebar
+	   (the TableOfContents override), which Starlight hides below 72rem, so on small
+	   screens show a compact chip above the post instead. Styled as a distinct pill,
+	   not body text, so it reads as chrome rather than the start of the article. */
+	.series-mobile {
+		display: inline-flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 1.5rem 0 0;
+		padding: 0.35rem 0.75rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-left: 3px solid var(--sl-color-text-accent);
+		border-radius: 1.2rem;
+		background: var(--sl-color-gray-6);
+		line-height: 1.4;
+	}
+	.series-mobile-num {
+		font-size: var(--sl-text-2xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		white-space: nowrap;
+		color: var(--sl-color-text-accent);
+	}
+	.series-mobile-of {
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+	}
+	.series-mobile-name {
+		font-size: var(--sl-text-xs);
+		font-weight: 600;
+		color: var(--sl-color-white);
+	}
+	@media (min-width: 72rem) {
+		.series-mobile {
+			display: none;
+		}
+	}
+
+	/* Two prev/next pagers, each .pagination (LinkCards in a CardGrid) sharing the
+	   native pager's styling via custom.css. The series pager sits right where the
+	   article ends; the chronological pager sits at the very bottom, above the
+	   tags/footer, with a divider above it separating it from the comments.
+	   (starlight-blog's own chronological pager is hidden in custom.css.) */
+	.post-pagers {
+		margin-top: 2.5rem;
+	}
+	/* A hairline that always marks the end of the article, whether or not a series
+	   pager is present (it tightens up against the series pager when there is one). */
+	.post-divider {
+		height: 0;
+		border: 0;
+		border-top: 1px solid var(--sl-color-gray-5);
+		margin-top: 2.5rem;
+	}
+	.post-pagers-series + .post-divider {
+		margin-top: 1.5rem;
+	}
+	.post-pagers-chrono {
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+	}
+</style>

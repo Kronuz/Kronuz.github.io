@@ -1,0 +1,146 @@
+---
+// Overrides Starlight's right-sidebar "On this page". Renders the default table of
+// contents, then, on posts that belong to an article series (frontmatter `series`),
+// appends a compact stepper below it. Desktop-only (the right sidebar is hidden on
+// mobile, where MarkdownContent's one-liner + prev/next pager carry the series instead).
+import Default from '@astrojs/starlight/components/TableOfContents.astro';
+import { resolveSeries } from '../lib/series.mjs';
+
+const { entry, toc } = Astro.locals.starlightRoute;
+const isBlogPost = Boolean(entry?.data?.date);
+const term = (entry?.id ?? '').replace(/\.mdx?$/, '');
+const series = isBlogPost ? await resolveSeries(term) : null;
+const showSeries = Boolean(toc) && Boolean(series?.inSeries);
+---
+
+{
+	showSeries && (
+		<nav class="series-aside" aria-label="Series navigation">
+			<h2 class="series-aside-title">{series.name}</h2>
+			<p class="series-aside-sub">Part {series.index + 1} of {series.total}</p>
+			<ol class="series-aside-list">
+				{series.parts.map((p) => (
+					<li>
+						{p.current ? (
+							<span class="series-aside-row is-current">
+								<span class="series-aside-num">{p.index + 1}</span>
+								<span class="series-aside-text">{p.title}</span>
+							</span>
+						) : p.available ? (
+							<a class="series-aside-row" href={`/blog/${p.slug}/`}>
+								<span class="series-aside-num">{p.index + 1}</span>
+								<span class="series-aside-text">{p.title}</span>
+							</a>
+						) : (
+							<span class="series-aside-row is-pending">
+								<span class="series-aside-num">{p.index + 1}</span>
+								<span class="series-aside-text">{p.title}</span>
+							</span>
+						)}
+					</li>
+				))}
+			</ol>
+		</nav>
+	)
+}
+
+<Default />
+
+<style>
+	.series-aside {
+		margin-bottom: 1.5rem;
+		padding-bottom: 1.25rem;
+		border-bottom: 1px solid var(--sl-color-gray-5);
+	}
+	.series-aside-title {
+		margin: 0;
+		font-size: var(--sl-text-h5);
+		font-weight: 600;
+		line-height: 1.2;
+		color: var(--sl-color-white);
+	}
+	.series-aside-sub {
+		margin: 0.2rem 0 0.6rem;
+		font-size: var(--sl-text-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-text-accent);
+	}
+	.series-aside-list {
+		position: relative;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	/* The continuous rail threading the numbered nodes. */
+	.series-aside-list::before {
+		content: '';
+		position: absolute;
+		left: 0.7rem;
+		top: 0.9rem;
+		bottom: 0.9rem;
+		width: 2px;
+		background: var(--sl-color-gray-5);
+	}
+	.series-aside-list li {
+		margin: 0;
+	}
+	.series-aside-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding: 0.25rem 0.3rem;
+		border-radius: 0.4rem;
+		text-decoration: none;
+		color: var(--sl-color-gray-2);
+		line-height: 1.3;
+	}
+	a.series-aside-row:hover {
+		background: var(--sl-color-gray-6);
+	}
+	.series-aside-num {
+		position: relative;
+		z-index: 1;
+		flex: 0 0 auto;
+		width: 1.4rem;
+		height: 1.4rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		border: 1px solid var(--sl-color-gray-4);
+		background: var(--sl-color-bg-sidebar, var(--sl-color-gray-6));
+		font-size: var(--sl-text-2xs);
+		font-weight: 600;
+		color: var(--sl-color-gray-2);
+	}
+	.series-aside-text {
+		font-size: var(--sl-text-xs);
+		padding-top: 0.08rem;
+	}
+	a.series-aside-row .series-aside-text {
+		color: var(--sl-color-text-accent);
+	}
+	a.series-aside-row:hover .series-aside-text {
+		text-decoration: underline;
+	}
+	.series-aside-row.is-current {
+		background: color-mix(in srgb, var(--sl-color-text-accent) 12%, transparent);
+	}
+	.series-aside-row.is-current .series-aside-num {
+		background: var(--sl-color-text-accent);
+		border-color: var(--sl-color-text-accent);
+		color: var(--sl-color-black);
+	}
+	.series-aside-row.is-current .series-aside-text {
+		color: var(--sl-color-white);
+		font-weight: 600;
+	}
+	.series-aside-row.is-pending {
+		color: var(--sl-color-gray-4);
+	}
+	.series-aside-row.is-pending .series-aside-num {
+		color: var(--sl-color-gray-4);
+		border-style: dashed;
+	}
+</style>

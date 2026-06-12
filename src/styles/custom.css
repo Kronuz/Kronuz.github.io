@@ -630,3 +630,120 @@ font-style: normal;
 grid-template-columns: auto 1fr auto;
 }
 }
+
+/* Unify the prev/next pagers. starlight-blog's chronological pagination at the foot
+   of each blog post renders as big Starlight LinkCards (title + large arrow, shadow).
+   Restyle those cards to match the custom series prev/next buttons defined in
+   MarkdownContent.astro (.series-foot-link): a compact bordered button with a small
+   uppercase "Previous"/"Next" label over an accent title, and an accent hover. This
+   targets the stable semantic classes from PrevNextLinks -> CardGrid -> LinkCard
+   (.pagination .sl-link-card / .stack / .title / .icon), not Astro's scoped hashes. */
+.pagination .sl-link-card {
+	gap: 0.5rem;
+	padding: 0.6rem 0.9rem;
+	border-color: var(--sl-color-gray-5);
+	border-radius: 0.5rem;
+	box-shadow: none;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+.pagination .sl-link-card:hover {
+	border-color: var(--sl-color-text-accent);
+	background: var(--sl-color-gray-6);
+}
+.pagination .sl-link-card .stack {
+	gap: 0.25rem;
+	min-width: 0;
+}
+/* Inject the directional label the native card's DOM doesn't carry, matching
+   .series-foot-dir. :has() drives prev vs next; the pseudo sits above the title. */
+.pagination .sl-link-card .stack::before {
+	font-size: var(--sl-text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--sl-color-gray-3);
+	white-space: nowrap;
+}
+.pagination .sl-link-card:has(a[rel='prev']) .stack::before {
+	content: 'Previous';
+}
+.pagination .sl-link-card:has(a[rel='next']) .stack::before {
+	content: 'Next';
+}
+/* The series pager (the .series-pager nav) keeps its "in series" wording; the
+   chronological pager stays the plain "Previous"/"Next". Higher specificity than the
+   base labels above, so it wins for the series pager only. */
+.pagination.series-pager .sl-link-card:has(a[rel='prev']) .stack::before {
+	content: 'Previous in series';
+}
+.pagination.series-pager .sl-link-card:has(a[rel='next']) .stack::before {
+	content: 'Next in series';
+}
+.pagination .sl-link-card:hover .stack::before {
+	color: var(--sl-color-text-accent);
+}
+/* Title matches .series-foot-title: smaller, semibold, accent. Kept to a single line
+   with an ellipsis so a long post title doesn't wrap the button to two rows (the
+   arrow + Previous/Next label already signal direction; the full title is one click
+   away). min-width:0 on the stack above lets the grid cell shrink for the ellipsis. */
+.pagination .sl-link-card .title {
+	display: block;
+	font-size: var(--sl-text-sm);
+	font-weight: 600;
+	color: var(--sl-color-text-accent);
+	line-height: 1.3;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+/* Shrink the oversized arrow down to a small, muted directional cue. */
+.pagination .sl-link-card .icon {
+	font-size: 1em;
+	color: var(--sl-color-gray-3);
+	align-self: center;
+}
+.pagination .sl-link-card:hover .icon {
+	color: var(--sl-color-text-accent);
+}
+
+/* Layout for .pagination, mirrored from starlight-blog's PrevNextLinks scoped CSS so
+   the series pager (which reuses .pagination + CardGrid + LinkCard but not that
+   component's scoped styles) lays out identically to the chronological pager: two
+   equal columns that stack on narrow widths, prev on the left with a flipped arrow,
+   next forced to the right column. Also makes a single button stay 50%, not full
+   width. These duplicate the native pager's own rules (same values), harmlessly. */
+.pagination {
+	container-type: inline-size;
+}
+.pagination .card-grid {
+	gap: 1rem;
+	grid-template-columns: 1fr;
+	grid-template-rows: 1fr 1fr;
+}
+.pagination .sl-link-card:has(a[rel='prev']) {
+	grid-template-columns: auto 1fr;
+}
+.pagination .sl-link-card:has(a[rel='prev']) span {
+	order: 2;
+}
+.pagination .sl-link-card:has(a[rel='prev']) svg {
+	transform: matrix(-1, 0, 0, 1, 0, 0);
+}
+.pagination .sl-link-card:has(a[rel='next']) span {
+	text-align: end;
+}
+@container (min-width: 30rem) {
+	.pagination .card-grid {
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: 1fr;
+	}
+	.pagination .sl-link-card:has(a[rel='next']) {
+		grid-column: 2;
+	}
+}
+
+/* We render the chronological blog pager ourselves, below the article next to the
+   series pager (see MarkdownContent.astro / .post-pagers), so hide starlight-blog's
+   own copy in the post footer to avoid showing it twice. PostTags stay. */
+.post-footer .pagination {
+	display: none;
+}
