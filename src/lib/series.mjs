@@ -17,21 +17,31 @@ export async function resolveSeries(term) {
 	const name = current?.data?.series;
 	if (!name) return { inSeries: false };
 
+	// The series reflects only *published* parts: "Part N of M" counts published parts
+	// (M is their count, i.e. the last published part), the stepper lists exactly them,
+	// and a series with a single published part isn't shown as a series at all. Drafts
+	// count only in dev (so the full series previews while writing), and the post being
+	// viewed always counts itself (so a draft previews its own series).
+	const isPublished = (e) =>
+		import.meta.env.MODE !== 'production' || e.data.draft !== true || bareSlug(e.id) === slug;
 	const members = docs
-		.filter((e) => e.data.series === name)
+		.filter((e) => e.data.series === name && isPublished(e))
 		.sort(
 			(a, b) =>
 				(a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0) ||
 				(a.data.date?.getTime() ?? 0) - (b.data.date?.getTime() ?? 0) ||
 				a.data.title.localeCompare(b.data.title),
 		);
+	// A lone published part is just a post, not a series — no series box, no series pager.
+	if (members.length <= 1) return { inSeries: false };
+
 	const index = members.findIndex((e) => bareSlug(e.id) === slug);
 	const parts = members.map((e, i) => ({
 		slug: bareSlug(e.id),
 		title: e.data.title,
 		index: i,
 		current: i === index,
-		available: i === index || e.data.draft !== true,
+		available: true,
 	}));
 
 	const prevP = index > 0 ? parts[index - 1] : null;
@@ -42,8 +52,8 @@ export async function resolveSeries(term) {
 		index,
 		total: parts.length,
 		parts,
-		prev: prevP && prevP.available ? { slug: prevP.slug, title: prevP.title } : null,
-		next: nextP && nextP.available ? { slug: nextP.slug, title: nextP.title } : null,
+		prev: prevP ? { slug: prevP.slug, title: prevP.title } : null,
+		next: nextP ? { slug: nextP.slug, title: nextP.title } : null,
 	};
 }
 
