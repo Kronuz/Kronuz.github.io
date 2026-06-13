@@ -76,7 +76,9 @@ const showSeries = Boolean(toc) && Boolean(series?.inSeries);
 	.series-aside-list::before {
 		content: '';
 		position: absolute;
-		left: 0.7rem;
+		/* Center the 2px rail on the number circles: row padding-left (0.3rem) +
+		   half the 1.4rem circle (0.7rem) = 1rem, minus half the rail width. */
+		left: calc(1rem - 1px);
 		top: 0.9rem;
 		bottom: 0.9rem;
 		width: 2px;
