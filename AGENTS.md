@@ -30,17 +30,26 @@ tags:
 ---
 ```
 
-Series posts open with a nav line right after the frontmatter, e.g.:
+Series posts are **frontmatter-driven**: every part sets the same `series:` name and a
+`seriesOrder:`, and the series UI (a right-sidebar stepper, a mobile "Part N of M" chip,
+and prev/next series pagers) is rendered automatically. There is no hub page and no manual
+"part of the series" line in the body.
 
-```markdown
-*Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from
-[The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This one opens ...*
-```
+- **Ordering:** `seriesOrder` ascending, then `date`, then `title`. Omit `seriesOrder`
+  when the dates already run in order; set it when they collide or don't match the
+  narrative. It defaults to 0.
+- **"Part N of M" counts published + upcoming parts.** Drafts are otherwise hidden.
+- **Tease a draft with `upcoming: true`.** On a *draft* part, `upcoming: true` shows it
+  greyed and un-linked in the stepper (a "disabled" item) instead of hiding it. A plain
+  draft stays hidden; a published part ignores `upcoming`. No "soon" label, just the
+  greyed item.
+- **One visible part is not a series** (no box, no pager) until a second is published or
+  teased.
 
-The hub article "The Boy Who Opened Boxes"
-(`the-boy-who-kept-opening-the-box.md`, slug kept as-is) is the series anchor and has no
-`seriesOrder`. Current series parts: 3 = DOSBox (`redraw-only-what-changed`),
-4 = Xapiand (`a-search-engine-from-scratch`).
+The resolver and UI are shared byte-for-byte with the internal blog (`lib/series.mjs`,
+`TableOfContents.astro`, the series bits of `MarkdownContent.astro`); only the series name
+differs (here "Opening Boxes", internal "Build It Yourself"). Preview the reader's view
+with `npm run dev:prod` (drafts hidden, upcoming greyed); `npm run dev` shows every draft.
 
 ## Voice (load-bearing)
 
