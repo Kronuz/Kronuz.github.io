@@ -4,12 +4,20 @@ import { getCollection } from 'astro:content';
 // Shared by the sidebar series box (TableOfContents override) and the in-content
 // prev/next pagers + mobile one-liner (MarkdownContent override). Any post that sets
 // `series:` joins that series; order within it is `seriesOrder` (then date, then title).
+//
+// Three visibility states within a series:
+//   published  (draft !== true)            -> readable, linked in the stepper, counts.
+//   upcoming   (draft: true, upcoming:true) -> a "coming soon" teaser: greyed + un-linked
+//                                              in the stepper (no page), but still counts,
+//                                              so a published part can advertise what's next.
+//   hidden     (draft: true)               -> not shown at all in production.
 
 const bareSlug = (id) => id.replace(/\.mdx?$/, '').split('/').pop();
 
 // Resolve the series state for a post `term` (its slug, optionally "blog/<slug>").
-// Sibling links resolve only for already-published parts (drafts are marked
-// unavailable) so nothing dead-links, in any publish order.
+// "Part N of M" and the stepper count published + upcoming parts; a series with a single
+// such part isn't shown as a series at all. Drafts (non-upcoming) count only in dev so the
+// full series previews while writing; the post being viewed always counts itself.
 export async function resolveSeries(term) {
 	const slug = (term ?? '').split('/').pop();
 	const docs = await getCollection('docs');
@@ -17,22 +25,23 @@ export async function resolveSeries(term) {
 	const name = current?.data?.series;
 	if (!name) return { inSeries: false };
 
-	// The series reflects only *published* parts: "Part N of M" counts published parts
-	// (M is their count, i.e. the last published part), the stepper lists exactly them,
-	// and a series with a single published part isn't shown as a series at all. Drafts
-	// count only in dev (so the full series previews while writing), and the post being
-	// viewed always counts itself (so a draft previews its own series).
-	const isPublished = (e) =>
-		import.meta.env.MODE !== 'production' || e.data.draft !== true || bareSlug(e.id) === slug;
+	const isProd = import.meta.env.MODE === 'production';
+	const isTeaser = (e) => e.data.upcoming === true;
+	const isPublished = (e) => !isTeaser(e) && e.data.draft !== true;
+	// A part appears in the series if it's published, an upcoming teaser, the post being
+	// viewed, or (in dev only) any draft, so the whole series previews while writing.
+	const isVisible = (e) =>
+		bareSlug(e.id) === slug || isPublished(e) || isTeaser(e) || !isProd;
+
 	const members = docs
-		.filter((e) => e.data.series === name && isPublished(e))
+		.filter((e) => e.data.series === name && isVisible(e))
 		.sort(
 			(a, b) =>
 				(a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0) ||
 				(a.data.date?.getTime() ?? 0) - (b.data.date?.getTime() ?? 0) ||
 				a.data.title.localeCompare(b.data.title),
 		);
-	// A lone published part is just a post, not a series — no series box, no series pager.
+	// A lone visible part is just a post, not a series — no series box, no series pager.
 	if (members.length <= 1) return { inSeries: false };
 
 	const index = members.findIndex((e) => bareSlug(e.id) === slug);
@@ -41,7 +50,10 @@ export async function resolveSeries(term) {
 		title: e.data.title,
 		index: i,
 		current: i === index,
-		available: true,
+		upcoming: isTeaser(e),
+		// Linked only when a readable page exists (published). Teasers and drafts are shown
+		// greyed, never linked, so nothing dead-links.
+		available: isPublished(e),
 	}));
 
 	const prevP = index > 0 ? parts[index - 1] : null;
@@ -52,8 +64,8 @@ export async function resolveSeries(term) {
 		index,
 		total: parts.length,
 		parts,
-		prev: prevP ? { slug: prevP.slug, title: prevP.title } : null,
-		next: nextP ? { slug: nextP.slug, title: nextP.title } : null,
+		prev: prevP && prevP.available ? { slug: prevP.slug, title: prevP.title } : null,
+		next: nextP && nextP.available ? { slug: nextP.slug, title: nextP.title } : null,
 	};
 }
 

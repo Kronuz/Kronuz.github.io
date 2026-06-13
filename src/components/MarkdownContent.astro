@@ -12,10 +12,15 @@
 import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
 import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 import Giscus from './Giscus.astro';
+import UpcomingPosts from './UpcomingPosts.astro';
 import { resolveSeries, resolveChronological } from '../lib/series.mjs';
 
 const { entry } = Astro.locals.starlightRoute;
 const isBlogPost = Boolean(entry?.data?.date);
+// True on the blog index (/blog), where we show the "Coming soon" teaser block above the
+// post list. Path-based so it doesn't depend on starlight-blog internals; the trailing
+// slash is normalized and pagination pages (/blog/2) and posts (/blog/<slug>) don't match.
+const isBlogRoot = (Astro.url?.pathname ?? '').replace(/\/+$/, '').endsWith('/blog');
 const term = (entry?.id ?? '').replace(/\.mdx?$/, '');
 
 // The full series stepper lives in the right sidebar (the TableOfContents override).
@@ -34,6 +39,7 @@ const chronoNext = chrono?.next ?? null;
 ---
 
 <BlogMarkdownContent>
+	{isBlogRoot && <UpcomingPosts />}
 	{
 		inSeries && (
 			<p class="series-mobile not-content">

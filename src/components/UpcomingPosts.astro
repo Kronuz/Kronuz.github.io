@@ -1,0 +1,108 @@
+---
+// A "Coming soon" teaser block for the blog index. Lists every post marked
+// `upcoming: true` (kept `draft: true`, so no readable page is built) as a greyed,
+// un-linked card with its title, a "Soon" badge, an optional series tag, and its
+// excerpt (falling back to description) so readers get a taste of what's next. Renders
+// nothing when there are no upcoming posts. See src/lib/series.mjs for the matching
+// in-series teaser behavior.
+import { getCollection } from 'astro:content';
+
+const docs = await getCollection('docs');
+const upcoming = docs
+	.filter((e) => e.data.upcoming === true)
+	.sort(
+		(a, b) =>
+			(a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0) ||
+			(a.data.date?.getTime() ?? 0) - (b.data.date?.getTime() ?? 0) ||
+			a.data.title.localeCompare(b.data.title),
+	);
+
+const teaser = (e) => e.data.excerpt || e.data.description || '';
+---
+
+{
+	upcoming.length > 0 && (
+		<section class="upcoming not-content" aria-label="Coming soon">
+			<h2 class="upcoming-title">Coming soon</h2>
+			<ul class="upcoming-list">
+				{upcoming.map((e) => (
+					<li class="upcoming-item">
+						<p class="upcoming-head">
+							<span class="upcoming-name">{e.data.title}</span>
+							{e.data.series && <span class="upcoming-series">{e.data.series}</span>}
+							<span class="upcoming-soon">Soon</span>
+						</p>
+						{teaser(e) && <p class="upcoming-excerpt">{teaser(e)}</p>}
+					</li>
+				))}
+			</ul>
+		</section>
+	)
+}
+
+<style>
+	.upcoming {
+		margin: 0 0 2.5rem;
+		padding: 1rem 1.25rem;
+		border: 1px dashed var(--sl-color-gray-5);
+		border-radius: 0.6rem;
+		background: color-mix(in srgb, var(--sl-color-gray-6) 50%, transparent);
+	}
+	.upcoming-title {
+		margin: 0 0 0.75rem;
+		font-size: var(--sl-text-xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--sl-color-text-accent);
+	}
+	.upcoming-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	.upcoming-item {
+		margin: 0;
+	}
+	.upcoming-head {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 0;
+	}
+	.upcoming-name {
+		font-size: var(--sl-text-h5);
+		font-weight: 600;
+		line-height: 1.2;
+		color: var(--sl-color-gray-2);
+	}
+	.upcoming-series {
+		font-size: var(--sl-text-2xs);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+	.upcoming-soon {
+		margin-left: auto;
+		align-self: center;
+		flex: 0 0 auto;
+		padding: 0.05rem 0.45rem;
+		border-radius: 1rem;
+		border: 1px dashed var(--sl-color-gray-4);
+		font-size: var(--sl-text-2xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-text-accent);
+	}
+	.upcoming-excerpt {
+		margin: 0.3rem 0 0;
+		font-size: var(--sl-text-sm);
+		line-height: 1.5;
+		color: var(--sl-color-gray-3);
+	}
+</style>

@@ -32,9 +32,10 @@ const showSeries = Boolean(toc) && Boolean(series?.inSeries);
 								<span class="series-aside-text">{p.title}</span>
 							</a>
 						) : (
-							<span class="series-aside-row is-pending">
+							<span class={`series-aside-row is-pending${p.upcoming ? ' is-upcoming' : ''}`}>
 								<span class="series-aside-num">{p.index + 1}</span>
 								<span class="series-aside-text">{p.title}</span>
+								{p.upcoming && <span class="series-aside-soon">Soon</span>}
 							</span>
 						)}
 					</li>
@@ -144,5 +145,19 @@ const showSeries = Boolean(toc) && Boolean(series?.inSeries);
 	.series-aside-row.is-pending .series-aside-num {
 		color: var(--sl-color-gray-4);
 		border-style: dashed;
+	}
+	/* "Coming soon" teaser: a small pill after the title to build a little anticipation. */
+	.series-aside-soon {
+		flex: 0 0 auto;
+		align-self: center;
+		margin-left: auto;
+		padding: 0.05rem 0.4rem;
+		border-radius: 1rem;
+		border: 1px dashed var(--sl-color-gray-4);
+		font-size: var(--sl-text-2xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-text-accent);
 	}
 </style>
