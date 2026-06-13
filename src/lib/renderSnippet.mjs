@@ -132,6 +132,25 @@ export const COPY_BTN =
   `<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>` +
   `<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>`;
 
+// Download icon (save-to-disk arrow), matching the Copy/Close icon buttons. Kept in sync
+// with the inline copy in <Snippet>/<SnippetLink> so all surfaces look alike.
+export const DOWNLOAD_ICON =
+  `<svg class="snippet-i snippet-i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" ` +
+  `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+  `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>` +
+  `<path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>`;
+
+/** A download icon button: the raw file, saved under its real name (drops the `.txt`). */
+export function downloadBtn(rawHref) {
+  if (!rawHref) return "";
+  const name = rawHref.replace(/^.*\/snippets\/raw\//, "").replace(/\.txt$/, "");
+  return (
+    `<a class="snippet-btn snippet-icon-btn snippet-download" href="${esc(rawHref)}" ` +
+    `download="${esc(name)}" aria-label="Download ${esc(name)}" title="Download ${esc(name)}">` +
+    `${DOWNLOAD_ICON}</a>`
+  );
+}
+
 /**
  * Build the inline snippet figure: a titled toolbar (Open / Raw / Copy) over the
  * highlighted code, optionally collapsed inside a <details>. The same builder
@@ -143,6 +162,7 @@ export async function snippetFigure({ code, lang, title, rawHref, viewHref, copy
   const actions = [
     viewHref ? `<a class="snippet-btn" href="${esc(viewHref)}">Open</a>` : "",
     rawHref ? `<a class="snippet-btn" href="${esc(rawHref)}" target="_blank" rel="noopener">Raw</a>` : "",
+    downloadBtn(rawHref),
     copy ? COPY_BTN : "",
   ].join("");
   const bar =

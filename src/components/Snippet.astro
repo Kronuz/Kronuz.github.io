@@ -27,6 +27,15 @@ const displayTitle = title || file || lang;
     <span class="snippet-actions">
       {viewHref && <a class="snippet-btn" href={viewHref}>Open</a>}
       {raw && <a class="snippet-btn" href={raw} target="_blank" rel="noopener">Raw</a>}
+      {raw && file && (
+        <a class="snippet-btn snippet-icon-btn snippet-download" href={raw} download={file} aria-label={`Download ${file}`} title={`Download ${file}`}>
+          <svg class="snippet-i snippet-i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <path d="M7 10l5 5 5-5" />
+            <path d="M12 15V3" />
+          </svg>
+        </a>
+      )}
     </span>
   </figcaption>
   {
