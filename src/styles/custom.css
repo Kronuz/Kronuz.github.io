@@ -747,3 +747,49 @@ grid-template-columns: auto 1fr auto;
 .post-footer .pagination {
 	display: none;
 }
+
+/* Blog post metadata: keep the Draft/Featured badges on the same line as the date
+   instead of a separate full-width row below it, and render them as compact pills.
+   Targets starlight-blog's Metadata.astro by class name (.metadata.not-content,
+   .dates, .authors, .badges), not its scoped hash, like the pager styles above.
+   `display`/`grid` need !important to beat the component's equal-specificity scoped
+   `.metadata { display:flex; flex-direction:column }`. */
+.metadata.not-content {
+	display: grid !important;
+	grid-template-columns: 1fr auto !important;
+	align-items: baseline;
+	column-gap: 0.75rem;
+	row-gap: 0.5rem;
+}
+.metadata.not-content .dates {
+	grid-column: 1;
+	grid-row: 1;
+}
+/* Badges share row 1 with the date (right-aligned into the empty space), so they
+   no longer cost a whole line. */
+.metadata.not-content .badges {
+	grid-column: 2;
+	grid-row: 1;
+	margin: 0;
+	justify-self: end;
+	align-self: center;
+	gap: 0.375rem;
+}
+.metadata.not-content .authors {
+	grid-column: 1 / -1;
+	grid-row: 2;
+}
+/* Smaller, rounder pills than the default medium badge, with a leading emoji
+   per kind (📝 draft, ⭐ featured) to match the post-category emojis. */
+.metadata.not-content .badges .sl-badge {
+	font-size: var(--sl-text-2xs, 0.6875rem);
+	line-height: 1.6;
+	padding: 0.0625rem 0.5rem;
+	border-radius: 999px;
+}
+.metadata.not-content .badges .sl-badge.caution::before {
+	content: "📝\00A0";
+}
+.metadata.not-content .badges .sl-badge.note::before {
+	content: "⭐\00A0";
+}
