@@ -2,7 +2,7 @@
 title: "ET Phone Home"
 subtitle: "A native control plane for Eternal Terminal"
 description: "I gave a machine a handle on a remote box by wrapping Eternal Terminal in a pseudo-terminal and scraping the screen. Every clever thing that wrapper did was a workaround for one fact: et only speaks 'human terminal.' So I stopped scraping and taught et to speak machine, a native control plane called etctl. It is ~1.9x faster to cold-start, ~6.9x faster per call, deletes whole categories of the old hacks, and is built to merge: client-side only, no server or protocol changes."
-excerpt: "My first handle on a remote terminal worked by scraping a screen meant for human eyes. Every clever thing it did was a workaround for one fact: et only speaks 'human terminal.' So I built the control plane into et itself. etctl is faster on every axis I measured, deletes whole categories of the old hacks, and is built to be easy to merge upstream. The honest report, with numbers."
+excerpt: "My first handle on a remote terminal worked by scraping a screen meant for human eyes. Every clever thing it did was a workaround for one fact: et only speaks 'human terminal.' So I built the control plane into et itself. etctl is faster on every axis I measured, deletes whole categories of the old hacks, moves files through the same session, and is built to be easy to merge upstream. The honest report, with numbers."
 date: 2026-06-14
 draft: true
 featured: true
@@ -44,18 +44,21 @@ Eternal Terminal abstracts the local terminal behind a small interface it calls 
 
 On top of that swap, `et --ctl --name main user@host` backgrounds the client with no terminal attached and has it listen on a per-user unix socket at `~/.et/ctl/main.sock`. A small native CLI, `etctl`, talks to that socket. That is the whole shape.
 
-```d2 alt="etch wrapped et from outside in a pseudo-terminal and scraped the rendered screen. etctl instead talks to a backgrounded 'et --ctl' client over a local unix socket, reading et's native byte stream; that client maintains the normal encrypted Eternal Terminal session to etserver and the remote shell."
-direction: right
+```d2 alt="The old etch.py wrapped et from outside in a pseudo-terminal and scraped the rendered screen. etctl instead sends input to and reads output from a backgrounded 'et --ctl' client over a local unix socket; that client maintains the normal encrypted Eternal Terminal session down to etserver, etterminal, and the remote shell."
+direction: down
 agent: "agent / script"
-etch: "etch.py\nPTY wrapper\n(scrapes the screen)" { style.stroke-dash: 3 }
 etctl: "etctl\n(native CLI)"
-sock: "~/.et/ctl/main.sock\n0600, getpeereid" { shape: cylinder }
+etch: "etch.py\nPTY wrapper\n(scrapes the screen)" { style.stroke-dash: 3 }
+sock: "~/.et/ctl/main.sock\n0600, uid-checked" { shape: cylinder }
 daemon: "et --ctl\nbackgrounded client\n(auto-reconnecting)"
-remote: "etserver → etterminal → shell" { shape: document }
+remote: "etserver\netterminal\nshell" { shape: document }
+
 agent -> etctl
-etctl -> sock -> daemon
-daemon -> remote: "normal encrypted ET"
-agent -> etch -> remote: "the old way (scrape)" { style.stroke-dash: 3 }
+agent -> etch: "the old way" { style.stroke-dash: 3 }
+etctl -> sock
+sock -> daemon
+daemon -> remote: "encrypted ET"
+etch -> remote: "scrape" { style.stroke-dash: 3 }
 ```
 
 Because the backgrounded `et` is just an Eternal Terminal client, it reconnects on its own across network drops, the same way a human's session does. The durability I had hand-rolled in etch came for free, because this time it was not hand-rolled. It was the thing `et` already does.
@@ -98,11 +101,25 @@ The steady-state command runs are network-bound, so the wins there are modest an
 
 The number I care about most is the last row. A `etctl` invocation starts in about **15 milliseconds** against etch's **106**, because one is a native binary already part of the `et` build and the other is a Python import. That is roughly **90 milliseconds saved on every single call**, and an agent driving a host issues a great many small calls. It is the kind of fixed cost that rounds to nothing in a demo and adds up to real time across a day of automated work.
 
+## A file through the keyhole
+
+A machine driving a box eventually needs to put a file *on* it. The handle it has is the session, so the clean move is to make that one channel carry the file too, instead of bolting on a separate transfer tool. The catch is that the channel is a terminal, and a terminal is the thing least built to move a file. That turned out to be the hardest small problem in the project, and every wrong turn taught me something.
+
+The obvious move is to [base64](https://en.wikipedia.org/wiki/Base64) the file and paste it through. It works beautifully on a tiny file and falls apart above a hundred kilobytes, and not for the reason you would guess. The bytes do not land in a clean pipe. They land in the interactive line editor, zsh with syntax highlighting, which re-colors the entire growing line on every newline. That is quadratic, and a real file buries it. A megabyte did not transfer slowly, it took the session down.
+
+So stop feeding the line editor. Drive the remote terminal into raw, no-echo mode and stream the bytes straight at a waiting reader. Binary-clean, no base64, no echo, and for small files it was perfect. Then it hung on anything past a few kilobytes.
+
+The reason is the thing a terminal fundamentally is not: a file transport. A tty's input buffer is only a few kilobytes, and in raw mode it has no flow control. Send a burst bigger than the buffer and the overflow is not backpressured, it is silently dropped, and the reader waits forever for bytes that will never arrive.
+
+What finally holds is unglamorous. Send the file in small acknowledged chunks, with only one sub-buffer chunk in flight at a time. The remote reads exactly that many bytes (a length-prefixed read, so nothing in the file can pose as an end marker), appends them, and acks; only then does the next chunk go. A dropped chunk becomes a missing ack, a fast clear failure, instead of a silent forever-hang, and a SHA-256 round-trip checks the whole file at the end. I threw the nasty cases at it, every byte value, raw control characters, even its own ack and marker strings sitting in the file as ordinary data, and it held every time.
+
+The honest cost is that this is reliable, not fast. The acknowledgments are round-trip-bound, so incompressible bytes crawl at about **twenty kilobytes a second**. But `put` gzips by default, and the things you actually push to a box, configs and scripts and source and logs, compress hard: a megabyte of text lands in **under a second**, where a megabyte of random bytes takes the better part of a minute. For that big incompressible case the right answer is not the terminal at all. It is one of `et`'s own port-forward tunnels, a clean binary side-channel, and that is the next thing to cut in.
+
 ## Where etch is still ahead
 
 This is an honest report, so the column where etch wins matters as much as the table.
 
-**Maturity.** etch has months of real agent sessions behind it. `etctl` is a working prototype: the [Catch2](https://github.com/catchorg/Catch2) suite passes 433 assertions across 26 cases and every flow has run against a real `etserver`, but it has almost no mileage. Speed is not robustness, and the interactive race above is exactly the class of bug that only daily use flushes out. etch earned my trust the hard way; `etctl` has not yet.
+**Maturity.** etch has months of real agent sessions behind it. `etctl` is a working prototype: the [Catch2](https://github.com/catchorg/Catch2) suite passes 439 assertions across 26 cases, and I have since put it through a stress run against a real `etserver`, hundreds of rapid commands, concurrent readers, parallel sessions, file transfers of every shape. That shook out a real teardown race, recreating a session the instant after ending it could catch the still-dying daemon and quietly no-op, now fixed with a `--wait` that blocks until the old one is truly gone. It is more hardened than it was, and still almost untested in anger. Speed is not robustness, and a race like that is exactly the class of bug only hard daily use flushes out. etch earned my trust the hard way; `etctl` is beginning to.
 
 **Persistence.** Neither tool survives a reboot today. Both daemons die with the host process. The design for reattaching across a restart is sketched and parked, and until it exists, this is the one capability where `etctl` is not yet strictly better than etch, only faster.
 
