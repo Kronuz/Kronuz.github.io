@@ -151,6 +151,47 @@ export function downloadBtn(rawHref) {
   );
 }
 
+// Close button for the modal, matching the Copy/Download icon buttons.
+const CLOSE_BTN =
+  `<button class="snippet-btn snippet-icon-btn snippet-close" type="button" data-snippet-close ` +
+  `aria-label="Close" title="Close">` +
+  `<svg class="snippet-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" ` +
+  `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+  `<path d="M18 6 6 18M6 6l12 12"></path></svg></button>`;
+
+let _snipLinkId = 0;
+
+/**
+ * Inline snippet link with a click-to-open modal, the markdown-native twin of
+ * <SnippetLink file="...">label</SnippetLink>. Emitted by remark-snippet-link for
+ * `[label](snippet:file)`, so posts need no JSX (no .mdx). The markup matches the
+ * component exactly: an inline <a> (raw file as the JS-off fallback) plus an inert
+ * <template> holding the dialog, cloned to <body> on click by the global
+ * <SnippetScript> delegated listener.
+ */
+export async function snippetLinkHtml(file, label) {
+  const lang = langForFile(file);
+  const raw = rawHref(file);
+  const viewHref = `/snippets/view/${file}/`;
+  const id = `snip-${file.replace(/[^a-z0-9]+/gi, "-")}-${(_snipLinkId++).toString(36)}`;
+  const pre = await highlight(readSnippet(file), lang);
+  const text = label ? esc(label) : esc(file);
+  const actions =
+    `<a class="snippet-btn" href="${esc(viewHref)}">Open</a>` +
+    `<a class="snippet-btn" href="${esc(raw)}" target="_blank" rel="noopener">Raw</a>` +
+    downloadBtn(raw) +
+    COPY_BTN +
+    CLOSE_BTN;
+  return (
+    `<a class="snippet-link" href="${esc(raw)}" data-snippet-open="${id}">${text}</a>` +
+    `<template data-snippet-tpl="${id}"><dialog class="snippet-dialog" aria-label="Source: ${esc(file)}">` +
+    `<figure class="snippet snippet--modal" data-lang="${esc(lang)}">` +
+    `<figcaption class="snippet-bar"><span class="snippet-title">${esc(file)}</span>` +
+    `<span class="snippet-actions">${actions}</span></figcaption>` +
+    `<div class="snippet-code">${pre}</div></figure></dialog></template>`
+  );
+}
+
 /**
  * Build the inline snippet figure: a titled toolbar (Open / Raw / Copy) over the
  * highlighted code, optionally collapsed inside a <details>. The same builder

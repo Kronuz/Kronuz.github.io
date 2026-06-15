@@ -3,12 +3,6 @@
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist"],
   "compilerOptions": {
-    "strictNullChecks": true,
-    // "@/*" path alias. Used by manual imports AND injected by
-    // src/plugins/remark-auto-import.mjs — removing it breaks the build.
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+    "strictNullChecks": true
   }
 }

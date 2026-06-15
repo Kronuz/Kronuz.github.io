@@ -12,6 +12,7 @@
 import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
 import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 import Giscus from './Giscus.astro';
+import SnippetScript from './SnippetScript.astro';
 import { resolveSeries, resolveChronological } from '../lib/series.mjs';
 
 const { entry } = Astro.locals.starlightRoute;
@@ -78,6 +79,7 @@ const chronoNext = chrono?.next ?? null;
 			</div>
 		)
 	}
+	{isBlogPost && <SnippetScript />}
 </BlogMarkdownContent>
 
 <style>
