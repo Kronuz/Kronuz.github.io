@@ -61,17 +61,7 @@ Now the fun began, which is to say the part where a one-line idea ate three even
 
 I added a **transient prompt**. When you press Enter, the full two-line prompt for the command you just ran collapses to a single faded caret, so your scrollback is a clean column instead of a wall of repeated prompts:
 
-```text
-# before: every past command keeps its whole two-line prompt
-● gmendezb at host (10.0.0.5)  ⎇ main  ❯ cd src
-● gmendezb at host (10.0.0.5)  ⎇ src   ❯ make
-● gmendezb at host (10.0.0.5)  ⎇ src   ❯ ./run
-
-# after: past commands collapse to a faded caret; only the live prompt stays full
-❯ cd src
-❯ make
-❯ ./run
-● gmendezb at host (10.0.0.5)  ⎇ main  ❯
+```snippet file="transient-prompt.ansi" title="Transient prompt: before / after" plain
 ```
 
 I liked it immediately. Then I wanted one more thing: the command you typed should fade too, the way old history feels old. Keep its syntax colors, just dimmer. A trivial ask. I budgeted ten minutes.
