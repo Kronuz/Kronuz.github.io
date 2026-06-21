@@ -12,6 +12,12 @@ OWNER, NAME = REPO.split("/", 1)
 # origin; REPO_URL is the "view on GitHub" link. Both are per-blog (per-tenant) values.
 SITE_URL = os.environ.get("SITE_URL", "")
 REPO_URL = os.environ.get("REPO_URL", "")
+# Per-tenant widget config served by GET /api/config. The config-tenant path (github
+# form) reads these from env; the db-tenant path reads them from the tenant row.
+# DISCUSSIONS_STRIP_SUFFIX drops a login suffix when displaying handles (cosmetic);
+# DISCUSSIONS_GIPHY_KEY enables the composer's client-side GIF picker.
+DISCUSSIONS_STRIP_SUFFIX = os.environ.get("DISCUSSIONS_STRIP_SUFFIX", "")
+DISCUSSIONS_GIPHY_KEY = os.environ.get("DISCUSSIONS_GIPHY_KEY", "")
 
 # Discussion category new threads are created under (giscus-style auto-create on
 # first comment). Matched case-insensitively by name or slug; falls back to the
@@ -27,13 +33,24 @@ DEV_ORIGINS = ["http://localhost:4321", "http://127.0.0.1:4321"]
 if ALLOWED_ORIGINS != ["*"]:
     ALLOWED_ORIGINS += [o for o in DEV_ORIGINS if o not in ALLOWED_ORIGINS]
 
-# --- Comment store backend ---------------------------------------------------
-# Which backend holds the commenting system. Today only "sqlite" is a server
-# backend: the self-hosted system of record (comments/replies/edits/hides/reactions),
-# keyed by GitHub login, with OAuth used ONLY to learn who the reader is. "github" is
-# NOT a server backend — if the OAuth App is ever approved, GitHub-direct is a
-# client-side mode (browser -> GitHub GraphQL with the user's token); see store/.
-DISCUSSIONS_BACKEND = os.environ.get("DISCUSSIONS_BACKEND", "sqlite")
+# --- Architecture: store, database, sessions, tenants ------------------------
+# STORE: where comments live. "selfhosted" (a Database holds the system of record) or
+# "github" (real GitHub Discussions via GraphQL). Back-compat: the old
+# DISCUSSIONS_BACKEND=sqlite|github maps to selfhosted|github.
+_legacy_backend = os.environ.get("DISCUSSIONS_BACKEND", "sqlite")
+STORE = os.environ.get("STORE") or ("github" if _legacy_backend == "github" else "selfhosted")
+# DATABASE: the self-hosted store's backing driver (also backs db sessions/tenants).
+# "sqlite" today; "mysql"/"postgres" would be added drivers (see db/__init__.py).
+DATABASE = os.environ.get("DATABASE", "sqlite")
+# SESSION_STORE: where OAuth sessions live. "db" (in the Database; the default for the
+# self-hosted form, which already has one) or "lru" (in-memory; the default for the
+# github form, so it needs no database at all). "cookie" (stateless) is also available.
+SESSION_STORE = os.environ.get("SESSION_STORE") or ("lru" if STORE == "github" else "db")
+# TENANTS: the tenant registry. "db" (multi-tenant, in the Database) or "config" (a
+# single tenant from this instance's env; the default for the github form).
+TENANTS = os.environ.get("TENANTS") or ("config" if STORE == "github" else "db")
+# Compat alias still read by GET /api/me and the widget: "github" or "sqlite".
+DISCUSSIONS_BACKEND = "github" if STORE == "github" else "sqlite"
 
 # Server-side token the *github* store uses to READ discussions for signed-out
 # visitors: GitHub's GraphQL API needs auth even for public data, so an anonymous
@@ -41,8 +58,7 @@ DISCUSSIONS_BACKEND = os.environ.get("DISCUSSIONS_BACKEND", "sqlite")
 # (authentic authorship); this token is only the read fallback (a signed-in reader's
 # own token is used for reads instead, so viewerHasReacted is accurate). A
 # fine-grained PAT with Discussions:read (or classic public_repo read) on REPO is
-# enough; giscus uses its app's installation token for the same job. Unused by the
-# sqlite store.
+# enough; giscus uses its app's installation token for the same job. Unused otherwise.
 GITHUB_READ_TOKEN = os.environ.get("GITHUB_READ_TOKEN", "")
 
 # --- OAuth / identity --------------------------------------------------------

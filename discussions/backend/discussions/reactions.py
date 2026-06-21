@@ -2,9 +2,9 @@
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
+from . import runtime
 from .auth import current_viewer
 from .ratelimit import RateLimit, client_key
-from .store import get_store
 
 router = APIRouter()
 
@@ -21,5 +21,5 @@ class ReactionReq(BaseModel):
 async def react(req: ReactionReq, request: Request) -> dict:
     viewer = await current_viewer(request)
     _rl_react.check(client_key(request, viewer))
-    return await get_store().react(comment_id=req.comment_id, content=req.content,
-                                   on=req.on, viewer=viewer)
+    return await runtime.store().react(comment_id=req.comment_id, content=req.content,
+                                       on=req.on, viewer=viewer)

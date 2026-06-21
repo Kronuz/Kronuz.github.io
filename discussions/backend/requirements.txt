@@ -1,6 +1,6 @@
-fastapi
-uvicorn[standard]
-httpx
-aiosqlite
-cmarkgfm
-pygments
+# Default deployment = the self-hosted (sqlite) form: this package plus its `sqlite`
+# extra (aiosqlite, cmark-gfm, pygments). run.sh installs from here.
+#
+# The lean github-store form installs the core only, with no database/Markdown deps:
+#   pip install .[github]
+.[sqlite]

@@ -2,11 +2,12 @@
 
 A *store* is the backend that holds the commenting system. Two implement this:
 
-- SqliteStore  — what we run. The full system (comments, replies, edits, hides,
-  reactions) lives in our SQLite; OAuth is used only to learn who the reader is.
-- GitHubStore  — the ideal: if the org ever approves the OAuth App (repo /
-  public_repo), the reader's own token writes to GitHub Discussions, so comments
-  are truly authored by them and reactions are native — no local store, no stamp.
+- SelfHostedStore — the self-hosted system of record. The full system (comments,
+  replies, edits, hides, reactions) lives in a Database driver (SQLite today; see db/);
+  OAuth is used only to learn who the reader is, and Markdown is rendered locally.
+- GitHubStore — real GitHub Discussions: the reader's own token (repo / public_repo)
+  writes, so comments are truly authored by them and reactions are native, with no local
+  store and no "via the blog" stamp. For a repo you own.
 
 Both return the same comment shape (below) so the routes and the widget don't care
 which one is active. Stores raise fastapi.HTTPException for auth/validation errors,
@@ -100,4 +101,11 @@ class Store:
 
     async def react(self, *, comment_id: str, content: str, on: bool,
                     viewer: Optional[dict]) -> dict:
+        raise NotImplementedError
+
+    async def preview(self, *, text: str, viewer: Optional[dict]) -> str:
+        """Render Markdown to HTML for the composer's Preview tab, the same way a
+        posted comment will render: the self-hosted store uses the local cmark-gfm
+        renderer; the github store uses GitHub's /markdown API (so preview matches
+        GitHub exactly). Returns the HTML string."""
         raise NotImplementedError

@@ -1,7 +1,8 @@
 """OAuth sign-in, the session cookie, and the /auth/* + /api/me routes.
 
-The session cookie (`gc_session`) is an opaque random id; the session row lives in
-the DB (see db.py). SESSION_SECRET only signs the OAuth `state` (CSRF), not the cookie.
+The session cookie (`gc_session`) is an opaque value created by the active SessionStore
+(see sessions.py): a random id for the server-side stores, or a signed payload for the
+stateless cookie store. SESSION_SECRET only signs the OAuth `state` (CSRF) here.
 """
 import base64
 import hashlib
@@ -16,7 +17,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
-from . import db, gh
+from . import gh, runtime
 from .config import (DEFAULT_TENANT_ID, DISCUSSIONS_BACKEND, COOKIE_CROSS_SITE, OAUTH_CLIENT_ID,
                      OAUTH_ENABLED, OAUTH_SCOPE, PUBLIC_BASE_URL, SESSION_SECRET)
 
@@ -65,14 +66,14 @@ async def current_session(request: Request) -> Optional[dict]:
     sid = request.cookies.get("gc_session")
     if not sid:
         return None
-    return await db.session_get(sid)
+    return await runtime.session_store().get(sid)
 
 
 def is_admin(tenant_id: str, login: Optional[str]) -> bool:
     """Whether `login` moderates the given tenant's blog (its owner/delegates, from the
     tenant_admins table — seeded for the default tenant from ADMIN_LOGINS). Per-tenant:
     a moderator of one hosted blog is not automatically a moderator of another."""
-    return db.tenant_is_admin(tenant_id, login)
+    return runtime.tenants().is_admin(tenant_id, login)
 
 
 def request_tenant(request: Request) -> str:
@@ -80,7 +81,7 @@ def request_tenant(request: Request) -> str:
     the registered tenant origins. Falls back to the default tenant when the origin isn't
     registered (phase 2 resolves but does not yet reject — that lands in phase 3) or is
     absent (same-origin /demo and non-browser callers send no Origin)."""
-    return db.tenant_id_for_origin(request.headers.get("origin")) or DEFAULT_TENANT_ID
+    return runtime.tenants().id_for_origin(request.headers.get("origin")) or DEFAULT_TENANT_ID
 
 
 async def current_viewer(request: Request) -> Optional[dict]:
@@ -117,7 +118,7 @@ async def api_config(request: Request) -> dict:
     tenant configures once on the server instead of baking these into its static build.
     Public (no identity); behind origin enforcement, so only a registered blog gets it.
     The widget uses these only to fill values it wasn't given via data attributes."""
-    t = await db.tenant_get(request_tenant(request))
+    t = runtime.tenants().get(request_tenant(request))
     if not t:
         return {}
     return {"repo": t.get("repo") or "", "repoUrl": t.get("repo_url") or "",
@@ -146,12 +147,11 @@ async def auth_callback(code: str = "", state: str = ""):
         raise HTTPException(status_code=400, detail="bad state")
     token, granted_scope = await gh.exchange_code(code)
     user = await gh.user(token)
-    sid = secrets.token_urlsafe(24)
     # Log who signed in + the scope GitHub actually granted (never the token), so we
     # can verify a repo-scope re-auth took effect.
     _log.info("oauth callback: login=%s granted_scope=%r requested_scope=%r",
               user.get("login"), granted_scope, OAUTH_SCOPE)
-    await db.session_put(sid, {
+    sid = await runtime.session_store().create({
         "token": token,
         "login": user["login"],
         "avatarUrl": user["avatar_url"],
@@ -178,7 +178,7 @@ async def auth_callback(code: str = "", state: str = ""):
 async def auth_logout(request: Request):
     sid = request.cookies.get("gc_session")
     if sid:
-        await db.session_del(sid)
+        await runtime.session_store().destroy(sid)
     resp = JSONResponse({"ok": True})
     resp.delete_cookie("gc_session", path="/")
     return resp

@@ -4,6 +4,9 @@
 certs/
 __pycache__/
 *.log
+# Python packaging build artifacts (pyproject.toml: pip install . / build).
+build/
+*.egg-info/
 # Persisted store (SQLite + WAL sidecars).
 discussions.db
 discussions.db-wal

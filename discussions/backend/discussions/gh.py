@@ -1,9 +1,11 @@
-"""GitHub OAuth client: a shared async HTTP client plus the OAuth token exchange and
-the /user identity lookup. Opened/closed by the app lifespan (see app.py).
+"""GitHub client: a shared async HTTP client, the OAuth token exchange, the /user
+identity lookup, and a /markdown render helper. Opened/closed by the app lifespan
+(see app.py / runtime.py).
 
-This is the ONLY place the backend talks to GitHub, and only for sign-in/identity:
-comments live in our SQLite store and Markdown is rendered locally (md.py), so there
-is no server-side GitHub token anymore.
+Sign-in is always GitHub OAuth (identity only). Beyond that, what talks to GitHub
+depends on the active store: the self-hosted store keeps comments locally and renders
+Markdown itself, touching GitHub only for sign-in; the github store also uses this
+module's graphql()/markdown() as its transport to GitHub Discussions.
 """
 import json
 from typing import Optional
@@ -53,6 +55,26 @@ async def user(token: str) -> dict:
         headers={"Authorization": "bearer " + token, "Accept": "application/vnd.github+json"},
     )
     return resp.json()
+
+
+async def markdown(token: Optional[str], text: str, context: Optional[str] = None) -> str:
+    """Render Markdown to HTML via GitHub's REST /markdown API (GFM mode), so a comment
+    preview matches exactly how GitHub will render the posted comment. `context` is an
+    "owner/repo" used to resolve #issue / @mention autolinks. The response body is the
+    HTML itself (text/html), not JSON. Returns the HTML string.
+    """
+    payload: dict = {"text": text, "mode": "gfm"}
+    if context:
+        payload["context"] = context
+    headers = {"Accept": "application/vnd.github+json"}
+    if token:
+        headers["Authorization"] = "bearer " + token
+    resp = await _http.post("https://api.github.com/markdown", json=payload, headers=headers)
+    if resp.status_code in (401, 403):
+        raise HTTPException(status_code=resp.status_code, detail="GitHub auth failed; sign in again")
+    if resp.status_code != 200:
+        raise HTTPException(status_code=502, detail="GitHub markdown render failed")
+    return resp.text
 
 
 async def graphql(token: str, query: str, variables: dict) -> dict:

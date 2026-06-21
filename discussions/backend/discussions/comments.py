@@ -1,19 +1,18 @@
 """Comment routes — thin wrappers over the active store (see store/).
 
-The store (SQLite today) owns all logic and authorization; these handlers just parse
-the request, resolve the viewer, and delegate. Markdown preview renders locally
-(md.render) so the composer's Preview matches a posted comment exactly.
+The store owns all logic and authorization; these handlers just parse the request,
+resolve the viewer, and delegate. Markdown preview is the store's job too (store.preview)
+so the composer's Preview matches a posted comment exactly (cmark-gfm self-hosted,
+GitHub's /markdown API for the github store).
 """
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from . import md
+from . import runtime
 from .auth import current_viewer, request_tenant
-from .config import MAX_BODY
 from .ratelimit import RateLimit, client_key
-from .store import get_store
 
 router = APIRouter()
 
@@ -33,7 +32,7 @@ async def get_discussion(request: Request, term: Optional[str] = None,
     first = max(1, min(first, 100))
     viewer = await current_viewer(request)
     _rl_read.check(client_key(request, viewer))
-    return await get_store().get_discussion(
+    return await runtime.store().get_discussion(
         tenant_id=request_tenant(request), term=term, after=after, first=first, viewer=viewer)
 
 
@@ -50,7 +49,7 @@ class NewComment(BaseModel):
 async def post_comment(new: NewComment, request: Request) -> dict:
     viewer = await current_viewer(request)
     _rl_post.check(client_key(request, viewer))
-    return await get_store().add_comment(
+    return await runtime.store().add_comment(
         tenant_id=request_tenant(request), term=new.term, title=new.title,
         subtitle=new.subtitle, url=new.url, body=new.body,
         reply_to_id=new.reply_to_id, viewer=viewer)
@@ -65,7 +64,7 @@ class EditReq(BaseModel):
 async def edit_comment(req: EditReq, request: Request) -> dict:
     viewer = await current_viewer(request)
     _rl_edit.check(client_key(request, viewer))
-    return await get_store().edit_comment(comment_id=req.comment_id, body=req.body, viewer=viewer)
+    return await runtime.store().edit_comment(comment_id=req.comment_id, body=req.body, viewer=viewer)
 
 
 class CommentRef(BaseModel):
@@ -76,7 +75,7 @@ class CommentRef(BaseModel):
 async def delete_comment(req: CommentRef, request: Request) -> dict:
     viewer = await current_viewer(request)
     _rl_delete.check(client_key(request, viewer))
-    return await get_store().delete_comment(comment_id=req.comment_id, viewer=viewer)
+    return await runtime.store().delete_comment(comment_id=req.comment_id, viewer=viewer)
 
 
 class HideReq(BaseModel):
@@ -89,7 +88,7 @@ class HideReq(BaseModel):
 async def hide_comment(req: HideReq, request: Request) -> dict:
     viewer = await current_viewer(request)
     _rl_hide.check(client_key(request, viewer))
-    return await get_store().set_hidden(comment_id=req.comment_id, hide=req.hide,
+    return await runtime.store().set_hidden(comment_id=req.comment_id, hide=req.hide,
                                         reason=req.reason, viewer=viewer)
 
 
@@ -101,14 +100,10 @@ class PreviewReq(BaseModel):
 async def preview(req: PreviewReq, request: Request) -> dict:
     # Preview is only useful while composing (which needs sign-in to post), so require a
     # viewer — that also keeps this render endpoint from being an open, unauthenticated
-    # CPU sink. Rate-limited and length-capped like a real comment.
+    # CPU sink. Rate-limited; the store applies the same length cap as a real comment.
     viewer = await current_viewer(request)
     if not viewer:
         raise HTTPException(status_code=401, detail="sign in required")
     _rl_preview.check(client_key(request, viewer))
-    text = req.text or ""
-    if len(text) > MAX_BODY:
-        raise HTTPException(status_code=413, detail="comment too long")
-    if not text.strip():
-        return {"html": ""}
-    return {"html": md.render(text)}
+    html = await runtime.store().preview(text=req.text or "", viewer=viewer)
+    return {"html": html}

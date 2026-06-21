@@ -1,6 +1,6 @@
 """GitHubStore — the comment store that uses real GitHub Discussions.
 
-The ideal the SqliteStore stands in for: the reader's own OAuth token writes to
+The ideal the SelfHostedStore stands in for: the reader's own OAuth token writes to
 GitHub Discussions, so comments and reactions are *authentically* authored by them
 (their avatar, their name, editable/deletable by them on GitHub, native reaction
 counts) — no local store, no "via the blog" stamp. Markdown is rendered by GitHub
@@ -16,7 +16,7 @@ Auth model (the same split giscus uses):
 
 Why this fits a repo you own: some organizations enable OAuth-App access
 restrictions that reject a reader token's `addDiscussionComment` (FORBIDDEN); where
-that applies, the SqliteStore is the fallback. A repo you control has no such
+that applies, the SelfHostedStore is the fallback. A repo you control has no such
 restriction, so reader-token writes go through and authorship is genuine.
 
 Term mapping (giscus-style): a post's `term` (slug) maps to a Discussion whose title
@@ -354,3 +354,14 @@ class GitHubStore(Store):
                                 {"id": comment_id, "content": content})
         subject = (data.get(op) or {}).get("subject") or {}
         return {"comment_id": comment_id, "reactions": _map_reactions(subject.get("reactionGroups"))}
+
+    async def preview(self, *, text, viewer):
+        require_viewer(viewer)
+        if len(text or "") > MAX_BODY:
+            raise HTTPException(status_code=413, detail="comment too long")
+        if not (text or "").strip():
+            return ""
+        # GitHub's own renderer, so the preview matches the posted comment exactly. Use
+        # the reader's token when signed in, falling back to the server read token.
+        token = (viewer or {}).get("token") or GITHUB_READ_TOKEN
+        return await gh.markdown(token, text, context=REPO)

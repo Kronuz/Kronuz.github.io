@@ -12,28 +12,33 @@ rendered with GitHub's own renderer (cmark-gfm) so bodies match GitHub.
 ## Two store backends
 
 The backend keeps the commenting system behind a swappable `Store` interface
-(`backend/discussions/store/`), selected by `DISCUSSIONS_BACKEND`:
+(`backend/discussions/store/`), selected by `STORE` (`DISCUSSIONS_BACKEND` is kept as a
+back-compat alias):
 
-- **`sqlite`** — a self-hosted system of record (comments, replies, edits, hides,
-  reactions in SQLite). OAuth is used only to learn who the reader is. Works anywhere,
-  owns its data, needs no special GitHub permissions.
+- **`selfhosted`** — a self-hosted system of record (comments, replies, edits, hides,
+  reactions in a Database; SQLite today). OAuth is used only to learn who the reader is.
+  Works anywhere, owns its data, needs no special GitHub permissions. Install `.[sqlite]`.
 - **`github`** — real **GitHub Discussions** via GraphQL. The reader's own OAuth token
   writes, so comments and reactions are authentically authored by them (their
-  avatar/name, editable on GitHub, native reactions) — like giscus, but with this
-  widget's UI. Reads use a server token for signed-out visitors. Use this for a repo
-  you own; an organization that restricts OAuth Apps blocks reader-token writes, where
-  `sqlite` is the fallback.
+  avatar/name, editable on GitHub, native reactions), like giscus but with this widget's
+  UI. Reads use a server token for signed-out visitors. Stateless (no database) and lean
+  (core deps only). Use this for a repo you own; an organization that restricts OAuth
+  Apps blocks reader-token writes, where `selfhosted` is the fallback.
+
+Beyond the store, the backend is split into `Database` (`db/`), `SessionStore`
+(`sessions.py`) and `TenantRegistry` (`tenants.py`) seams wired by `runtime.py`, so a new
+database (e.g. MySQL) or store is one new file.
 
 ## Enabling (when you want to switch off giscus)
 
 1. Register a GitHub **OAuth App** (or GitHub App) for this site and set
-   `OAUTH_CLIENT_ID` / `OAUTH_CLIENT_SECRET`. For the `github` backend the sign-in
+   `OAUTH_CLIENT_ID` / `OAUTH_CLIENT_SECRET`. For the `github` store the sign-in
    scope is `repo` (the config default) so the reader's token can write Discussions.
-2. For the `github` backend, also set `GITHUB_READ_TOKEN` (a fine-grained PAT with
+2. For the `github` store, also set `GITHUB_READ_TOKEN` (a fine-grained PAT with
    Discussions:read) for signed-out reads, plus `REPO` and `DISCUSSION_CATEGORY`.
-3. Deploy the backend (`backend/run.sh`, or any ASGI host). The `github` backend is
-   **stateless** (no database), so a free serverless tier works; `sqlite` needs a
-   persistent disk.
+3. Deploy the backend (`backend/run.sh`, or any ASGI host). The `github` store is
+   **stateless** (`pip install .[github]`, no database), so a free serverless tier
+   works; `selfhosted` needs a persistent disk (`pip install .[sqlite]`).
 4. Add a `Discussions.astro` component that renders `widget/` pointed at the deployed
    backend URL, and include it in the post layout (in place of `Giscus`). See
    `widget/README.md` for the widget's data-attributes.

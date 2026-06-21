@@ -1,11 +1,12 @@
 """Tiny tenant-admin CLI for the multi-tenant comment backend (phase 3).
 
 Registers the blogs that may use this server and who moderates each. It writes the same
-SQLite DB the server reads; a running server picks up changes within TENANT_REFRESH_SECONDS
-(app.py), so onboarding a blog needs no restart. Origin enforcement (app.py) then rejects
-any blog whose origin isn't registered here.
+Database the server reads; a running server picks up changes within TENANT_REFRESH_SECONDS
+(app.py reloads the tenant registry), so onboarding a blog needs no restart. Origin
+enforcement (app.py) then rejects any blog whose origin isn't registered here.
 
-Run from the backend dir with the service's venv so DB_PATH/.env match the server:
+This manages db-backed tenants, so it's only meaningful when TENANTS=db (the self-hosted
+form). Run from the backend dir with the service's venv so DB_PATH/.env match the server:
 
     ./.venv/bin/python -m discussions.admin tenant list
     ./.venv/bin/python -m discussions.admin tenant add --id myblog \
@@ -38,12 +39,14 @@ def _split(csv: str) -> list:
 
 
 async def _run(args) -> int:
-    from . import db
+    from .db import build_database
+    db = build_database()
     await db.init()
     try:
         if args.cmd == "tenant" and args.action == "add":
-            await db.tenant_create(args.id, args.origin, args.repo, args.repo_url,
-                                   _split(args.admins), args.strip_suffix, args.giphy_key)
+            await db.tenant_create(args.id, args.origin, repo=args.repo,
+                                   repo_url=args.repo_url, admins=_split(args.admins),
+                                   strip_suffix=args.strip_suffix, giphy_key=args.giphy_key)
             t = await db.tenant_get(args.id)
             admins = await db.tenant_admins(args.id)
             print(f"ok: tenant {t['id']} origin={t['origin']} repo={t['repo']} "

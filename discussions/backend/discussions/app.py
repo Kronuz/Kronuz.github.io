@@ -1,29 +1,34 @@
 """Comments backend — application wiring.
 
-Self-hosted blog comments. The system of record is our SQLite store (the sqlite
-backend): comments, replies, edits, hides, and reactions, keyed by GitHub login.
-OAuth (the Kronuz Discussions app) is used ONLY to learn who the reader is; the blog
-admin is whoever's login is listed in ADMIN_LOGINS. Markdown is rendered locally with
-cmark-gfm (md.py) — GitHub's own renderer — so there is no GitHub token at all.
+Self-hosted blog comments with a pluggable store. The default (selfhosted) store keeps
+comments, replies, edits, hides, and reactions in a Database driver (SQLite today),
+keyed by GitHub login; OAuth is used only to learn who the reader is, and Markdown is
+rendered locally with cmark-gfm (md.py). An alternative `github` store writes straight
+to GitHub Discussions with the reader's own token (giscus-style); it needs none of the
+database/Markdown machinery, so that form's deployment stays lean.
 
-A `Store` interface (store/) keeps the backend swappable. We do not ship a server-side
-GitHub store: if the OAuth App is ever approved, "GitHub-direct" is a client-side mode
-(browser -> GitHub GraphQL with the user's token), leaving the server only the OAuth
-code->token exchange.
+The seams that keep this swappable, all wired together by runtime.py:
+    Store          (store/)     — the comment system (selfhosted | github)
+    Database       (db/)        — persistence driver (sqlite; MySQL/Postgres later)
+    SessionStore   (sessions.py)— signed-in reader sessions (lru | db | cookie)
+    TenantRegistry (tenants.py) — Origin -> tenant, moderators, widget config (config | db)
 
 Layout:
-    config.py     settings from the environment
-    db.py         aiosqlite store (sessions, comments, reactions)
-    md.py         local Markdown -> HTML renderer (cmark-gfm, GitHub's renderer)
-    gh.py         GitHub OAuth client (token exchange + /user identity)
-    auth.py       OAuth + session cookie + /auth/*, /api/me, is_admin, current_viewer
-    store/        the comment store: base (interface) + sqlite (what we run)
+    config.py     settings from the environment (STORE/DATABASE/SESSION_STORE/TENANTS)
+    runtime.py    builds + holds the Store/Database/SessionStore/TenantRegistry; startup/shutdown
+    db/           Database drivers: base (interface) + sqlite
+    sessions.py   SessionStore: lru (default for github) | db | cookie
+    tenants.py    TenantRegistry: config (single tenant) | db (multi-tenant)
+    md.py         local Markdown -> HTML renderer (cmark-gfm); used by the selfhosted store
+    gh.py         GitHub client: OAuth token exchange + /user identity (+ github store transport)
+    auth.py       OAuth + session cookie + /auth/*, /api/me, /api/config, is_admin, current_viewer
+    store/        the comment store: base (interface) + selfhosted + github
     comments.py   /api/comments (+ /edit, /delete, /hide), /api/preview — thin routes
     reactions.py  /api/react — thin route
-    app.py        this file: app, lifespan, CORS, router wiring, /api/health, static
+    app.py        this file: app, lifespan, CORS, origin enforcement, /api/health, static
 
 Run:
-    pip install -r requirements.txt
+    pip install -e .[sqlite]
     REPO=<owner>/<repo> ADMIN_LOGINS=<your-login> \
       OAUTH_CLIENT_ID=... OAUTH_CLIENT_SECRET=... \
       ALLOWED_ORIGINS="https://<your>.pages.github.io" \
@@ -40,10 +45,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import auth, comments, db, gh, reactions
-from .config import (ADMIN_LOGINS, ALLOWED_ORIGINS, DEFAULT_TENANT_ID, DEV_ORIGINS,
-                     LOG_LEVEL, REPO, REPO_URL, REQUEST_MAX_BYTES, SITE_URL, WIDGET_DIR)
-from .store import get_store
+from . import auth, comments, reactions, runtime
+from .config import (ALLOWED_ORIGINS, DEV_ORIGINS, LOG_LEVEL, REPO, REQUEST_MAX_BYTES,
+                     WIDGET_DIR)
 
 # How often to refresh the in-process tenant cache so a tenant added out-of-process (the
 # admin CLI) becomes active without restarting the server (multi-tenant phase 3).
@@ -66,23 +70,23 @@ def _setup_logging() -> None:
 
 
 async def _session_sweeper() -> None:
-    # Hourly background sweep of expired sessions; lazy on-read cleanup handles the
-    # rest. Cheap: one indexed DELETE on expires_at.
+    # Hourly background sweep of expired sessions; lazy on-read cleanup handles the rest.
+    # The active SessionStore decides what (if anything) this does.
     while True:
         await asyncio.sleep(3600)
         try:
-            await db.session_sweep()
+            await runtime.session_store().sweep()
         except Exception:
             pass
 
 
 async def _tenant_cache_refresher() -> None:
-    # Periodically reload the tenant cache so a tenant created out-of-process (the admin
-    # CLI) starts resolving + passing CORS/origin checks without a server restart.
+    # Periodically reload the tenant registry so a tenant created out-of-process (the
+    # admin CLI) starts resolving + passing CORS/origin checks without a server restart.
     while True:
         await asyncio.sleep(TENANT_REFRESH_SECONDS)
         try:
-            await db.tenant_cache_load()
+            await runtime.tenants().load()
         except Exception:
             pass
 
@@ -90,12 +94,7 @@ async def _tenant_cache_refresher() -> None:
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     _setup_logging()
-    await gh.init()    # shared httpx client
-    await db.init()    # aiosqlite connection + schema
-    # Seed the single default tenant from this instance's env (phase 1: one hosted blog).
-    await db.tenant_seed_default(DEFAULT_TENANT_ID, SITE_URL, REPO, REPO_URL, ADMIN_LOGINS)
-    await get_store().init()  # active comment store
-    await db.session_sweep()  # drop anything that expired while we were down
+    await runtime.startup()  # build + bring up store, db (if needed), sessions, tenants
     tasks = [asyncio.create_task(_session_sweeper()),
              asyncio.create_task(_tenant_cache_refresher())]
     try:
@@ -108,9 +107,7 @@ async def lifespan(_app: FastAPI):
                 await t
             except asyncio.CancelledError:
                 pass
-        await get_store().close()
-        await gh.close()
-        await db.close()
+        await runtime.shutdown()
 
 
 app = FastAPI(title="discussions", lifespan=lifespan)
@@ -129,11 +126,11 @@ class _AllowedOrigins:
     is never a member, so credentials stay enabled and the origin is echoed explicitly."""
 
     def __contains__(self, origin: str) -> bool:
-        return origin != "*" and (origin in DEV_ORIGINS or origin in db.tenant_origins())
+        return origin != "*" and (origin in DEV_ORIGINS or origin in runtime.tenants().origins())
 
 
 def _origin_registered(origin: str) -> bool:
-    return origin in DEV_ORIGINS or db.tenant_id_for_origin(origin) is not None
+    return origin in DEV_ORIGINS or runtime.tenants().id_for_origin(origin) is not None
 
 
 if _WILDCARD:

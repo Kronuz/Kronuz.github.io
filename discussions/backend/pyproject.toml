@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "discussions"
+version = "0.1.0"
+description = "Self-hosted, pluggable blog comments backend (GitHub sign-in, multi-tenant)."
+requires-python = ">=3.10"
+# Core: the web app and its GitHub sign-in / github-store transport. This alone is
+# enough to run the `github` store (STORE=github), which keeps no local database and
+# renders Markdown via GitHub's API — so its deployment installs nothing heavier.
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "httpx",
+]
+
+[project.optional-dependencies]
+# The self-hosted store (STORE=selfhosted, DATABASE=sqlite): a SQLite system of record
+# plus local Markdown rendering (cmark-gfm + Pygments highlighting). This is the form
+# the default deployment runs.
+sqlite = ["aiosqlite", "cmarkgfm", "pygments"]
+# A MySQL system of record: the same self-hosted store with a different Database driver
+# (add db/mysql.py). The local Markdown renderer is shared with the sqlite form.
+mysql = ["aiomysql", "cmarkgfm", "pygments"]
+# The github store needs nothing beyond core (it talks to GitHub over httpx); listed for
+# symmetry so `pip install .[github]` reads cleanly.
+github = []
+
+[tool.setuptools.packages.find]
+include = ["discussions*"]

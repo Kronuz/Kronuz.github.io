@@ -21,10 +21,10 @@ for _line in open(".env"):
         os.environ.setdefault(_k, _v.strip().strip('"').strip("'"))
 sys.path.insert(0, ".")
 
-from discussions import db  # noqa: E402
-from discussions.config import (  # noqa: E402
-    DEFAULT_TENANT_ID, SITE_URL, REPO, REPO_URL, ADMIN_LOGINS)
-from discussions.store.sqlite import SqliteStore  # noqa: E402
+from discussions.config import DEFAULT_TENANT_ID  # noqa: E402
+from discussions.db import build_database  # noqa: E402
+from discussions.store.selfhosted import SelfHostedStore  # noqa: E402
+from discussions.tenants import DbTenants  # noqa: E402
 
 TERM = "__smoke__" + secrets.token_hex(4)
 USER = {"login": "smoke-bot", "name": "Smoke Bot", "avatarUrl": "", "url": "", "is_admin": False}
@@ -39,10 +39,12 @@ def check(label, cond):
 
 
 async def main():
+    db = build_database()
     await db.init()
-    await db.tenant_seed_default(DEFAULT_TENANT_ID, SITE_URL, REPO, REPO_URL, ADMIN_LOGINS)
-    store = SqliteStore()
-    # Moderation is per-tenant now (db.tenant_is_admin against the comment's tenant), not
+    tenants = DbTenants(db)
+    await tenants.load()  # seeds the default tenant from env + loads the registry cache
+    store = SelfHostedStore(db, tenants)
+    # Moderation is per-tenant now (tenants.is_admin against the comment's tenant), not
     # the viewer's self-reported flag. Register the throwaway admin as a moderator of the
     # default tenant so it can hide/delete here; removed in cleanup. A second synthetic
     # tenant id (never written to) is used for read-isolation + per-tenant-admin checks.
@@ -51,7 +53,7 @@ async def main():
         "INSERT OR IGNORE INTO tenant_admins(tenant_id, login) VALUES(?,?)",
         (DEFAULT_TENANT_ID, ADMIN["login"]))
     await db._conn.commit()
-    await db.tenant_cache_load()
+    await tenants.load()
     print(f"[smoke] term={TERM} tenant={DEFAULT_TENANT_ID}")
 
     cid = rid = None
@@ -83,8 +85,8 @@ async def main():
         check("read is tenant-scoped (other tenant sees 0)",
               other_t["discussion"]["totalCount"] == 0)
         # Per-tenant admin: a default-tenant moderator is not a moderator of another tenant.
-        check("admin scoped to its tenant", db.tenant_is_admin(DEFAULT_TENANT_ID, ADMIN["login"]))
-        check("admin not global across tenants", not db.tenant_is_admin(T2, ADMIN["login"]))
+        check("admin scoped to its tenant", tenants.is_admin(DEFAULT_TENANT_ID, ADMIN["login"]))
+        check("admin not global across tenants", not tenants.is_admin(T2, ADMIN["login"]))
 
         rr = await store.react(comment_id=cid, content="ROCKET", on=True, viewer=USER)
         check("reaction added", any(x["content"] == "ROCKET" for x in rr["reactions"]))
@@ -115,7 +117,7 @@ async def main():
         await db._conn.execute("DELETE FROM tenant_admins WHERE tenant_id=? AND login=?",
                                (DEFAULT_TENANT_ID, ADMIN["login"]))
         await db._conn.commit()
-        await db.tenant_cache_load()
+        await tenants.load()
 
     gone = await store.get_discussion(tenant_id=DEFAULT_TENANT_ID, term=TERM,
                                       after=None, first=20, viewer=None)
