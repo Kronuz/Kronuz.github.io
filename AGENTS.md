@@ -98,12 +98,16 @@ console.log(`${Math.round(+m[1])}x${Math.round(+m[2])} ratio=${(+m[1]/+m[2]).toF
 ## Snippets & cross-links
 
 - **Snippets** (full files from `src/snippets/`), plain Markdown, two forms: a fenced
-  ```` ```snippet ```` with `file="name.ext"` (optional `title=`, `lang=`, `collapse`,
-  and `plain` to drop the Open/Raw/Download actions for an illustrative snippet) for
-  the framed viewer, or an inline link `[label](snippet:file)` for a click-to-open modal.
-  Both render via `lib/renderSnippet.mjs` (`remark-snippet.mjs` / `remark-snippet-link.mjs`),
-  driven by the global `<SnippetScript>`. Served raw at `/snippets/raw/<file>.txt`, full page at
-  `/snippets/view/<file>/`.
+  ```` ```snippet ```` with `file="name.ext"` (optional `title=`, `lang=`, `collapse`)
+  for the framed viewer, or an inline link `[label](snippet:file)` for a click-to-open
+  modal. Both render via `lib/renderSnippet.mjs` (`remark-snippet.mjs` /
+  `remark-snippet-link.mjs`), driven by the global `<SnippetScript>`. Served raw at
+  `/snippets/raw/<file>.txt`, full page at `/snippets/view/<file>/`.
+- **Terminal output (colored):** a plain ```` ```ansi ```` fence — Expressive Code
+  renders Shiki's `ansi` grammar natively, so raw SGR escape bytes in the fence body come
+  out colored and theme-aware, with the same frame, `title=`, and copy button as any code
+  fence (no custom plugin). Use ```` ```ansi ```` for an inline capture (a prompt, a build
+  log); a ```` ```snippet ```` with a `.out`/`.ansi` file is only for *sharing the whole file*.
 - **Soft cross-links:** a `/blog/<slug>/` link to a post that is a *draft* (so not in a
   production build) renders as plain text instead of 404ing, then becomes a real link once
   that post publishes (`remark-soft-blog-links.mjs`). Only known post slugs are softened, so

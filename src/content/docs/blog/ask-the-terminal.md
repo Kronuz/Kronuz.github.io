@@ -61,7 +61,17 @@ Now the fun began, which is to say the part where a one-line idea ate three even
 
 I added a **transient prompt**. When you press Enter, the full two-line prompt for the command you just ran collapses to a single faded caret, so your scrollback is a clean column instead of a wall of repeated prompts:
 
-```snippet file="transient-prompt.ansi" title="Transient prompt: before / after" plain
+```ansi
+[2m# before: every past command keeps its whole two-line prompt[0m
+[32m●[0m [1;37mgmendezb[0m at [34mhost[0m [90m(10.0.0.5)[0m  [90m⎇[0m [1;37mmain[0m  [1;31m❯[0m[1;33m❯[0m[1;32m❯[0m cd src
+[32m●[0m [1;37mgmendezb[0m at [34mhost[0m [90m(10.0.0.5)[0m  [90m⎇[0m [1;37msrc[0m   [1;31m❯[0m[1;33m❯[0m[1;32m❯[0m make
+[32m●[0m [1;37mgmendezb[0m at [34mhost[0m [90m(10.0.0.5)[0m  [90m⎇[0m [1;37msrc[0m   [1;31m❯[0m[1;33m❯[0m[1;32m❯[0m ./run
+
+[2m# after: past commands collapse to a faded caret; only the live prompt stays full[0m
+[2m❯ cd src[0m
+[2m❯ make[0m
+[2m❯ ./run[0m
+[32m●[0m [1;37mgmendezb[0m at [34mhost[0m [90m(10.0.0.5)[0m  [90m⎇[0m [1;37mmain[0m  [1;31m❯[0m[1;33m❯[0m[1;32m❯[0m
 ```
 
 I liked it immediately. Then I wanted one more thing: the command you typed should fade too, the way old history feels old. Keep its syntax colors, just dimmer. A trivial ask. I budgeted ten minutes.

@@ -11,7 +11,6 @@
  *   lang="..."   override the language (else inferred from the extension)
  *   title="..."  toolbar title (defaults to the filename)
  *   collapse     wrap the code in a <details> (good for long files)
- *   plain        drop the Open/Raw/Download actions (illustrative: frame + title only)
  *
  * Rendering is shared with the full-page route via ../lib/renderSnippet.mjs.
  */
@@ -43,8 +42,8 @@ export default function remarkSnippet() {
           code: readSnippet(meta.file),
           lang: langForFile(meta.file, meta.lang),
           title: meta.title || meta.file,
-          rawHref: meta.plain ? undefined : rawHref(meta.file),
-          viewHref: meta.plain ? undefined : `/snippets/view/${meta.file}/`,
+          rawHref: rawHref(meta.file),
+          viewHref: `/snippets/view/${meta.file}/`,
           collapse: !!meta.collapse,
         };
       } else {
