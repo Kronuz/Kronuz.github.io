@@ -358,11 +358,6 @@ transition: color 0.15s ease;
 }
 .snippet-details > .snippet-code { padding: 0; }
 
-/* Match the regular code blocks (Expressive Code) to the snippet's rounded
-   corners, so a ```fenced block and a <Snippet> read as the same family. */
-.sl-markdown-content .expressive-code .frame {
-	--ec-brdRad: 0.45rem;
-}
 .snippet-code { overflow: auto; }
 .snippet-code pre.shiki {
 	margin: 0;
