@@ -358,6 +358,17 @@ transition: color 0.15s ease;
 }
 .snippet-details > .snippet-code { padding: 0; }
 
+/* Round the code-block frame to match the snippet's corners (one source: the
+   frame's own --ec-brdRad). The editor tab (```lang title="...") then rounds only
+   its top-LEFT, flush with the frame corner; its top-right (and bottom) stay square
+   so the tab reads as part of the bar, not a floating pill. EC's default rounds
+   both top corners (var(--tab-border-radius) var(--tab-border-radius) 0 0). */
+.sl-markdown-content .expressive-code .frame {
+	--ec-brdRad: 0.45rem;
+}
+.sl-markdown-content .expressive-code .frame.has-title:not(.is-terminal) .title {
+	border-radius: var(--ec-brdRad) 0 0 0;
+}
 .snippet-code { overflow: auto; }
 .snippet-code pre.shiki {
 	margin: 0;
