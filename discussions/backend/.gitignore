@@ -1,0 +1,10 @@
+# Never commit the OAuth client secret, the venv, or the TLS private key/cert.
+.env
+.venv/
+certs/
+__pycache__/
+*.log
+# Persisted store (SQLite + WAL sidecars).
+discussions.db
+discussions.db-wal
+discussions.db-shm
