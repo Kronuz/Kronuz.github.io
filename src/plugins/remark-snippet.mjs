@@ -44,6 +44,7 @@ export default function remarkSnippet() {
           title: meta.title || meta.file,
           rawHref: rawHref(meta.file),
           viewHref: `/snippets/view/${meta.file}/`,
+          copy: true,
           collapse: !!meta.collapse,
         };
       } else {
@@ -51,6 +52,7 @@ export default function remarkSnippet() {
           code: job.node.value,
           lang: meta.lang || "text",
           title: meta.title || "",
+          copy: true,
           collapse: !!meta.collapse,
         };
       }
