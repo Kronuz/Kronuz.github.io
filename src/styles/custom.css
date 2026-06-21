@@ -298,9 +298,9 @@ transition: color 0.15s ease;
 .snippet > .snippet-details,
 .snippet-details > .snippet-code { margin-top: 0; }
 .snippet-bar {
-	display: flex;
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
 	align-items: center;
-	justify-content: space-between;
 	gap: 0.5rem;
 	padding: 0.35rem 0.6rem;
 	background: var(--snip-bar-bg);
@@ -311,6 +311,7 @@ transition: color 0.15s ease;
    frame header (same 3-circle icon, theme dot color, and 0.15 opacity). */
 .snippet-bar::before {
 	content: "";
+	justify-self: start;
 	flex: 0 0 auto;
 	width: 2.1rem;
 	height: 0.56rem;
@@ -322,12 +323,11 @@ transition: color 0.15s ease;
 	mask-repeat: no-repeat;
 }
 .snippet-title {
-	flex: 1;
 	text-align: center;
 	font-family: var(--sl-font-mono, ui-monospace, monospace);
 	color: var(--sl-color-gray-2);
 }
-.snippet-actions { display: flex; gap: 0.4rem; }
+.snippet-actions { display: flex; justify-self: end; gap: 0.4rem; }
 .snippet-btn {
 	text-decoration: none;
 	padding: 0.05rem 0.5rem;
