@@ -71,7 +71,11 @@ function runD2(input, themeId, pad) {
       return execFileSync(
         bin,
         ["--sketch", "--pad", String(pad), "--theme", String(themeId), "-", "-"],
-        { input, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
+        // Capture stderr instead of letting it inherit to the console: d2 prints a
+        // "success: successfully compiled ..." line to stderr on every render, which
+        // would otherwise spam the build/dev output (~one per diagram). Piping it
+        // keeps it quiet and still exposes it as err.stderr for the error path below.
+        { input, encoding: "utf8", maxBuffer: 16 * 1024 * 1024, stdio: ["pipe", "pipe", "pipe"] },
       );
     } catch (err) {
       if (err && err.code === "ENOENT") {
