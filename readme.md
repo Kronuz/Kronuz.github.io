@@ -24,7 +24,7 @@ you write `​```d2` fences: <https://d2lang.com/tour/install>. CI installs it a
 
 ## Writing a post
 
-1. Add `src/content/docs/blog/<slug>.md` (or `.mdx`) with frontmatter:
+1. Add `src/content/docs/blog/<slug>.md` with frontmatter:
    ```yaml
    ---
    title: "Post title"
@@ -38,6 +38,14 @@ you write `​```d2` fences: <https://d2lang.com/tour/install>. CI installs it a
 2. Preview with `npm run dev` (drafts show with a yellow badge).
 3. Publish: `npm run publish -- <slug>` — drops `draft`, stamps `date` to today, commits,
    and pushes. GitHub Actions builds and deploys automatically.
+
+## Code blocks
+
+Fenced blocks render through [Expressive Code](https://expressive-code.com/), which
+frames each by language: a **terminal window** for the shell languages (`sh`, `bash`,
+`zsh`, `ansi`, `console`, …) and an **editor** (a file tab when titled) for everything
+else. Override per block with `frame="terminal"`, `frame="code"`, or `frame="none"`, and
+set the title with `title="..."`. An `ansi` block renders raw terminal output in real colors.
 
 ## Comments (giscus)
 
