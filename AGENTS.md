@@ -95,6 +95,21 @@ console.log(`${Math.round(+m[1])}x${Math.round(+m[2])} ratio=${(+m[1]/+m[2]).toF
 '
 ```
 
+## Snippets & cross-links
+
+- **Snippets** (full files from `src/snippets/`), plain Markdown, two forms: a fenced
+  ```` ```snippet ```` with `file="name.ext"` (optional `title=`, `lang=`, `collapse`,
+  and `plain` to drop the Open/Raw/Download actions for an illustrative snippet) for
+  the framed viewer, or an inline link `[label](snippet:file)` for a click-to-open modal.
+  Both render via `lib/renderSnippet.mjs` (`remark-snippet.mjs` / `remark-snippet-link.mjs`),
+  driven by the global `<SnippetScript>`. Served raw at `/snippets/raw/<file>.txt`, full page at
+  `/snippets/view/<file>/`.
+- **Soft cross-links:** a `/blog/<slug>/` link to a post that is a *draft* (so not in a
+  production build) renders as plain text instead of 404ing, then becomes a real link once
+  that post publishes (`remark-soft-blog-links.mjs`). Only known post slugs are softened, so
+  links to published posts, tags, anchors and external URLs are untouched. Link siblings
+  freely, even forward to a not-yet-published one.
+
 ## Gotchas
 
 - **Drafts are excluded from `dist`.** `npm run build` does NOT render `draft: true` posts,
@@ -144,11 +159,14 @@ durable rules:
 This repo and the **internal** mirror (`~/Development/LinkedIn/gmendezb-pages`, branch `main`,
 served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared components,
 `renderSnippet.mjs`, the snippet pages, `PageTitle.astro`, `Sidebar.astro`, `ThemeSelect.astro`,
-etc. After editing a shared file, copy it to the other repo and rebuild both. **Legitimately
+`TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
+(`remark-d2.mjs`, `remark-snippet.mjs`, `remark-snippet-link.mjs`, `remark-soft-blog-links.mjs`).
+After editing a shared file, copy it to the other repo and rebuild both. **Legitimately
 different:** content (posts, `about.md`, `index.mdx`, `projects.md`), `sidebar.mjs` (this side adds
 Projects), `content.config.ts`, `astro.config.mjs`, `consts.ts`, `SiteTitle.astro`, `Footer.astro`,
-`ReplHero.astro`, and the comment system — this (public) side uses `Giscus.astro`; the internal side
-uses a Discussion link-out (`PostCta.astro` + `MarkdownContent.astro`).
+`ReplHero.astro`, and the comment system — this (public) side uses `Giscus.astro`; the internal
+side appends a self-hosted comments widget (`Discussions.astro`, a SQLite-backed store wired in
+via `MarkdownContent.astro`).
 
 ## Deferred ideas
 
