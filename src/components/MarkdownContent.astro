@@ -46,7 +46,7 @@ const chronoNext = chrono?.next ?? null;
 <BlogMarkdownContent>
 	{editHref && (
 		<div class="dev-edit-bar not-content">
-			<a class="dev-edit" href={editHref} title="Open this post's source in your editor" onclick="event.preventDefault();fetch(this.href).catch(()=>{});">
+			<a class="dev-edit" href="#" data-edit={editHref} data-astro-prefetch="false" title="Open this post's source in your editor" onclick="event.preventDefault();fetch(this.dataset.edit).catch(()=>{});">
 				<Icon name="pencil" size="0.85em" /> Edit source
 			</a>
 		</div>
