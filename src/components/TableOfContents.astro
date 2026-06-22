@@ -26,8 +26,8 @@ const showSeries = Boolean(toc) && Boolean(series?.inSeries);
 								<span class="series-aside-num">{p.index + 1}</span>
 								<span class="series-aside-text">{p.title}</span>
 							</span>
-						) : p.available ? (
-							<a class="series-aside-row" href={`/blog/${p.slug}/`}>
+						) : p.reachable ? (
+							<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`/blog/${p.slug}/`}>
 								<span class="series-aside-num">{p.index + 1}</span>
 								<span class="series-aside-text">{p.title}</span>
 							</a>
@@ -144,5 +144,11 @@ const showSeries = Boolean(toc) && Boolean(series?.inSeries);
 	.series-aside-row.is-pending .series-aside-num {
 		color: var(--sl-color-gray-4);
 		border-style: dashed;
+	}
+	/* In `npm run dev` a pending part is reachable, so it renders as a greyed link
+	   (clickable to preview, still visibly pending). Hold the muted color over the accent
+	   link color above; the hover underline stays as the link affordance. */
+	a.series-aside-row.is-pending .series-aside-text {
+		color: var(--sl-color-gray-4);
 	}
 </style>

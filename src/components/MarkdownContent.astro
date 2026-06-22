@@ -51,10 +51,10 @@ const chronoNext = chrono?.next ?? null;
 				<nav class="pagination series-pager" aria-label="Series navigation" data-pagefind-ignore>
 					<CardGrid>
 						{seriesPrev && (
-							<LinkCard href={`/blog/${seriesPrev.slug}/`} rel="prev" title={seriesPrev.title} />
+							<LinkCard href={`/blog/${seriesPrev.slug}/`} rel="prev" class={seriesPrev.pending ? "is-pending" : undefined} title={seriesPrev.title} />
 						)}
 						{seriesNext && (
-							<LinkCard href={`/blog/${seriesNext.slug}/`} rel="next" title={seriesNext.title} />
+							<LinkCard href={`/blog/${seriesNext.slug}/`} rel="next" class={seriesNext.pending ? "is-pending" : undefined} title={seriesNext.title} />
 						)}
 					</CardGrid>
 				</nav>

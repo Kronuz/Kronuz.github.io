@@ -46,15 +46,22 @@ export async function resolveSeries(term) {
 	if (members.length <= 1) return { inSeries: false };
 
 	const index = members.findIndex((e) => bareSlug(e.id) === slug);
-	const parts = members.map((e, i) => ({
-		slug: bareSlug(e.id),
-		title: e.data.title,
-		index: i,
-		current: i === index,
-		// Linked only when a readable page exists (published). Upcoming drafts render greyed
-		// and un-linked (the disabled stepper item), so nothing dead-links.
-		available: isPublished(e),
-	}));
+	const parts = members.map((e, i) => {
+		const published = isPublished(e);
+		return {
+			slug: bareSlug(e.id),
+			title: e.data.title,
+			index: i,
+			current: i === index,
+			// Reachable = there's a page to link to. Published parts always have one; a draft
+			// has a built page only in `npm run dev`, so it's reachable there but not in
+			// production (where an unpublished part stays un-linked, so nothing dead-links).
+			reachable: published || !isProd,
+			// A not-yet-published part shown for preview (an `upcoming` tease, or any draft in
+			// dev). Rendered greyed ("is-pending") wherever it appears.
+			pending: !published,
+		};
+	});
 
 	const prevP = index > 0 ? parts[index - 1] : null;
 	const nextP = index < parts.length - 1 ? parts[index + 1] : null;
@@ -64,9 +71,11 @@ export async function resolveSeries(term) {
 		index,
 		total: parts.length,
 		parts,
-		// The pagers only point at readable parts; an upcoming neighbor yields no pager link.
-		prev: prevP && prevP.available ? { slug: prevP.slug, title: prevP.title } : null,
-		next: nextP && nextP.available ? { slug: nextP.slug, title: nextP.title } : null,
+		// The pagers point at any reachable neighbor (published always; a draft only in
+		// `npm run dev`), carrying `pending` so the pager can grey a dev-only draft link the
+		// same way the stepper greys an is-pending item.
+		prev: prevP && prevP.reachable ? { slug: prevP.slug, title: prevP.title, pending: prevP.pending } : null,
+		next: nextP && nextP.reachable ? { slug: nextP.slug, title: nextP.title, pending: nextP.pending } : null,
 	};
 }
 

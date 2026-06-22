@@ -832,6 +832,21 @@ grid-template-columns: auto 1fr auto;
 .pagination.series-pager .sl-link-card:has(a[rel='next']) .stack::before {
 	content: 'Next in series';
 }
+/* In `npm run dev` the series pager may link a not-yet-published neighbor so the pager can
+   be previewed; grey that card like the stepper's is-pending item (muted title + label,
+   dashed border). LinkCard forwards our class onto its inner <a>, so target via :has().
+   Production never links an unpublished part, so this only appears under npm run dev. */
+.pagination.series-pager .sl-link-card:has(a.is-pending) {
+	border-style: dashed;
+}
+.pagination.series-pager .sl-link-card:has(a.is-pending) .title,
+.pagination.series-pager .sl-link-card:has(a.is-pending) .stack::before {
+	color: var(--sl-color-gray-4);
+}
+.pagination.series-pager .sl-link-card:has(a.is-pending):hover .title,
+.pagination.series-pager .sl-link-card:has(a.is-pending):hover .stack::before {
+	color: var(--sl-color-text-accent);
+}
 .pagination .sl-link-card:hover .stack::before {
 	color: var(--sl-color-text-accent);
 }
