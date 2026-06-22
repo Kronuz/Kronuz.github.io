@@ -10,13 +10,22 @@
 // ("you already have a MarkdownContent override") and skip its own registration.
 // That's expected: we re-import its override below, so the blog frame still renders.
 import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
-import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Icon, LinkCard, CardGrid } from '@astrojs/starlight/components';
 import Giscus from './Giscus.astro';
 import SnippetScript from './SnippetScript.astro';
 import { resolveSeries, resolveChronological } from '../lib/series.mjs';
 
 const { entry } = Astro.locals.starlightRoute;
 const isBlogPost = Boolean(entry?.data?.date);
+// Dev-only "Edit source" link. In `npm run dev` (never in a production build) open the
+// post's source file in whatever editor you're running, via the dev server's Vite
+// /__open-in-editor endpoint (launch-editor picks VS Code / Sublime, or honors
+// $LAUNCH_EDITOR). entry.filePath is the file's path relative to the project root (with the
+// real .md/.mdx extension); process.cwd() is the repo root the dev server runs from.
+const editHref =
+	import.meta.env.DEV && isBlogPost && entry?.filePath
+		? `/__open-in-editor?file=${encodeURIComponent(`${process.cwd()}/${entry.filePath}`)}`
+		: null;
 const term = (entry?.id ?? '').replace(/\.mdx?$/, '');
 
 // The full series stepper lives in the right sidebar (the TableOfContents override).
@@ -35,6 +44,13 @@ const chronoNext = chrono?.next ?? null;
 ---
 
 <BlogMarkdownContent>
+	{editHref && (
+		<div class="dev-edit-bar not-content">
+			<a class="dev-edit" href={editHref} title="Open this post's source in your editor" onclick="event.preventDefault();fetch(this.href).catch(()=>{});">
+				<Icon name="pencil" size="0.85em" /> Edit source
+			</a>
+		</div>
+	)}
 	{
 		inSeries && (
 			<p class="series-mobile not-content">

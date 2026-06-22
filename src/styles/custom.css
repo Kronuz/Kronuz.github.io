@@ -910,6 +910,25 @@ grid-template-columns: auto 1fr auto;
 	}
 }
 
+/* Dev-only "Edit source" link at the top of a blog post (rendered only under npm run dev;
+   see MarkdownContent.astro). Opens the post's .md in your editor via the dev server's
+   /__open-in-editor endpoint. Small, muted, tucked top-right so it stays out of the way. */
+.sl-markdown-content .dev-edit-bar {
+	margin: 0 0 1.25rem;
+	text-align: right;
+}
+.sl-markdown-content a.dev-edit {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	font-size: var(--sl-text-xs);
+	color: var(--sl-color-gray-3);
+	text-decoration: none;
+}
+.sl-markdown-content a.dev-edit:hover {
+	color: var(--sl-color-text-accent);
+}
+
 /* About / Projects (and any non-blog doc page) render Starlight's default
    <Pagination> (.pagination-links) — a different DOM from the blog's LinkCard pager
    above (plain <a> with an arrow + a "Previous/Next" line + a big white .link-title).
