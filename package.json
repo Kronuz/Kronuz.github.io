@@ -24,7 +24,6 @@
     "starlight-blog": "^0.26.1"
   },
   "devDependencies": {
-    "gh-pages": "^6.3.0",
     "patch-package": "^8.0.1"
   },
   "volta": {
