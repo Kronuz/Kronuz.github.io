@@ -94,6 +94,7 @@ export default defineConfig({
 				SiteTitle: './src/components/SiteTitle.astro',
 				ThemeSelect: './src/components/ThemeSelect.astro',
 				Sidebar: './src/components/Sidebar.astro',
+				SocialIcons: './src/components/SocialIcons.astro',
 			},
 		}),
 	],

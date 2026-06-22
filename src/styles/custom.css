@@ -625,6 +625,154 @@ color: var(--sl-color-gray-3);
 color: var(--sl-color-white);
 font-style: normal;
 }
+/* The role line as a subtitle on its own line below the name, a touch smaller. */
+.about-lede .about-roles {
+display: block;
+margin-top: 0.25rem;
+font-size: var(--sl-text-base);
+}
+
+/* About page profile header: a banner with the portrait avatar overlapping its
+   bottom-left, above the lede (LinkedIn-style). The banner is German's own career
+   montage; the avatar is a circular crop. The ring uses the page background so it
+   reads on both themes, and the hero's bottom margin clears the avatar's overhang so
+   the lede starts below it. The avatar scales down on narrow screens. */
+.about-hero {
+position: relative;
+margin: 0 0 4rem;
+}
+.about-hero .about-banner {
+display: block;
+width: 100%;
+height: auto;
+aspect-ratio: 1400 / 350;
+object-fit: cover;
+border-radius: 0.6rem;
+}
+.about-hero .about-avatar {
+position: absolute;
+left: 1.25rem;
+bottom: -2.75rem;
+width: clamp(5.5rem, 18vw, 7.5rem);
+height: clamp(5.5rem, 18vw, 7.5rem);
+border-radius: 50%;
+object-fit: cover;
+border: 4px solid var(--sl-color-bg);
+box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+/* Center the decorative KRONUZ ANSI banner on the About page (only this one, via the
+   .ansi-banner wrapper; terminal-output ```ansi blocks in posts stay left-aligned),
+   and strip Expressive Code's frame chrome so the ANSI art stands alone: no background,
+   border, drop-shadow, padding, or header strip. frame="none" only removes the terminal
+   window chrome, not these, so they're zeroed here. */
+.ansi-banner .expressive-code {
+display: flex;
+justify-content: center;
+}
+.ansi-banner .expressive-code,
+.ansi-banner .expressive-code .frame,
+.ansi-banner .expressive-code pre,
+.ansi-banner .expressive-code pre code {
+background: transparent !important;
+border: none !important;
+box-shadow: none !important;
+}
+.ansi-banner .expressive-code .frame::before,
+.ansi-banner .expressive-code .frame::after {
+display: none !important;
+}
+.ansi-banner .expressive-code .frame .header {
+display: none !important;
+}
+.ansi-banner .expressive-code pre {
+padding: 0 !important;
+}
+/* About page era logos: a small project logo floats beside its story beat (the game
+   engine, the search engine) and the text wraps around it; it becomes a centered block
+   on narrow screens. Transparent PNGs, so they read on both themes. */
+.sl-markdown-content img.about-era {
+float: right;
+width: clamp(9rem, 28vw, 15rem);
+height: auto;
+margin: 0.3rem 0 0.8rem 1.6rem;
+}
+.sl-markdown-content img.about-era.left {
+float: left;
+margin: 0.3rem 1.6rem 0.8rem 0;
+}
+.sl-markdown-content img.about-era.icon {
+width: clamp(6.5rem, 19vw, 9rem);
+}
+.sl-markdown-content img.about-era.shot {
+border-radius: 0.4rem;
+box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+@media (max-width: 44rem) {
+.sl-markdown-content img.about-era,
+.sl-markdown-content img.about-era.left {
+float: none;
+display: block;
+margin: 1.2rem auto;
+}
+}
+/* Reusable decorative pull-quote. Drop class="pull-quote" on a <p> or <blockquote>
+   in any post: a memorable line set large, accent-green and centered, framed by two
+   big translucent quotation marks (open upper-left, close lower-right). The four
+   knobs to tune by eye are the font-size / offsets on ::before and ::after. */
+.sl-markdown-content .pull-quote {
+position: relative;
+clear: both;
+margin: 2rem auto 1.5rem;
+max-width: 34rem;
+padding: 1.4rem 2.6rem;
+text-align: center;
+font-size: var(--sl-text-h4);
+font-style: italic;
+line-height: 1.5;
+color: var(--sl-color-text-accent);
+}
+.sl-markdown-content .pull-quote::before,
+.sl-markdown-content .pull-quote::after {
+position: absolute;
+font-family: Georgia, "Times New Roman", serif;
+font-style: normal;
+line-height: 1;
+color: var(--sl-color-text-accent);
+opacity: 0.16;
+pointer-events: none;
+}
+.sl-markdown-content .pull-quote::before {
+content: "\201C"; /* opening curly double-quote, large, upper-left */
+top: -3.4rem;
+left: -1rem;
+font-size: 20rem;
+}
+.sl-markdown-content .pull-quote::after {
+content: "\201D"; /* closing curly double-quote, smaller, lower-right */
+bottom: -6rem;
+right: 0;
+font-size: 12rem;
+}
+/* Scale the (large) decorative marks down on narrow screens so they can't poke
+   past the viewport edge and trigger horizontal scroll. */
+@media (max-width: 44rem) {
+.sl-markdown-content .pull-quote::before {
+top: -2.2rem;
+font-size: 12rem;
+}
+.sl-markdown-content .pull-quote::after {
+bottom: -3.6rem;
+font-size: 8rem;
+}
+}
+/* Small inline tech logos sitting right before a tool's name in the prose. */
+.sl-markdown-content img.tech-logo {
+display: inline-block;
+height: 1.15em;
+width: auto;
+margin: 0 0.18em -0.18em 0;
+vertical-align: baseline;
+}
 
 /* Keep the header search box in a stable spot across pages. Starlight sizes the
    first header column (site title) to the sidebar width on doc pages but ~0 on
