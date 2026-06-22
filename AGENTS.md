@@ -160,7 +160,7 @@ durable rules:
 
 ## Two-blog sync
 
-This repo and the **internal** mirror (`~/Development/LinkedIn/gmendezb-pages`, branch `main`,
+This repo and the **internal** mirror (`~/Development/KronuzBlog/gmendezb-pages`, branch `main`,
 served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared components,
 `renderSnippet.mjs`, the snippet pages, `PageTitle.astro`, `Sidebar.astro`, `ThemeSelect.astro`,
 `TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
