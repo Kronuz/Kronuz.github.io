@@ -2,6 +2,7 @@
 
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
 import starlightBlog from 'starlight-blog';
 import remarkGfm from 'remark-gfm';
 import rehypeExternalLinks from 'rehype-external-links';
@@ -31,6 +32,10 @@ export default defineConfig({
 		],
 	},
 	integrations: [
+		// Our own @astrojs/sitemap (Starlight would otherwise inject one with no
+		// filter). The filter drops the private /all/ dashboard from the sitemap;
+		// the page is also noindex + pagefind:false + unlinked.
+		sitemap({ filter: (page) => !/\/all\/?$/.test(page) }),
 		starlight({
 			title: SITE_TITLE,
 			description: SITE_DESCRIPTION,
