@@ -1081,16 +1081,11 @@ grid-template-columns: auto 1fr auto;
 	margin: 0;
 }
 
-/* Project page header (the /projects/<slug>/ page): tagline, tech + status/featured badges,
-   a "Part N of M" series note, and the link pills. */
+/* Project page header (the /projects/<slug>/ page): tech + status/featured badges, a
+   "Part N of M" series note, and the link pills. (The tagline renders as the page subtitle
+   via the PageTitle override, like blog posts.) */
 .sl-markdown-content .project-head {
-	margin: 0 0 1.5rem;
-}
-.project-head .project-page-tagline {
-	margin: 0 0 0.5rem;
-	font-size: var(--sl-text-lg);
-	font-weight: 600;
-	color: var(--sl-color-text-accent);
+	margin: 0.75rem 0 1.5rem;
 }
 .project-head .project-meta {
 	display: flex;

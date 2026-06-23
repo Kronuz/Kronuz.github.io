@@ -49,7 +49,7 @@ const showStatusBadge = Boolean(d.status) && !isLandingHub;
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 ---
 
-<StarlightPage frontmatter={{ title: pageTitle, description: d.description ?? d.tagline }}>
+<StarlightPage frontmatter={{ title: pageTitle, subtitle: d.tagline, description: d.description ?? d.tagline }}>
 	{
 		editHref && (
 			<div class="dev-edit-bar not-content">
@@ -68,7 +68,6 @@ const cap = (s) => s[0].toUpperCase() + s.slice(1);
 	}
 
 	<div class="project-head not-content">
-		{d.tagline && <p class="project-page-tagline">{d.tagline}</p>}
 		{
 			(d.tech.length > 0 || showStatusBadge || d.featured) && (
 				<p class="project-meta">
