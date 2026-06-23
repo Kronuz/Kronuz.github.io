@@ -16,6 +16,10 @@ import kronuzLight from './src/styles/kronuz-light.json';
 import { SITE_DESCRIPTION, SITE_TITLE } from './src/consts';
 import { sidebarConfig } from './src/lib/sidebar.mjs';
 
+import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { join, extname } from 'node:path';
+
 // https://astro.build/config
 export default defineConfig({
 	// Canonical URL of the deployed GitHub Pages site.
@@ -109,5 +113,39 @@ export default defineConfig({
 				SocialIcons: './src/components/SocialIcons.astro',
 			},
 		}),
+		// Brand the GitHub Pages host as "Kronuz.github.io" everywhere in the output.
+		// Astro lowercases the host of every generated absolute URL (new URL() normalizes
+		// it), so `site` can't carry the capital K; GitHub serves the host case-insensitively,
+		// so rewrite it in the built files instead (canonical, og:url, sitemap, RSS, the
+		// Giscus theme URL, ...). Matching only "//kronuz.github.io" is deliberate: it skips
+		// the bare 'kronuz.github.io' literal the Giscus theme compares against
+		// location.hostname, which the browser always reports lowercased.
+		{
+			name: 'kz-brand-host-case',
+			hooks: {
+				'astro:build:done': async ({ dir, logger }) => {
+					const exts = new Set(['.html', '.xml', '.txt', '.js', '.css', '.json']);
+					const needle = '//kronuz.github.io';
+					const replacement = '//Kronuz.github.io';
+					let files = 0;
+					const walk = async (d) => {
+						for (const ent of await readdir(d, { withFileTypes: true })) {
+							const p = join(d, ent.name);
+							if (ent.isDirectory()) {
+								await walk(p);
+							} else if (exts.has(extname(ent.name))) {
+								const s = await readFile(p, 'utf8');
+								if (s.includes(needle)) {
+									await writeFile(p, s.replaceAll(needle, replacement));
+									files++;
+								}
+							}
+						}
+					};
+					await walk(fileURLToPath(dir));
+					logger.info(`Branded host casing to Kronuz.github.io in ${files} file(s).`);
+				},
+			},
+		},
 	],
 });
