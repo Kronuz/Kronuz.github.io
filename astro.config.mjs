@@ -91,6 +91,10 @@ export default defineConfig({
 			// every page by the Sidebar override below. This config copy drives the
 			// route-derived bits (e.g. pagination) on docs-style pages.
 			sidebar: sidebarConfig(),
+			// Drop the empty right "On this page" column on heading-less pages (blog
+			// index, tag/author lists, project landings) so the blog and projects
+			// spaces behave the same. See src/starlightRouteData.ts.
+			routeMiddleware: './src/starlightRouteData.ts',
 			components: {
 				PageTitle: './src/components/PageTitle.astro',
 				MarkdownContent: './src/components/MarkdownContent.astro',

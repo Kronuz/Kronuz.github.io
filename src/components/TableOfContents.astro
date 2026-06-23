@@ -8,12 +8,16 @@
 // the project route resolves its own series and passes it in via `Astro.locals.projectSeries`.
 import Default from '@astrojs/starlight/components/TableOfContents.astro';
 import { resolveSeries } from '../lib/series.mjs';
+import { tocHasHeadings } from '../lib/toc.mjs';
 
 const { entry, toc } = Astro.locals.starlightRoute;
 const isBlogPost = Boolean(entry?.data?.date);
 const term = (entry?.id ?? '').replace(/\.mdx?$/, '');
 const series = Astro.locals.projectSeries ?? (isBlogPost ? await resolveSeries(term) : null);
 const showSeries = Boolean(toc) && Boolean(series?.inSeries);
+// The column survives heading-less pages only to carry the stepper (see the route
+// middleware); on those, suppress the bare "Overview"-only list so just the stepper shows.
+const showToc = tocHasHeadings(toc);
 ---
 
 {
@@ -47,7 +51,7 @@ const showSeries = Boolean(toc) && Boolean(series?.inSeries);
 	)
 }
 
-<Default />
+{showToc && <Default />}
 
 <style>
 	.series-aside {
