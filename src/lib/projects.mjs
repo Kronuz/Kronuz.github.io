@@ -134,6 +134,30 @@ export async function resolveProject(id) {
 	return { name: proj.name, isLanding: index === 0, multi, board, rollup: rollup(bparts), series };
 }
 
+// Sidebar nav list (shown under "Projects" on /projects/ pages): the projects worth quick
+// access — featured ones, plus any with an in-flight part (active/blocked/proposed/paused).
+// Featured first, then `order`, then name; the project containing `currentSlug` is marked.
+export async function listSidebarProjects(currentSlug) {
+	const inFlight = ['active', 'blocked', 'proposed', 'paused'];
+	const projects = await getProjects(currentSlug ?? null);
+	return projects
+		.filter(
+			(proj) =>
+				proj.landing.data.featured || proj.parts.some((e) => inFlight.includes(e.data.status)),
+		)
+		.sort(
+			(a, b) =>
+				Number(b.landing.data.featured ?? false) - Number(a.landing.data.featured ?? false) ||
+				(a.landing.data.order ?? 0) - (b.landing.data.order ?? 0) ||
+				a.name.localeCompare(b.name),
+		)
+		.map((proj) => ({
+			name: proj.name,
+			landingSlug: proj.landing.id,
+			isCurrent: currentSlug ? proj.parts.some((e) => e.id === currentSlug) : false,
+		}));
+}
+
 // Cross-space links: a project's `related` blog-post slugs, resolved against the docs
 // collection. Linked when the post is reachable (published always; a draft only in dev,
 // greyed). In production an unpublished related post drops out, so nothing dead-links.

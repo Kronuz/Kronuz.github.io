@@ -20,12 +20,15 @@
  */
 import Default from "@astrojs/starlight/components/Sidebar.astro";
 import { buildSidebar } from "../lib/sidebar.mjs";
+import { listSidebarProjects } from "../lib/projects.mjs";
 
 const route = Astro.locals.starlightRoute;
 const pathname = Astro.url.pathname;
 const onBlog = pathname === "/blog/" || pathname.startsWith("/blog/");
+const onProjects = pathname === "/projects/" || pathname.startsWith("/projects/");
 
 const isBlogRoot = (e) => e.type === "link" && /\/blog\/?$/.test(e.href);
+const isProjectsRoot = (e) => e.type === "link" && /\/projects\/?$/.test(e.href);
 const isRss = (e) => e.type === "link" && /rss\.xml$/.test(e.href);
 
 // Global RSS link, pinned to the very bottom of the menu on every page (so it
@@ -59,6 +62,23 @@ if (onBlog) {
     isBlogRoot(e)
       ? { ...e, label: "Blog", isCurrent: true, attrs: { ...(e.attrs ?? {}), "data-icon": "open-book" } }
       : e,
+  );
+} else if (onProjects) {
+  // Expand the "Projects" entry in place: keep it as the (current) section link, then list
+  // the featured + active projects right under it, the current one lit. Mirrors how the
+  // blog expands its posts, but inserted in place so menu order (About, Projects, Blog) holds.
+  const slug = pathname.replace(/^\/projects\//, "").replace(/\/$/, "");
+  const projects = await listSidebarProjects(slug);
+  const sublinks = projects.map((p) => ({
+    type: "link",
+    label: p.name,
+    href: `/projects/${p.landingSlug}/`,
+    isCurrent: p.isCurrent,
+    badge: undefined,
+    attrs: { "data-subnav": "" },
+  }));
+  menu = menu.flatMap((e) =>
+    isProjectsRoot(e) ? [{ ...e, isCurrent: true }, ...sublinks] : [e],
   );
 }
 route.sidebar = [...menu, ...extras, RSS];
