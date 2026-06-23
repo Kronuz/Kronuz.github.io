@@ -18,6 +18,12 @@ import { resolveSeries, resolveChronological } from '../lib/series.mjs';
 const { entry } = Astro.locals.starlightRoute;
 const isBlogPost = Boolean(entry?.data?.date);
 const term = (entry?.id ?? '').replace(/\.mdx?$/, '');
+// starlight-blog's MarkdownContent override treats every /blog/* path as a post (its
+// isAnyBlogPostPage in libs/page.ts) and calls getBlogEntry(), which throws for a non-post
+// page we add under /blog/ (e.g. the /blog/all/ dashboard). List those reserved subpaths
+// here so we render them as a plain page instead of delegating to the blog post frame.
+const RESERVED_BLOG = new Set(['blog/all']);
+const isReservedBlogPage = RESERVED_BLOG.has(term);
 
 // The full series stepper lives in the right sidebar (the TableOfContents override).
 // Here we keep only the in-content pieces: a mobile-only one-liner (the sidebar is
@@ -34,7 +40,7 @@ const chronoPrev = chrono?.prev ?? null;
 const chronoNext = chrono?.next ?? null;
 ---
 
-<BlogMarkdownContent>
+{isReservedBlogPage ? <slot /> : <BlogMarkdownContent>
 	{
 		inSeries && (
 			<p class="series-mobile not-content">
@@ -80,7 +86,7 @@ const chronoNext = chrono?.next ?? null;
 		)
 	}
 	{isBlogPost && <SnippetScript />}
-</BlogMarkdownContent>
+</BlogMarkdownContent>}
 
 <style>
 	/* Mobile-only series indicator. The full stepper lives in the right sidebar

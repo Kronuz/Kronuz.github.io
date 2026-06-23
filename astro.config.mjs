@@ -20,6 +20,9 @@ import { sidebarConfig } from './src/lib/sidebar.mjs';
 export default defineConfig({
 	// Canonical URL of the deployed GitHub Pages site.
 	site: 'https://kronuz.github.io',
+	// The all-posts dashboard moved from /all/ to /blog/all/ (to sit beside the
+	// projects dashboard at /projects/all/). Keep the old path working.
+	redirects: { '/all': '/blog/all' },
 	// GFM tables in .mdx, and external links (http/https) open in a new tab.
 	// Internal relative links (/blog/...) and mailto are left alone.
 	markdown: {
