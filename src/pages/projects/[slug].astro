@@ -1,8 +1,8 @@
 ---
 import { getCollection, render } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { LinkCard, CardGrid } from '@astrojs/starlight/components';
-import { resolveProjectSeries, resolveRelatedPosts } from '../../lib/projects.mjs';
+import { Icon, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { resolveProject, resolveRelatedPosts } from '../../lib/projects.mjs';
 
 export async function getStaticPaths() {
 	const isProd = import.meta.env.MODE === 'production';
@@ -16,45 +16,72 @@ const { project } = Astro.props;
 const d = project.data;
 const { Content } = await render(project);
 
-const series = await resolveProjectSeries(project.id);
-const seriesPrev = series?.prev ?? null;
-const seriesNext = series?.next ?? null;
+const proj = await resolveProject(project.id);
+const series = proj?.series ?? { inSeries: false };
+const seriesPrev = series.prev ?? null;
+const seriesNext = series.next ?? null;
 const related = await resolveRelatedPosts(d.related);
 
-// Hand the resolved series to the shared TableOfContents override (the right-sidebar
-// stepper) through a request local, so that component never imports the projects
-// collection (which would break the internal mirror, which has no such collection).
+// Hand the series to the shared TableOfContents override (the sidebar stepper) through a
+// request local, so that component never imports the projects collection.
 Astro.locals.projectSeries = series;
+
+// Dev-only "Edit source" link (same as blog posts): open this part's source in your editor
+// via the dev server's Vite /__open-in-editor endpoint. Never rendered in a production build.
+const editHref =
+	import.meta.env.DEV && project.filePath
+		? `/__open-in-editor?file=${encodeURIComponent(`${process.cwd()}/${project.filePath}`)}`
+		: null;
 
 const links = [
 	d.website && { label: 'Website', href: d.website },
 	d.docs && { label: 'Docs', href: d.docs },
 	d.repo && { label: 'GitHub', href: d.repo },
 ].filter(Boolean);
+
+const isLandingHub = Boolean(proj?.isLanding && proj?.multi);
+// Landing of a multi-part project shows the project (series) name; a part page or a
+// standalone project uses the entry's own title.
+const pageTitle = isLandingHub ? proj.name : d.title;
+// Header status badge: on a standalone project or a part page, not on the multi-part landing
+// (which shows the board instead).
+const showStatusBadge = Boolean(d.status) && !isLandingHub;
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
 ---
 
-<StarlightPage
-	frontmatter={{ title: d.title, description: d.description ?? d.tagline }}
->
+<StarlightPage frontmatter={{ title: pageTitle, description: d.description ?? d.tagline }}>
+	{
+		editHref && (
+			<div class="dev-edit-bar not-content">
+				<a
+					class="dev-edit"
+					href="#"
+					data-edit={editHref}
+					data-astro-prefetch="false"
+					title="Open this project's source in your editor"
+					onclick="event.preventDefault();fetch(this.dataset.edit).catch(()=>{});"
+				>
+					<Icon name="pencil" size="0.85em" /> Edit source
+				</a>
+			</div>
+		)
+	}
+
 	<div class="project-head not-content">
 		{d.tagline && <p class="project-page-tagline">{d.tagline}</p>}
 		{
-			(d.tech.length > 0 || d.status || d.featured) && (
+			(d.tech.length > 0 || showStatusBadge || d.featured) && (
 				<p class="project-meta">
 					{d.tech.map((t) => (
 						<span class="project-tag">{t}</span>
 					))}
 					{d.featured && <span class="project-badge is-featured">Featured</span>}
-					{d.status && (
-						<span class={`project-badge is-${d.status}`}>
-							{d.status[0].toUpperCase() + d.status.slice(1)}
-						</span>
-					)}
+					{showStatusBadge && <span class={`project-badge is-${d.status}`}>{cap(d.status)}</span>}
 				</p>
 			)
 		}
 		{
-			series?.inSeries && (
+			series.inSeries && !proj.isLanding && (
 				<p class="project-series-note">
 					Part {series.index + 1} of {series.total} · {series.name}
 				</p>
@@ -74,7 +101,31 @@ const links = [
 	<Content />
 
 	{
-		(seriesPrev || seriesNext) && (
+		isLandingHub && proj.board.length > 0 && (
+			<div class="project-board not-content" data-pagefind-ignore>
+				{proj.board.map((col) => (
+					<section class={`project-board-col is-${col.key}`}>
+						<h2 class="project-board-col-head">
+							{col.label} <span class="project-board-count">{col.parts.length}</span>
+						</h2>
+						<ul class="project-board-list">
+							{col.parts.map((p) => (
+								<li>
+									<a class="project-board-card" href={`/projects/${p.slug}/`}>
+										<span class={`project-board-dot is-${col.key}`} />
+										<span class="project-board-title">{p.title}</span>
+									</a>
+								</li>
+							))}
+						</ul>
+					</section>
+				))}
+			</div>
+		)
+	}
+
+	{
+		!proj?.isLanding && (seriesPrev || seriesNext) && (
 			<div class="post-pagers post-pagers-series">
 				<nav class="pagination series-pager" aria-label="Series navigation" data-pagefind-ignore>
 					<CardGrid>

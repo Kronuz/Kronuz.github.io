@@ -1115,6 +1115,140 @@ grid-template-columns: auto 1fr auto;
 	color: var(--sl-color-gray-3);
 }
 
+/* Status roll-up chips on a multi-part project's index card: a count + group label, colored
+   by status group (matching the badges). Active=purple, Blocked=red, Proposed=blue,
+   Paused=orange, Done(shipped/completed)=green, Dead=gray. */
+.project-rollup {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.2rem;
+	font-size: var(--sl-text-2xs);
+	border-radius: 999px;
+	padding: 0.02rem 0.5rem;
+	white-space: nowrap;
+}
+.project-rollup.is-active {
+	color: var(--sl-color-purple-high);
+	background: var(--sl-color-purple-low);
+}
+.project-rollup.is-blocked {
+	color: var(--sl-color-red-high);
+	background: var(--sl-color-red-low);
+}
+.project-rollup.is-proposed {
+	color: var(--sl-color-blue-high);
+	background: var(--sl-color-blue-low);
+}
+.project-rollup.is-paused {
+	color: var(--sl-color-orange-high);
+	background: var(--sl-color-orange-low);
+}
+.project-rollup.is-done {
+	color: var(--sl-color-green-high);
+	background: var(--sl-color-green-low);
+}
+.project-rollup.is-dead {
+	color: var(--sl-color-gray-2);
+	background: var(--sl-color-gray-6);
+}
+
+/* Project page status board: the project's parts grouped into status columns, each a small
+   linked card. Lives in a `not-content` wrapper, so Starlight's prose styles (incl. the h2
+   column heads) don't apply and these own the look. */
+.project-board {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: 1rem;
+	margin: 2rem 0;
+}
+.project-board-col {
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.6rem;
+	padding: 0.85rem 0.9rem;
+}
+.project-board-col-head {
+	display: flex;
+	align-items: baseline;
+	gap: 0.4rem;
+	margin: 0 0 0.6rem;
+	padding: 0;
+	border: none;
+	font-size: var(--sl-text-xs);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.project-board-count {
+	font-size: var(--sl-text-2xs);
+	color: var(--sl-color-gray-3);
+}
+.project-board-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+.project-board-card {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.4rem 0.55rem;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.4rem;
+	text-decoration: none;
+	color: var(--sl-color-white);
+	font-size: var(--sl-text-sm);
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.project-board-card:hover {
+	border-color: var(--sl-color-text-accent);
+	background: var(--sl-color-gray-6);
+}
+.project-board-dot {
+	flex: 0 0 auto;
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: 50%;
+}
+.project-board-col.is-active .project-board-col-head {
+	color: var(--sl-color-purple-high);
+}
+.project-board-dot.is-active {
+	background-color: var(--sl-color-purple-high);
+}
+.project-board-col.is-blocked .project-board-col-head {
+	color: var(--sl-color-red-high);
+}
+.project-board-dot.is-blocked {
+	background-color: var(--sl-color-red-high);
+}
+.project-board-col.is-proposed .project-board-col-head {
+	color: var(--sl-color-blue-high);
+}
+.project-board-dot.is-proposed {
+	background-color: var(--sl-color-blue-high);
+}
+.project-board-col.is-paused .project-board-col-head {
+	color: var(--sl-color-orange-high);
+}
+.project-board-dot.is-paused {
+	background-color: var(--sl-color-orange-high);
+}
+.project-board-col.is-done .project-board-col-head {
+	color: var(--sl-color-green-high);
+}
+.project-board-dot.is-done {
+	background-color: var(--sl-color-green-high);
+}
+.project-board-col.is-dead .project-board-col-head {
+	color: var(--sl-color-gray-2);
+}
+.project-board-dot.is-dead {
+	background-color: var(--sl-color-gray-3);
+}
+
 /* About / Projects (and any non-blog doc page) render Starlight's default
    <Pagination> (.pagination-links) — a different DOM from the blog's LinkCard pager
    above (plain <a> with an arrow + a "Previous/Next" line + a big white .link-title).
