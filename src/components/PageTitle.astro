@@ -1,9 +1,14 @@
 ---
-// Custom override of Starlight's PageTitle: renders the page <h1> with an
-// optional category emoji just before the title (announcement / tutorial /
-// note). A post with no `category` is a plain article and gets no badge. Also
-// renders an optional `subtitle` line below the title.
-const { title, subtitle, category } = Astro.locals.starlightRoute.entry.data as {
+// Custom override of Starlight's PageTitle: renders the page <h1> with an optional category
+// emoji just before the title (announcement / tutorial / note), and an optional `subtitle`
+// line below it. Also renders the dev-only "Edit source" link here, so it sits in the
+// title's container next to the subtitle (above the content divider). Projects (rendered via
+// StarlightPage) hand their source path in through Astro.locals.editHref; blog posts we
+// resolve from the entry's filePath. The link only exists under `npm run dev`.
+import { Icon } from "@astrojs/starlight/components";
+
+const route = Astro.locals.starlightRoute;
+const { title, subtitle, category } = route.entry.data as {
 title: string;
 subtitle?: string;
 category?: string;
@@ -14,10 +19,24 @@ tutorial: { emoji: "🛠️", label: "Tutorial" },
 note: { emoji: "💡", label: "Note" },
 } as const;
 const cat = category ? CATEGORY[category as keyof typeof CATEGORY] : undefined;
+
+const isBlogPost = Boolean(route.entry?.data?.date);
+const editHref =
+(Astro.locals as Record<string, unknown>).editHref ??
+(import.meta.env.DEV && isBlogPost && route.entry?.filePath
+? `/__open-in-editor?file=${encodeURIComponent(`${process.cwd()}/${route.entry.filePath}`)}`
+: null);
 ---
 
+<div class="kz-page-head">
 <h1 id="_top">{cat && <span class="post-category" role="img" aria-label={`${cat.label}: `} title={cat.label}>{cat.emoji}</span>}{title}</h1>
 {subtitle && <p class="page-subtitle">{subtitle}</p>}
+{editHref && (
+<a class="dev-edit" href="#" data-edit={editHref} data-astro-prefetch="false" title="Open this page's source in your editor" onclick="event.preventDefault();fetch(this.dataset.edit).catch(()=>{});">
+<Icon name="pencil" size="0.85em" /> Edit source
+</a>
+)}
+</div>
 
 <style>
 @layer starlight.core {
@@ -28,6 +47,11 @@ line-height: var(--sl-line-height-headings);
 font-weight: 600;
 color: var(--sl-color-white);
 }
+}
+
+/* Positioned context for the overlaid Edit-source link, without changing the title spacing. */
+.kz-page-head {
+position: relative;
 }
 
 .post-category {
@@ -43,5 +67,22 @@ font-size: var(--sl-text-2xl);
 font-weight: 400;
 line-height: var(--sl-line-height-headings);
 color: var(--sl-color-gray-3);
+}
+
+/* Dev-only "Edit source" link: a transparent overlay at the bottom-right of the title block
+   (by the subtitle, above the content divider), taking no layout space. */
+.kz-page-head .dev-edit {
+position: absolute;
+bottom: 0;
+right: 0;
+display: inline-flex;
+align-items: center;
+gap: 0.3rem;
+font-size: var(--sl-text-xs);
+color: var(--sl-color-gray-3);
+text-decoration: none;
+}
+.kz-page-head .dev-edit:hover {
+color: var(--sl-color-text-accent);
 }
 </style>

@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { Icon, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 import { resolveProject, resolveRelatedPosts } from '../../lib/projects.mjs';
 
 export async function getStaticPaths() {
@@ -26,12 +26,11 @@ const related = await resolveRelatedPosts(d.related);
 // request local, so that component never imports the projects collection.
 Astro.locals.projectSeries = series;
 
-// Dev-only "Edit source" link (same as blog posts): open this part's source in your editor
-// via the dev server's Vite /__open-in-editor endpoint. Never rendered in a production build.
-const editHref =
-	import.meta.env.DEV && project.filePath
-		? `/__open-in-editor?file=${encodeURIComponent(`${process.cwd()}/${project.filePath}`)}`
-		: null;
+// Dev-only "Edit source" link: hand this part's source path to the shared PageTitle override
+// (which renders the link by the subtitle) through a request local. Never set in production.
+if (import.meta.env.DEV && project.filePath) {
+	Astro.locals.editHref = `/__open-in-editor?file=${encodeURIComponent(`${process.cwd()}/${project.filePath}`)}`;
+}
 
 const links = [
 	d.website && { label: 'Website', href: d.website },
@@ -50,23 +49,6 @@ const cap = (s) => s[0].toUpperCase() + s.slice(1);
 ---
 
 <StarlightPage frontmatter={{ title: pageTitle, subtitle: d.tagline, description: d.description ?? d.tagline }}>
-	{
-		editHref && (
-			<div class="dev-edit-bar not-content">
-				<a
-					class="dev-edit"
-					href="#"
-					data-edit={editHref}
-					data-astro-prefetch="false"
-					title="Open this project's source in your editor"
-					onclick="event.preventDefault();fetch(this.dataset.edit).catch(()=>{});"
-				>
-					<Icon name="pencil" size="0.85em" /> Edit source
-				</a>
-			</div>
-		)
-	}
-
 	<div class="project-head not-content">
 		{
 			(d.tech.length > 0 || showStatusBadge || d.featured) && (
