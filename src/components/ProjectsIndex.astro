@@ -1,0 +1,41 @@
+---
+// The Projects index grid: one card per project (a standalone project shows its own status
+// badge; a multi-part project shows a status roll-up). Rendered from the projects collection
+// via listProjects(). Used by the markdown index page (src/pages/projects/index.mdx).
+import { listProjects } from '../lib/projects.mjs';
+
+const projects = await listProjects();
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
+---
+
+<div class="projects-grid not-content">
+	{
+		projects.map((p) => (
+			<article class="project-card">
+				<p class="project-card-meta">
+					{p.data.tech[0] && <span class="project-tag">{p.data.tech[0]}</span>}
+					{p.data.featured && <span class="project-badge is-featured">Featured</span>}
+					{p.single && p.status && (
+						<span class={`project-badge is-${p.status}`}>{cap(p.status)}</span>
+					)}
+					{!p.single &&
+						p.rollup.map((r) => (
+							<span class={`project-rollup is-${r.key}`}>
+								{r.count} {r.label}
+							</span>
+						))}
+				</p>
+				<h3 class="project-name">
+					<a href={`/projects/${p.landingSlug}/`}>{p.name}</a>
+				</h3>
+				{p.data.tagline && <p class="project-tagline">{p.data.tagline}</p>}
+				{p.data.description && <p class="project-desc">{p.data.description}</p>}
+				<p class="project-links">
+					{p.data.website && <a href={p.data.website}>Website</a>}
+					{p.data.docs && <a href={p.data.docs}>Docs</a>}
+					{p.data.repo && <a href={p.data.repo}>GitHub</a>}
+				</p>
+			</article>
+		))
+	}
+</div>

@@ -1,0 +1,11 @@
+---
+// Gives a plain `src/pages/` markdown/mdx page the full Starlight chrome (header, sidebars,
+// theming). Use it as the `layout` for pages that are authored as content but aren't part of
+// the docs collection — e.g. the Projects index. The page's frontmatter (title, description,
+// tableOfContents, ...) is forwarded straight to StarlightPage.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+const { frontmatter } = Astro.props;
+---
+
+<StarlightPage frontmatter={frontmatter}><slot /></StarlightPage>
