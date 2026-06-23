@@ -183,7 +183,7 @@ display: block;
 max-width: 100%;
 font-family: var(--__sl-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
 font-weight: 400;
-font-size: clamp(0.95rem, 0.8rem + 1.1vw, 1.5rem);
+font-size: clamp(0.8rem, min(0.8rem + 1.1vw, calc((100vw - 2.5rem) / 26)), 1.5rem);
 line-height: 1.7;
 text-align: left;
 letter-spacing: 0;
