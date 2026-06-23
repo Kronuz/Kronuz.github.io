@@ -666,32 +666,20 @@ object-fit: cover;
 border: 4px solid var(--sl-color-bg);
 box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
-/* Center the decorative KRONUZ ANSI banner on the About page (only this one, via the
-   .ansi-banner wrapper; terminal-output ```ansi blocks in posts stay left-aligned),
-   and strip Expressive Code's frame chrome so the ANSI art stands alone: no background,
-   border, drop-shadow, padding, or header strip. frame="none" only removes the terminal
-   window chrome, not these, so they're zeroed here. */
-.ansi-banner .expressive-code {
+/* The KRONUZ banner on the About page: an animated ANSI block-art GIF (authentic CP437
+   half-block art rendered with ansilove). Centered; scales down to fit on mobile; crisp
+   blocky pixels (no smoothing). The black "terminal" background is baked into the art. */
+.ansi-banner {
 display: flex;
 justify-content: center;
+margin: 1.75rem 0;
 }
-.ansi-banner .expressive-code,
-.ansi-banner .expressive-code .frame,
-.ansi-banner .expressive-code pre,
-.ansi-banner .expressive-code pre code {
-background: transparent !important;
-border: none !important;
-box-shadow: none !important;
-}
-.ansi-banner .expressive-code .frame::before,
-.ansi-banner .expressive-code .frame::after {
-display: none !important;
-}
-.ansi-banner .expressive-code .frame .header {
-display: none !important;
-}
-.ansi-banner .expressive-code pre {
-padding: 0 !important;
+.ansi-banner img {
+width: 100%;
+max-width: 520px;
+height: auto;
+image-rendering: pixelated;
+border-radius: 6px;
 }
 /* About page era logos: a small project logo floats beside its story beat (the game
    engine, the search engine) and the text wraps around it; it becomes a centered block

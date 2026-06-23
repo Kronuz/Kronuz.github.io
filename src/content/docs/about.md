@@ -16,16 +16,7 @@ Hey there! I'm **Germán**, though you might've crossed paths with me online as 
 My affair with technology kicked off as a bright-eyed kid in Mexico City, somewhere in the chaotic glow of the late '80s. Imagine a 10-year-old me, hunched over a monochrome CRT screen, fingers dancing awkwardly on a stiff keyboard, trying to figure out how to make that mysterious blinking cursor do my bidding. Those early lines of BASIC opened doors I never knew existed, and I've been chasing that magic ever since.
 
 <div class="ansi-banner">
-
-```ansi frame="none"
-[1m[38;2;61;107;30m██╗  ██╗██████╗  ██████╗ ███╗   ██╗██╗   ██╗███████╗[0m
-[1m[38;2;73;119;36m██║ ██╔╝██╔══██╗██╔═══██╗████╗  ██║██║   ██║╚══███╔╝[0m
-[1m[38;2;85;131;43m█████╔╝ ██████╔╝██║   ██║██╔██╗ ██║██║   ██║  ███╔╝ [0m
-[1m[38;2;98;144;49m██╔═██╗ ██╔══██╗██║   ██║██║╚██╗██║██║   ██║ ███╔╝  [0m
-[1m[38;2;110;156;56m██║  ██╗██║  ██║╚██████╔╝██║ ╚████║╚██████╔╝███████╗[0m
-[1m[38;2;122;168;62m╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚══════╝[0m
-```
-
+  <img src="/img/about/kronuz.gif" alt="Kronuz — animated ANSI block-art banner" width="1196" height="284" />
 </div>
 
 <img class="about-era left shot" src="/img/about/lord.png" alt="Legend of the Red Dragon, a classic ANSI BBS door game" /> Growing up through the vibrant yet strangely peaceful '80s and '90s, my fascination quickly spiraled outward. Dialing into BBSes like **"Tierras Extrañas"**, **Coyoacán BBS**, and **Tornado BBS** (some humming along on [**Wildcat!**](https://en.wikipedia.org/wiki/Wildcat!_BBS) or [**Renegade**](https://en.wikipedia.org/wiki/Renegade_(BBS))) became my early digital playgrounds, places full of file archives, ANSI art, door games like [**Legend of the Red Dragon**](https://en.wikipedia.org/wiki/Legend_of_the_Red_Dragon), and electronic magazines. I still remember the thrill of Xmodem, Ymodem, and Zmodem transfers slowly counting up like a secret ritual, where ASCII art and slow modem handshakes felt like secret portals into alternate universes. Alongside my cousin Victor, I crafted what we cheekily called a "digital ouija," a playful little hack that could make answers appear seemingly from nowhere, startling and delighting our friends into questioning reality itself and having lots of fun in the process.
