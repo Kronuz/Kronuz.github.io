@@ -67,6 +67,7 @@ export async function resolveSeries(term) {
 	const nextP = index < parts.length - 1 ? parts[index + 1] : null;
 	return {
 		inSeries: true,
+		base: '/blog',
 		name,
 		index,
 		total: parts.length,

@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { docsSchema } from '@astrojs/starlight/schema';
+import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { blogSchema } from 'starlight-blog/schema';
 
@@ -31,6 +32,38 @@ export const collections = {
 						category: z.enum(['announcement', 'tutorial', 'note']).optional(),
 					}),
 				),
+		}),
+	}),
+	// Projects are their own space (not Starlight docs, not blog posts): each is a page
+	// under src/content/projects/, rendered by src/pages/projects/[slug].astro and listed
+	// by src/pages/projects/index.astro. Kept out of the blog RSS, the blog index and /all/
+	// for free, since none of those look at this collection.
+	projects: defineCollection({
+		loader: glob({ base: './src/content/projects', pattern: '**/*.{md,mdx}' }),
+		schema: z.object({
+				title: z.string(),
+				// One-line deck shown under the title and on the index card.
+				tagline: z.string().optional(),
+				// Longer blurb for the index card and meta description.
+				description: z.string().optional(),
+				// Tech tags (first one shown as the card's pill).
+				tech: z.array(z.string()).default([]),
+				// Canonical links.
+				repo: z.string().optional(),
+				website: z.string().optional(),
+				docs: z.string().optional(),
+				// Lifecycle, kept separate from `draft` (draft = visibility). Optional for now.
+				status: z.enum(['proposed', 'active', 'paused', 'shipped', 'archived']).optional(),
+				// Index ordering (ascending), then title. Featured projects sort first.
+				order: z.number().optional(),
+				featured: z.boolean().optional(),
+				draft: z.boolean().optional(),
+				// Project-internal grouping (multi-page projects), mirroring the blog series:
+				// same `series` name + `seriesOrder` link the parts with a stepper/pager.
+				series: z.string().optional(),
+				seriesOrder: z.number().optional(),
+				// Cross-space links to blog posts (by slug), e.g. the write-up behind a project.
+				related: z.array(z.string()).default([]),
 		}),
 	}),
 };

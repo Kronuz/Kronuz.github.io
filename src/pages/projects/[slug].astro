@@ -1,0 +1,121 @@
+---
+import { getCollection, render } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { resolveProjectSeries, resolveRelatedPosts } from '../../lib/projects.mjs';
+
+export async function getStaticPaths() {
+	const isProd = import.meta.env.MODE === 'production';
+	const projects = await getCollection('projects');
+	return projects
+		.filter((p) => !isProd || p.data.draft !== true)
+		.map((p) => ({ params: { slug: p.id }, props: { project: p } }));
+}
+
+const { project } = Astro.props;
+const d = project.data;
+const { Content } = await render(project);
+
+const series = await resolveProjectSeries(project.id);
+const seriesPrev = series?.prev ?? null;
+const seriesNext = series?.next ?? null;
+const related = await resolveRelatedPosts(d.related);
+
+// Hand the resolved series to the shared TableOfContents override (the right-sidebar
+// stepper) through a request local, so that component never imports the projects
+// collection (which would break the internal mirror, which has no such collection).
+Astro.locals.projectSeries = series;
+
+const links = [
+	d.website && { label: 'Website', href: d.website },
+	d.docs && { label: 'Docs', href: d.docs },
+	d.repo && { label: 'GitHub', href: d.repo },
+].filter(Boolean);
+---
+
+<StarlightPage
+	frontmatter={{ title: d.title, description: d.description ?? d.tagline }}
+>
+	<div class="project-head not-content">
+		{d.tagline && <p class="project-page-tagline">{d.tagline}</p>}
+		{
+			(d.tech.length > 0 || d.status || d.featured) && (
+				<p class="project-meta">
+					{d.tech.map((t) => (
+						<span class="project-tag">{t}</span>
+					))}
+					{d.featured && <span class="project-badge is-featured">Featured</span>}
+					{d.status && (
+						<span class={`project-badge is-${d.status}`}>
+							{d.status[0].toUpperCase() + d.status.slice(1)}
+						</span>
+					)}
+				</p>
+			)
+		}
+		{
+			series?.inSeries && (
+				<p class="project-series-note">
+					Part {series.index + 1} of {series.total} · {series.name}
+				</p>
+			)
+		}
+		{
+			links.length > 0 && (
+				<p class="project-links">
+					{links.map((l) => (
+						<a href={l.href}>{l.label}</a>
+					))}
+				</p>
+			)
+		}
+	</div>
+
+	<Content />
+
+	{
+		(seriesPrev || seriesNext) && (
+			<div class="post-pagers post-pagers-series">
+				<nav class="pagination series-pager" aria-label="Series navigation" data-pagefind-ignore>
+					<CardGrid>
+						{seriesPrev && (
+							<LinkCard
+								href={`/projects/${seriesPrev.slug}/`}
+								rel="prev"
+								class={seriesPrev.pending ? 'is-pending' : undefined}
+								title={seriesPrev.title}
+							/>
+						)}
+						{seriesNext && (
+							<LinkCard
+								href={`/projects/${seriesNext.slug}/`}
+								rel="next"
+								class={seriesNext.pending ? 'is-pending' : undefined}
+								title={seriesNext.title}
+							/>
+						)}
+					</CardGrid>
+				</nav>
+			</div>
+		)
+	}
+
+	{
+		related.length > 0 && (
+			<div class="project-related not-content">
+				<p class="project-related-title">Related reading</p>
+				<div class="pagination" data-pagefind-ignore>
+					<CardGrid>
+						{related.map((r) => (
+							<LinkCard
+								href={`/blog/${r.slug}/`}
+								class={r.pending ? 'is-pending' : undefined}
+								title={r.title}
+							/>
+						))}
+					</CardGrid>
+				</div>
+			</div>
+		)
+	}
+</StarlightPage>

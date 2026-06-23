@@ -3,13 +3,16 @@
 // contents, then, on posts that belong to an article series (frontmatter `series`),
 // appends a compact stepper below it. Desktop-only (the right sidebar is hidden on
 // mobile, where MarkdownContent's one-liner + prev/next pager carry the series instead).
+// Project pages (a separate collection, rendered via StarlightPage) can't be resolved
+// here without importing the projects collection, which the internal mirror lacks — so
+// the project route resolves its own series and passes it in via `Astro.locals.projectSeries`.
 import Default from '@astrojs/starlight/components/TableOfContents.astro';
 import { resolveSeries } from '../lib/series.mjs';
 
 const { entry, toc } = Astro.locals.starlightRoute;
 const isBlogPost = Boolean(entry?.data?.date);
 const term = (entry?.id ?? '').replace(/\.mdx?$/, '');
-const series = isBlogPost ? await resolveSeries(term) : null;
+const series = Astro.locals.projectSeries ?? (isBlogPost ? await resolveSeries(term) : null);
 const showSeries = Boolean(toc) && Boolean(series?.inSeries);
 ---
 
@@ -27,7 +30,7 @@ const showSeries = Boolean(toc) && Boolean(series?.inSeries);
 								<span class="series-aside-text">{p.title}</span>
 							</span>
 						) : p.reachable ? (
-							<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`/blog/${p.slug}/`}>
+							<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
 								<span class="series-aside-num">{p.index + 1}</span>
 								<span class="series-aside-text">{p.title}</span>
 							</a>

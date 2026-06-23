@@ -929,6 +929,187 @@ grid-template-columns: auto 1fr auto;
 	color: var(--sl-color-text-accent);
 }
 
+/* Projects page (public blog): a responsive card grid. Each project is a bordered tile with
+   a small tech tag, a white name, an accent tagline, a muted description, and a row of pill
+   links; the whole card lifts and turns accent on hover. The "Also worth a look" row is a
+   set of small rounded chips. Styled outside .sl-markdown-content because the grid carries
+   `not-content` (so Starlight's prose styles don't fight these). */
+.projects-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+	gap: 1rem;
+	margin: 1.75rem 0 2rem;
+}
+.projects-grid .project-card {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.35rem;
+	margin: 0;
+	padding: 1.1rem 1.2rem;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.6rem;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.projects-grid .project-card:hover {
+	border-color: var(--sl-color-text-accent);
+	background: var(--sl-color-gray-6);
+}
+.project-tag {
+	font-size: var(--sl-text-2xs);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--sl-color-text-accent);
+	background: var(--sl-color-gray-6);
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 999px;
+	padding: 0.05rem 0.55rem;
+}
+.project-card .project-name {
+	margin: 0.15rem 0 0;
+	font-size: var(--sl-text-lg);
+	line-height: 1.2;
+}
+.project-card .project-name a {
+	color: var(--sl-color-white);
+	text-decoration: none;
+}
+.project-card .project-name a:hover {
+	color: var(--sl-color-text-accent);
+}
+.project-card .project-tagline {
+	margin: 0;
+	font-size: var(--sl-text-sm);
+	font-weight: 600;
+	color: var(--sl-color-text-accent);
+}
+.project-card .project-desc {
+	margin: 0;
+	flex: 1 1 auto;
+	font-size: var(--sl-text-sm);
+	color: var(--sl-color-gray-3);
+}
+.project-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+.project-card .project-links {
+	margin: 0.55rem 0 0;
+}
+.project-links a,
+.projects-more a {
+	font-size: var(--sl-text-xs);
+	color: var(--sl-color-gray-2);
+	text-decoration: none;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.4rem;
+	padding: 0.12rem 0.6rem;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+.project-links a:hover,
+.projects-more a:hover {
+	color: var(--sl-color-text-accent);
+	border-color: var(--sl-color-text-accent);
+}
+/* "Also worth a look" — smaller, fully-rounded chips. */
+.projects-more {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0.75rem 0 0;
+}
+.projects-more a {
+	border-radius: 999px;
+}
+
+/* Status / Featured badges. Our own vocabulary and colors on purpose: Starlight's <Badge>
+   variants are fixed semantic colors (note/tip/caution/danger/success/default) that don't
+   map to a project lifecycle and have no "featured", so a small custom pill is cleaner. */
+.project-badge {
+	font-size: var(--sl-text-2xs);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	line-height: 1.6;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	padding: 0.02rem 0.5rem;
+	white-space: nowrap;
+}
+.project-badge.is-proposed {
+	color: var(--sl-color-blue-high);
+	background: var(--sl-color-blue-low);
+}
+.project-badge.is-active {
+	color: var(--sl-color-purple-high);
+	background: var(--sl-color-purple-low);
+}
+.project-badge.is-paused {
+	color: var(--sl-color-orange-high);
+	background: var(--sl-color-orange-low);
+}
+.project-badge.is-shipped {
+	color: var(--sl-color-green-high);
+	background: var(--sl-color-green-low);
+}
+.project-badge.is-archived {
+	color: var(--sl-color-gray-2);
+	background: var(--sl-color-gray-6);
+}
+.project-badge.is-featured {
+	color: var(--sl-color-black);
+	background: var(--sl-color-text-accent);
+	border-color: var(--sl-color-text-accent);
+}
+/* Index card meta row: tech pill + badges on one line, above the name. */
+.project-card .project-card-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0;
+}
+
+/* Project page header (the /projects/<slug>/ page): tagline, tech + status/featured badges,
+   a "Part N of M" series note, and the link pills. */
+.sl-markdown-content .project-head {
+	margin: 0 0 1.5rem;
+}
+.project-head .project-page-tagline {
+	margin: 0 0 0.5rem;
+	font-size: var(--sl-text-lg);
+	font-weight: 600;
+	color: var(--sl-color-text-accent);
+}
+.project-head .project-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0 0 0.5rem;
+}
+.project-head .project-series-note {
+	margin: 0 0 0.5rem;
+	font-size: var(--sl-text-2xs);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--sl-color-gray-3);
+}
+.project-head .project-links {
+	margin: 0;
+}
+/* "Related reading" block on a project page. */
+.project-related {
+	margin-top: 2rem;
+}
+.project-related .project-related-title {
+	margin: 0 0 0.5rem;
+	font-size: var(--sl-text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--sl-color-gray-3);
+}
+
 /* About / Projects (and any non-blog doc page) render Starlight's default
    <Pagination> (.pagination-links) — a different DOM from the blog's LinkCard pager
    above (plain <a> with an arrow + a "Previous/Next" line + a big white .link-title).
