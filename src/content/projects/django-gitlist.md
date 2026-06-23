@@ -4,7 +4,7 @@ tagline: Git repositories for Django
 description: An elegant and modern web interface for interacting with multiple git repositories.
 tech: [Python, Django]
 repo: https://github.com/Kronuz/django_gitlist
-status: archived
+status: dead
 order: 7
 ---
 

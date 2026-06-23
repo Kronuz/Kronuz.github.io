@@ -1044,15 +1044,20 @@ grid-template-columns: auto 1fr auto;
 	color: var(--sl-color-purple-high);
 	background: var(--sl-color-purple-low);
 }
+.project-badge.is-blocked {
+	color: var(--sl-color-red-high);
+	background: var(--sl-color-red-low);
+}
 .project-badge.is-paused {
 	color: var(--sl-color-orange-high);
 	background: var(--sl-color-orange-low);
 }
-.project-badge.is-shipped {
+.project-badge.is-shipped,
+.project-badge.is-completed {
 	color: var(--sl-color-green-high);
 	background: var(--sl-color-green-low);
 }
-.project-badge.is-archived {
+.project-badge.is-dead {
 	color: var(--sl-color-gray-2);
 	background: var(--sl-color-gray-6);
 }

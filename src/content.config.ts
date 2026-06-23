@@ -53,7 +53,9 @@ export const collections = {
 				website: z.string().optional(),
 				docs: z.string().optional(),
 				// Lifecycle, kept separate from `draft` (draft = visibility). Optional for now.
-				status: z.enum(['proposed', 'active', 'paused', 'shipped', 'archived']).optional(),
+				status: z
+					.enum(['proposed', 'active', 'blocked', 'paused', 'shipped', 'completed', 'dead'])
+					.optional(),
 				// Index ordering (ascending), then title. Featured projects sort first.
 				order: z.number().optional(),
 				featured: z.boolean().optional(),

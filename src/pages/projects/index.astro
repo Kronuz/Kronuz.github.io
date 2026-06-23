@@ -37,7 +37,6 @@ const projects = await listProjects();
 					{p.data.tagline && <p class="project-tagline">{p.data.tagline}</p>}
 					{p.data.description && <p class="project-desc">{p.data.description}</p>}
 					<p class="project-links">
-						<a href={`/projects/${p.id}/`}>Details{p.parts > 1 ? ` · ${p.parts} parts` : ''}</a>
 						{p.data.website && <a href={p.data.website}>Website</a>}
 						{p.data.docs && <a href={p.data.docs}>Docs</a>}
 						{p.data.repo && <a href={p.data.repo}>GitHub</a>}
