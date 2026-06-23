@@ -916,12 +916,20 @@ grid-template-columns: auto 1fr auto;
 	}
 }
 
-/* Dev-only "Edit source" link at the top of a blog post (rendered only under npm run dev;
-   see MarkdownContent.astro). Opens the post's .md in your editor via the dev server's
-   /__open-in-editor endpoint. Small, muted, tucked top-right so it stays out of the way. */
+/* Dev-only "Edit source" link (rendered only under npm run dev; see MarkdownContent.astro
+   and the project route). Opens the source in your editor via the dev server's
+   /__open-in-editor endpoint. Floated as a transparent overlay at the top-right of the
+   content, just under the subtitle, so it takes no row and never shifts the layout. The
+   :has() scopes the positioning context to pages that actually carry the link (dev only). */
+.sl-markdown-content:has(.dev-edit-bar) {
+	position: relative;
+}
 .sl-markdown-content .dev-edit-bar {
-	margin: 0 0 1.25rem;
-	text-align: right;
+	position: absolute;
+	top: -0.35rem;
+	right: 0;
+	margin: 0;
+	z-index: 1;
 }
 .sl-markdown-content a.dev-edit {
 	display: inline-flex;
