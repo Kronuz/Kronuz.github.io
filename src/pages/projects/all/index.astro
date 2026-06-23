@@ -1,0 +1,173 @@
+---
+/**
+ * /projects/all/ — a private, single-page index of EVERY project entry (every part of every
+ * project, published AND draft), two lines each: status + featured/draft flags, project name
+ * with the part title, the project's tagline, and the series position.
+ *
+ * The projects analog of /blog/all/: deliberately unlisted (excluded from the sitemap via the
+ * `sitemap({ filter })` in astro.config.mjs, kept out of Pagefind with `pagefind: false`, and
+ * marked `noindex`), a personal dashboard for reviewing the whole project catalog and its
+ * statuses at a glance. Draft entries aren't built in production, so a draft link resolves in
+ * local dev (npm run dev) but 404s on the deployed site, by design.
+ *
+ * Sorted by project (series, then standalone title), then series order, so a project's parts
+ * read top-to-bottom in sequence.
+ */
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { getCollection } from "astro:content";
+
+const bareSlug = (id) => id.replace(/\.mdx?$/, "").split("/").pop();
+const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : "");
+
+const all = await getCollection("projects");
+
+// Total parts per project (series), so each row can show "N/M".
+const seriesTotal = {};
+for (const e of all) {
+  const s = e.data.series;
+  if (s) seriesTotal[s] = (seriesTotal[s] ?? 0) + 1;
+}
+
+const rows = all
+  .sort(
+    (a, b) =>
+      (a.data.series ?? a.data.title).localeCompare(b.data.series ?? b.data.title) ||
+      (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0) ||
+      a.data.title.localeCompare(b.data.title),
+  )
+  .map((e) => {
+    const d = e.data;
+    return {
+      slug: bareSlug(e.id),
+      title: d.title,
+      subtitle: d.tagline ?? "",
+      status: d.status ?? "",
+      draft: d.draft === true,
+      featured: d.featured === true,
+      series: d.series ?? "",
+      order: d.seriesOrder,
+      total: d.series ? seriesTotal[d.series] : 0,
+    };
+  });
+
+const published = rows.filter((r) => !r.draft).length;
+const drafts = rows.length - published;
+
+const head = [{ tag: "meta", attrs: { name: "robots", content: "noindex, nofollow" } }];
+---
+
+<StarlightPage frontmatter={{ title: "All Projects", tableOfContents: false, pagefind: false, head }}>
+	<p class="all-summary not-content">
+		{rows.length} entries · {published} published · {drafts} draft
+	</p>
+	<ul class="all-list not-content">
+		{
+			rows.map((r) => (
+				<li class:list={["all-row", r.draft && "is-draft"]}>
+					<span class="all-flags">
+						{r.draft ? (
+							<span class="all-pill all-pill-draft">📝 draft</span>
+						) : (
+							<span class="all-pill all-pill-live">live</span>
+						)}
+						{r.status && <span class={`project-badge is-${r.status}`}>{cap(r.status)}</span>}
+						{r.featured && <span class="all-pill all-pill-feat">⭐</span>}
+					</span>
+					<span class="all-title-block">
+						<span class="all-title" title={r.title}>
+							<a href={`/projects/${r.slug}/`}>{r.title}</a>
+						</span>
+						{r.subtitle && (
+							<span class="all-subtitle" title={r.subtitle}>
+								{r.subtitle}
+							</span>
+						)}
+					</span>
+					{r.series && (
+						<span class="all-series">
+							{r.series} {r.order}/{r.total}
+						</span>
+					)}
+				</li>
+			))
+		}
+	</ul>
+</StarlightPage>
+
+<style>
+	.all-summary {
+		color: var(--sl-color-gray-3);
+		font-size: var(--sl-text-sm);
+		margin: 0 0 1rem;
+	}
+	.all-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.all-row {
+		display: flex;
+		align-items: baseline;
+		gap: 0.6rem;
+		padding: 0.35rem 0;
+		border-bottom: 1px solid var(--sl-color-gray-6);
+	}
+	.all-flags {
+		flex: 0 0 11rem;
+		display: inline-flex;
+		gap: 0.3rem;
+		align-items: baseline;
+	}
+	.all-pill {
+		font-size: var(--sl-text-2xs);
+		line-height: 1.6;
+		border-radius: 999px;
+		padding: 0.02rem 0.45rem;
+		white-space: nowrap;
+	}
+	.all-pill-draft {
+		background: var(--sl-color-orange-low);
+		color: var(--sl-color-orange-high);
+	}
+	.all-pill-live {
+		background: var(--sl-color-green-low);
+		color: var(--sl-color-green-high);
+	}
+	.all-pill-feat {
+		background: var(--sl-color-blue-low);
+	}
+	.all-title-block {
+		flex: 1 1 auto;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.05rem;
+	}
+	.all-title {
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+	.all-subtitle {
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		color: var(--sl-color-gray-3);
+		font-size: var(--sl-text-sm);
+	}
+	.is-draft .all-title a {
+		color: var(--sl-color-gray-3);
+	}
+	.is-draft .all-subtitle {
+		color: var(--sl-color-gray-4);
+	}
+	.all-series {
+		flex: 0 0 auto;
+		margin-left: auto;
+		color: var(--sl-color-gray-3);
+		font-size: var(--sl-text-sm);
+		white-space: nowrap;
+	}
+</style>
