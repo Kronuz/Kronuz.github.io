@@ -46,6 +46,9 @@ export const collections = {
 				tagline: z.string().optional(),
 				// Longer blurb for the index card and meta description.
 				description: z.string().optional(),
+				// Optional project logo (path under /public, e.g. /img/projects/mech.png).
+				// Shown on the index card and floated beside the project page header.
+				logo: z.string().optional(),
 				// Tech tags (first one shown as the card's pill).
 				tech: z.array(z.string()).default([]),
 				// Canonical links.

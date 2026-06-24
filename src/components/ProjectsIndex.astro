@@ -11,7 +11,10 @@ const cap = (s) => s[0].toUpperCase() + s.slice(1);
 <div class="projects-grid not-content">
 	{
 		projects.map((p) => (
-			<article class="project-card">
+			<article class={`project-card${p.data.logo ? ' has-logo' : ''}`}>
+				{p.data.logo && (
+					<img class="project-card-logo" src={p.data.logo} alt={`${p.name} logo`} loading="lazy" />
+				)}
 				<p class="project-card-meta">
 					{p.data.tech[0] && <span class="project-tag">{p.data.tech[0]}</span>}
 					{p.data.featured && <span class="project-badge is-featured">Featured</span>}

@@ -50,6 +50,9 @@ const cap = (s) => s[0].toUpperCase() + s.slice(1);
 
 <StarlightPage frontmatter={{ title: pageTitle, subtitle: d.tagline, description: d.description ?? d.tagline }}>
 	<div class="project-head not-content">
+		{d.logo && !isLandingHub && (
+			<img class="project-head-logo" src={d.logo} alt={`${d.title} logo`} />
+		)}
 		{
 			(d.tech.length > 0 || showStatusBadge || d.featured) && (
 				<p class="project-meta">

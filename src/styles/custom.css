@@ -936,6 +936,24 @@ grid-template-columns: auto 1fr auto;
 	border-color: var(--sl-color-text-accent);
 	background: var(--sl-color-gray-6);
 }
+/* Project logo on an index card: a small mark in the top-right corner, so the tech tag and
+   name keep their left edge. Transparent PNGs, so they read on both themes. Cards without a
+   logo are unaffected. */
+.project-card.has-logo {
+	position: relative;
+}
+.project-card .project-card-logo {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	width: 2.4rem;
+	height: 2.4rem;
+	object-fit: contain;
+	opacity: 0.95;
+}
+.project-card.has-logo .project-card-meta {
+	padding-right: 3rem;
+}
 .project-tag {
 	font-size: var(--sl-text-2xs);
 	text-transform: uppercase;
@@ -1061,6 +1079,22 @@ grid-template-columns: auto 1fr auto;
    via the PageTitle override, like blog posts.) */
 .sl-markdown-content .project-head {
 	margin: 0.75rem 0 1.5rem;
+}
+/* Project logo floated beside the page header, so the body text wraps around it; it becomes
+   a centered block on narrow screens. Transparent PNGs, so they read on both themes. */
+.sl-markdown-content .project-head-logo {
+	float: right;
+	width: clamp(4.5rem, 12vw, 6.5rem);
+	height: auto;
+	margin: 0 0 0.8rem 1.4rem;
+}
+@media (max-width: 44rem) {
+	.sl-markdown-content .project-head-logo {
+		float: none;
+		display: block;
+		width: 5rem;
+		margin: 0 0 0.8rem;
+	}
 }
 .project-head .project-meta {
 	display: flex;
