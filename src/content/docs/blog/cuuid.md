@@ -29,6 +29,27 @@ This matters in a search engine specifically because ids are *everywhere*: every
 
 Generating the UUID in the first place is where the operating systems disagree, as they always do. cuuid uses the platform UUID backend rather than rolling its own: `uuid/uuid.h` (libuuid) on Linux and Darwin, the native `uuid.h` on FreeBSD, selected at build time. Its two small dependencies are other familiars in this series, [endian](https://github.com/Kronuz/endian) for byte-order handling and [char-classify](https://github.com/Kronuz/char-classify) for parsing and rendering hex, and the host-specific seams (tracing, exceptions, local-node salting) are left as override points so the core carries nothing it does not need.
 
+## Against the field
+
+Here is the fair question, the one I would ask if someone showed me this library today: it is 2026, we have [UUIDv7](https://www.rfc-editor.org/rfc/rfc9562) and [Snowflake](https://github.com/twitter-archive/snowflake) and a dozen other time-sortable ids, so where does a custom v1 codec actually stand? I owed the library an honest answer, so I [benchmarked it](https://github.com/Kronuz/cuuid/blob/main/COMPARISON.md) against the ids people actually reach for.
+
+The size result is real but smaller than the folklore. cuuid's compact wire is **8 bytes** for any present-day timestamp. That is half of UUIDv7's sixteen and equal to a 64-bit Snowflake, and unlike Snowflake it needs no worker-id coordination to get there. The famous 4-byte figure only appears for timestamps within about a year of cuuid's 2016 epoch, because the encoding works by stripping leading zero bytes off a rebased timestamp, and today's timestamps no longer have many to strip. The old in-repo benchmark hit 4 bytes only because it fed near-zero times. So: 8 bytes, coordination-free, honestly good.
+
+Can it sort by time, the way a Snowflake does? On the wire, **yes**. The condensed form puts the timestamp in the most-significant bytes, so a raw lexicographic sort of the encoded ids is a sort by creation time, down to a resolution floor of about **1.64 milliseconds** (below that, the low timestamp bits get folded into the clock field and order dissolves, which is the same class of limitation UUIDv7 and ULID have below their millisecond floor). The catch is that this is true of the *wire* form, not the canonical sixteen-byte v1 bytes, which carry the classic v1 curse: sort them and you get a full-range backward jump every seven minutes when the low timestamp field wraps. That is the exact wart [UUIDv6](https://www.rfc-editor.org/rfc/rfc9562) was invented to fix.
+
+And then the number that stung. The compact path costs about **900 nanoseconds to encode and another 900 to decode**. UUIDv7, UUIDv6, ULID, and Snowflake all do their equivalent in single-digit nanoseconds.
+
+| | wire size | sortable (wire) | encode + decode |
+| --- | --- | --- | --- |
+| cuuid compact | 8 bytes | yes, ~1.64 ms | ~900 ns + ~900 ns |
+| Snowflake | 8 bytes | yes, 1 ms | ~1 ns + ~2 ns |
+| UUIDv7 | 16 bytes | yes, 1 ms | ~1 ns + ~0.5 ns |
+| UUIDv6 | 16 bytes | yes, 100 ns | ~0 ns |
+
+Two to three orders of magnitude, and it turns out to be almost entirely one thing: reconstructing the compacted node runs a `std::mt19937`, and constructing a Mersenne Twister means initializing its 624-word state, every single time, on both encode and decode. I swapped in a splitmix64 mixer that does the identical job (a deterministic node derived from the same inputs) and it ran in **2 nanoseconds**, about 440 times faster. The cost was never the idea, it was the dice we chose to roll it with.
+
+So, is it worth it? In the place it was born, yes without hesitation: a search engine that keeps billions of ids as keys, wants them small and time-sortable, cannot pay for coordination, and owns both ends of the wire. Eight coordination-free sortable bytes at that scale is real money. Away from that niche, in a greenfield service in 2026, I would reach for UUIDv7 (standard, sortable, no MAC leak, a library in every language) or a Snowflake if a 64-bit id and a worker registry are fine. And the Mersenne-Twister cost is not a law of the design, it is a fixable wart: a future version could reconstruct the node with the cheap mixer, store the data as v6 so even the canonical bytes sort natively, and keep the variable-length size trick, all behind a new tag so the old ids still decode. That is the version I would build starting over. The full write-up, the wider landscape (ULID, KSUID, ObjectId, and the rest), and the numbers to reproduce all live in the repo's [COMPARISON.md](https://github.com/Kronuz/cuuid/blob/main/COMPARISON.md).
+
 ## Where it fits
 
 Reach for it when you want time-sortable unique ids and you care about their size on the wire or on disk, which in a storage or search system you should. Skip it if random v4 ids are what you want (there is nothing structural to condense in true randomness), or if a plain UUID library already does everything you need and the bytes are not worth counting.
