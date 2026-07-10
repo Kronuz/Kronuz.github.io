@@ -115,6 +115,8 @@ I will not pretend this was free. Building your own distributed datastore is a d
 
 There is a straight line from here to the rest of my career. The instinct that built Xapiand, *I want to understand the whole stack, down to the bytes on disk and the votes on the wire*, is the same one that, a few years later, had me elbow-deep in CPython's dictionary internals making imports lazy. If you want that story, it is in [the longer one](/blog/the-boy-who-kept-opening-the-box/). Xapiand is where I learned, for real, how much "make it distributed" actually asks of you.
 
+Xapiand also turned out to be a quarry. Years after Dubalu I went back and cut its sharpest pieces out into standalone libraries, each a small creature that can stand on its own: a [lock-free timer wheel](/blog/the-sparse-wheel/), a [crash tracer that photographs every thread's stack at once](/blog/the-haunted-handler/), the HTM mesh, the cluster bus, a [fantasy-name generator for the node names](/blog/rolling-for-a-name/), thirty-odd of them. I am opening them one at a time in a series of their own, **Familiars**. If this post was the dungeon, that series is the loot.
+
 ---
 
 *Everything above is from the real source: [github.com/Kronuz/Xapiand](https://github.com/Kronuz/Xapiand), specifically [`server/discovery.h`](https://github.com/Kronuz/Xapiand/blob/master/src/server/discovery.h) (Raft), [`storage.h`](https://github.com/Kronuz/Xapiand/blob/master/src/storage.h) (the store), and [`geospatial/htm.h`](https://github.com/Kronuz/Xapiand/blob/master/src/geospatial/htm.h) (the mesh). Copyright Dubalu LLC, 2015-2019.*

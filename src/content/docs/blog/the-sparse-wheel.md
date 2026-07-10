@@ -5,15 +5,15 @@ description: "A hierarchical timer wheel from Xapiand backed by a sparse, lazily
 excerpt: "One thread in Xapiand sleeps while every other thread drops timed work onto its schedule: log flushes, fsyncs, commits, replication. The drop can never take a lock, and more than that, it can never stall. The little data structure that makes both true is the strangest, best thing in the whole codebase, and the only piece I would publish entirely on its own."
 date: 2026-06-28
 draft: true
-series: "Opening Boxes"
-seriesOrder: 10
+series: "Familiars"
+seriesOrder: 3
 tags:
-  - opening-boxes
+  - familiars
   - cpp
   - concurrency
 ---
 
-*Part of the **Opening Boxes** series, technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) opened [Xapiand](https://github.com/Kronuz/Xapiand); this one opens a single jewel I found inside it and pulled out into its own box: [stash](https://github.com/Kronuz/stash).*
+*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) opened the whole engine; this one opens the single jewel I would pull out of it before any other: [stash](https://github.com/Kronuz/stash).*
 
 Somewhere in a running [Xapiand](https://github.com/Kronuz/Xapiand) there is a thread that does almost nothing. It sleeps. Every so often it wakes, looks at a clock, runs whatever is due, and goes back to sleep. It is the laziest thread in the server, and on a busy node it is also the busiest, because every *other* thread is quietly dropping work onto its schedule: every delayed log line, every queued fsync, every database commit, every replication trigger. They all hand it a thing to do later, and they hand it over constantly.
 
@@ -229,3 +229,5 @@ A dead heat on throughput; the difference is the tail, 4.3 µs against 49, becau
 This used to be the *slowest* row, behind even a mutex and a deque, because a per-leaf commit loop serialized the converging producers. Replacing it with a three-state slot (reserved / filled / drained, read directly by the walker) moved it to mid-pack: it now beats the heap and ties a locked deque, while a queue still wins hand-off by a wide margin, as it should. The lesson is not that stash got good at hand-off; it is that its one ugly facet is no longer ugly, and a queue is still the right tool when there is no *when*.
 
 The full harness, every thread count, both patterns, and the complete percentile tables are in the [repo](https://github.com/Kronuz/stash/tree/main/bench).
+
+That is the familiar I would keep if I could keep only one: a lock-free slot store that also knows what time it is. The next one lives closer to the door and meets every request before anything else does. It is the router, and its whole job is to decide, in the time it takes to read a URL, which of a thousand handlers a request belongs to, without ever walking the whole tree to find out, and without falling apart on the one input an attacker would send on purpose.
