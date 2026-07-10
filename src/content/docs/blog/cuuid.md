@@ -41,12 +41,12 @@ And then the number that stung. The compact path costs about **900 nanoseconds t
 
 | | wire size | sortable (wire) | encode + decode |
 | --- | --- | --- | --- |
-| cuuid compact | 8 bytes | yes, ~1.64 ms | ~900 ns + ~900 ns |
+| cuuid compact (v1) | 8 bytes | yes, ~1.64 ms | ~880 ns + ~880 ns |
 | Snowflake | 8 bytes | yes, 1 ms | ~1 ns + ~2 ns |
 | UUIDv7 | 16 bytes | yes, 1 ms | ~1 ns + ~0.5 ns |
 | UUIDv6 | 16 bytes | yes, 100 ns | ~0 ns |
 
-Two to three orders of magnitude, and it turns out to be almost entirely one thing: reconstructing the compacted node runs a `std::mt19937`, and constructing a Mersenne Twister means initializing its 624-word state, every single time, on both encode and decode. I swapped in a splitmix64 mixer that does the identical job (a deterministic node derived from the same inputs) and it ran in **2 nanoseconds**, about 440 times faster. The cost was never the idea, it was the dice we chose to roll it with.
+Two to three orders of magnitude, and it turns out to be almost entirely one thing: reconstructing the compacted node runs a `std::mt19937`, and constructing a Mersenne Twister means initializing its 624-word state, every single time, on both encode and decode. I swapped in a splitmix64 mixer that does the identical job, a deterministic node derived from the same inputs, in about **2 nanoseconds** instead of nine hundred, and the whole compact path fell with it: roughly **9 nanoseconds to encode and 16 to decode**, down from about 880 apiece. The catch is that a different mixer reconstructs a different node, so the wire bytes move with it. That makes it a new format rather than a patch you slip under the old one. The cost was never the idea, it was the dice we chose to roll it with.
 
 So, is it worth it? In the place it was born, yes without hesitation: a search engine that keeps billions of ids as keys, wants them small and time-sortable, cannot pay for coordination, and owns both ends of the wire. Eight coordination-free sortable bytes at that scale is real money. But the benchmark left two warts sitting in plain sight, the Mersenne-Twister tax and a canonical form that still lurches backward every seven minutes, and once you have measured a wart it is hard to walk away from. So I stopped writing the benchmark and went and fixed them.
 
