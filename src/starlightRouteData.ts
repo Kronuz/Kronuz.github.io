@@ -15,6 +15,13 @@ import { resolveSeries } from './lib/series.mjs';
 export const onRequest = defineRouteMiddleware(async (context) => {
 	const route = context.locals.starlightRoute;
 	const toc = route?.toc;
+
+	// Lead the "On this page" list with the page title instead of Starlight's generic
+	// "Overview" (matches the Xapiand docs). Mutating route.toc here covers both the desktop
+	// right-sidebar TOC and the mobile "On this page" dropdown, which both read route.toc.
+	const topItem = toc?.items?.find((it) => it.slug === '_top');
+	if (topItem && route.entry?.data?.title) topItem.text = route.entry.data.title;
+
 	if (!toc || tocHasHeadings(toc)) return;
 
 	const locals = /** @type {{ projectSeries?: { inSeries?: boolean } }} */ (context.locals);

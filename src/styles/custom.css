@@ -158,6 +158,14 @@ code {
 	border-radius: 4px;
 }
 
+/* "On this page" leads with the page title (the #_top entry, relabeled in the route
+   middleware); make that first item stand out from the section links below it (shared
+   with the Xapiand docs engine). */
+starlight-toc a[href='#_top'] {
+	font-weight: 600;
+	font-size: var(--sl-text-base);
+}
+
 /* Blockquotes read as quoted voice: italic prose, but keep inline code upright
    so monospace doesn't slant. */
 .sl-markdown-content blockquote {
