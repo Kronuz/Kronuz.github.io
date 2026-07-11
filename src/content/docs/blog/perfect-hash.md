@@ -60,35 +60,23 @@ Two phf rows, two honest ways to use it. Hash-only is the fast path Xapiand runs
 
 ## Where it came from
 
-Its home, and the reason it exists, is [Xapiand](https://github.com/Kronuz/Xapiand), which dispatches on names constantly: field types, query operators, cast functions, the reserved words of its query language, dozens of small fixed sets, each one a `switch` on the far side of a hash. The pattern that recurs is worth showing whole, because it is prettier than a bare `switch` on an integer. You hash a set of names into a `phf`, then use the phf's dense output as the *values of an `enum`*, so the dispatch reads as a `switch` over named constants and the compiler gets the dense jump table it wanted all along:
+Its home, and the reason it exists, is [Xapiand](https://github.com/Kronuz/Xapiand), which dispatches on names constantly: field types, query operators, cast functions, the reserved words of its query language, dozens of small fixed sets, each one a `switch` on the far side of a hash. The pattern that recurs is worth showing plainly. You hash a fixed set of names into a `phf`, then `switch` on the lookup. Every slot is a compile-time constant, so the case labels are just the same names run through the same lookup, and the compiler turns it into a dense jump table over strings:
 
 ```cpp
-// A fixed set of cast-operator names, listed once.
-#define HASH_OPTIONS() OPTION(INTEGER) OPTION(FLOAT) OPTION(POINT) /* ...and ~30 more */
+// hash() is any constexpr string hash (the one from the hashes post does fine).
+constexpr auto ops = phf::make_phf({ hash("add"), hash("remove"), hash("replace"), hash("move") });
 
-// Build the perfect hash over their hashes, at compile time.
-constexpr static auto cast_hash = phf::make_phf({
-    #define OPTION(name) hh(RESERVED_##name),
-    HASH_OPTIONS()
-    #undef OPTION
-});
-
-// The phf's dense slots ARE the enum values.
-enum class HashType : uint32_t {
-    #define OPTION(name) name = cast_hash.fhh(RESERVED_##name),
-    HASH_OPTIONS()
-    #undef OPTION
-};
-
-// Dispatch: hash the word once, switch on a dense enum.
-switch (static_cast<HashType>(cast_hash.fhh(word))) {
-    case HashType::INTEGER: return FieldType::integer;
-    case HashType::POINT:   return FieldType::geo;
-    // ...
+// Dispatch on a string: hash the input, switch on its dense, collision-free slot.
+switch (ops.find(hash(op))) {
+    case ops.find(hash("add")):     return do_add();
+    case ops.find(hash("remove")):  return do_remove();
+    case ops.find(hash("replace")): return do_replace();
+    case ops.find(hash("move")):    return do_move();
+    default:                        return unknown(op);   // not one of the keys
 }
 ```
 
-That is the whole idea in one place: a set of known names becomes a collision-free, branch-free index into a table of what to do about them. It is the machinery under the [string switch](/blog/compile-time-magic/) from the compile-time opener and under the [enum reflection](/blog/enum-reflection/) in the next post.
+That is the whole idea in one place: a set of known names becomes a collision-free, branch-free index into a table of what to do about them. (Xapiand takes it one step further and uses the slots as the values of an `enum`, so the `switch` reads over named constants, but that is sugar on top of this.) It is the machinery under the [string switch](/blog/compile-time-magic/) from the compile-time opener and under the [enum reflection](/blog/enum-reflection/) in the next post.
 
 One honesty note, the same one every perfect hash carries. It removes collisions *among the keys you gave it*; it cannot tell a stranger from a member. Hand it a word that is not in the set and it still reads some slot and returns whatever sits there. When the input might not be a member, you verify: keep the original strings and compare against the one at the slot, or guard the shape first, the way the cast dispatch throws on a word that does not begin with the reserved marker before it ever hashes. For a genuinely closed set, where the input is always one of the keys, you pay for neither.
 
