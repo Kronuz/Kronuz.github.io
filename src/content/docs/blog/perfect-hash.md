@@ -64,7 +64,12 @@ Its home, and the reason it exists, is [Xapiand](https://github.com/Kronuz/Xapia
 
 ```cpp
 // hash() is any constexpr string hash (the one from the hashes post does fine).
-constexpr auto ops = phf::make_phf({ hash("add"), hash("remove"), hash("replace"), hash("move") });
+constexpr auto ops = phf::make_phf({
+    hash("add"),
+    hash("remove"),
+    hash("replace"),
+    hash("move")
+});
 
 // Dispatch on a string: hash the input, switch on its dense, collision-free slot.
 switch (ops.find(hash(op))) {
