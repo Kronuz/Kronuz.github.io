@@ -39,11 +39,11 @@ In the **canonical sixteen-byte form**, v6 does better: it keeps the full 100-na
 
 Rebuilding the shared node on decode is where cuuid used to embarrass itself. The compact form does not store the 48-bit node; it stores a 7-bit salt and *reconstructs* a synthetic node deterministically from the timestamp, clock, and salt. That reconstruction needs a mixing function, and the original code reached for the obvious one: seed a `std::mt19937` and pull two draws. Constructing a Mersenne Twister initializes its 624-word state, every single time, on both encode and decode, and it dominated everything. The compact path cost about **880 nanoseconds each way**, two to three orders of magnitude more than Snowflake, UUIDv7, or ULID.
 
-The node's actual value is arbitrary; it only has to be deterministic, carry the salt, and set the multicast bit. So I swapped the Mersenne Twister for a **splitmix64** mixer that does the identical job from the same seed, and the whole compact path fell with it: about **9 nanoseconds to encode and 16 to decode**, down from ~880 apiece.
+The node's actual value is arbitrary; it only has to be deterministic, carry the salt, and set the multicast bit. So I swapped the Mersenne Twister for a **splitmix64** mixer that does the identical job from the same seed, and the whole compact path fell with it: about **9 nanoseconds to encode and 12 to decode**, down from ~880 apiece. (Decode owed a little more to a byte-at-a-time loop unpacking the wire; folding that into a single machine byteswap took it from ~16 down to ~12.)
 
 | | wire size | sortable (wire) | encode + decode |
 | --- | --- | --- | --- |
-| cuuid v6 | 8 bytes | yes, ~1.64 ms | ~9 ns + ~16 ns |
+| cuuid v6 | 8 bytes | yes, ~1.64 ms | ~9 ns + ~12 ns |
 | cuuid v1 (legacy) | 8 bytes | yes, ~1.64 ms | ~880 ns + ~880 ns |
 | Snowflake | 8 bytes | yes, 1 ms | ~1 ns + ~2 ns |
 | UUIDv7 | 16 bytes | yes, 1 ms | ~1 ns + ~0.5 ns |
