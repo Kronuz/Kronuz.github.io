@@ -1,0 +1,24 @@
+diff --git a/node_modules/starlight-blog/components/Preview.astro b/node_modules/starlight-blog/components/Preview.astro
+index 778cc68..8995618 100644
+--- a/node_modules/starlight-blog/components/Preview.astro
++++ b/node_modules/starlight-blog/components/Preview.astro
+@@ -26,6 +26,7 @@ if (!config) throw new Error(`Failed to get blog configuration for entry '${entr
+       <h2>{entry.data.title}</h2>
+       {entry.data.cover && <Cover cover={entry.data.cover} alt="" />}
+     </a>
++    {entry.data.subtitle && <p class="preview-subtitle">{entry.data.subtitle}</p>}
+     <Metadata {config} {entry} />
+   </header>
+   <div class="sl-markdown-content">
+@@ -64,4 +65,11 @@ if (!config) throw new Error(`Failed to get blog configuration for entry '${entr
+   .preview-link:has(figure) h2 {
+     margin-bottom: 1.5rem;
+   }
++
++  .preview-subtitle {
++    margin-top: -1rem;
++    margin-bottom: 1.5rem;
++    font-size: var(--sl-text-lg);
++    color: var(--sl-color-gray-3);
++  }
+ </style>
