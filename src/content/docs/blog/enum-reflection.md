@@ -23,7 +23,7 @@ Here is a small, permanent annoyance in C++. You write `enum class Method { GET,
 
 The interesting part is *how* the name-to-member direction works, because that is a lookup from a string to an enum value, exactly the kind of dispatch the last two posts were building toward. The generated accessors route it through a compile-time [perfect hash](/blog/perfect-hash/) over the member names, built with the [hashes](/blog/compile-time-magic/) macros. So looking a name up is not a chain of `if (s == "GET")` comparisons; it is a hash and a couple of array reads into a collision-free table, materialized at build time. The reflection is branch-light, heap-free, and constructs no runtime tables at all. This is the payoff of the whole compile-time chapter arriving in one place: a string switch wants a [hash](/blog/compile-time-magic/), the hash wants to be [collision-free](/blog/perfect-hash/), and enum reflection is what you build once you have both, the enum names dispatched through a perfect hash the compiler computed for you.
 
-It is also why this library sits at the top of a small stack of the others: it pulls in `perfect-hash` for the dispatch and `hashes` for the hashing macros, and those pull their own siblings in turn. A reflective enum is not one idea; it is three of the smaller familiars standing on each other's shoulders.
+It is also why this library sits at the top of a small stack of the others: it pulls in `constexpr-phf` for the dispatch and `hashes` for the hashing macros, and those pull their own siblings in turn. A reflective enum is not one idea; it is three of the smaller familiars standing on each other's shoulders.
 
 ## The one-liner sibling
 
