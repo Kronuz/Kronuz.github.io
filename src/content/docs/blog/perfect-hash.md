@@ -25,26 +25,40 @@ Before a perfect hash, you reach for what the language hands you. Say you are di
 
 An `if`-ladder is a linear scan: on average it tests half the cases before it hits, and every test is a branch the predictor can miss. A `switch` *looks* like it should become a jump table, but a jump table needs dense labels, and hashes are the opposite of dense. Handed a few hundred scattered 32-bit values, the compiler does the only thing it can and turns the `switch` into a **binary search** of comparisons: `O(log n)` branches, still branching, still growing. The reflexive escape, a [`std::unordered_map`](https://en.cppreference.com/w/cpp/container/unordered_map), trades the branches for a hash, a probe, a pointer chase, and a likely cache miss.
 
-Here is what each costs per lookup as the set grows, on a fixed set of sparse keys (the hashes you actually dispatch on), arm64 at `-O3`:
+Here is what each costs per lookup as the set grows, on a fixed set of sparse keys (the hashes you actually dispatch on), at `-O3`:
 
 | keys | `if`-ladder | `switch` (binary search) | `unordered_map` | `phf` |
 | ---: | ---: | ---: | ---: | ---: |
-| 6 | 1.4 | 1.5 | 1.0 | 0.5 |
-| 46 | 6.8 | 4.1 | 1.6 | 0.5 |
-| 192 | 33 | 7.4 | 1.7 | 0.5 |
-| 1000 | 138 | 8.4 | 1.4 | 0.5 |
+| 6 | 2.4 | 4.0 | 3.2 | 1.2 |
+| 46 | 14 | 8.2 | 3.1 | 1.2 |
+| 192 | 38 | 26 | 3.1 | 1.2 |
+| 1000 | 162 | 40 | 3.2 | 1.3 |
 
-The ladder is fine at six keys and hopeless at a thousand. The `switch` grows with the logarithm and never stops branching. The map flattens out but never gets cheap, because a hash-plus-probe-plus-indirection has a floor a nanosecond or two off the ground. Only the perfect hash is **flat and low**: the same half-nanosecond at a thousand keys as at six, because it runs the same fixed arithmetic every time. Its worst case is its best case. The next section is why.
+The ladder is fine at six keys and hopeless at a thousand, where it spends 160 nanoseconds walking comparisons. The `switch` grows with the logarithm and never stops branching, past 40 nanoseconds by the time the set is large. The map flattens out around three nanoseconds but never gets cheaper than that, because a hash-plus-probe-plus-indirection has a floor. Only the perfect hash is **flat and low**: the same ~1.2 nanoseconds at a thousand keys as at six, because it runs the same fixed arithmetic every time. Its worst case is its best case. The next section is why.
 
 ## What the lookup costs
 
 The construction uses the CHD scheme (compress, hash, displace): a two-level design that splits the keys into buckets with a first hash, then, bucket by bucket from largest to smallest, finds a small displacement value for each that slots all its keys into free positions without collision. That search is real work, but it is the compiler's work, done once at build time. What survives into your binary is a `buckets` array and an `index` array of `constexpr` data. So at runtime, resolving a key is not a search at all. It is a couple of multiplies, a shift, and **two array reads**: hash the key to pick a bucket, read that bucket's displacement, combine, read the final slot. No collisions to resolve, no unpredictable branch on the hot path, no heap, no probing, no chain. The same handful of instructions for every key, always, with a worst case identical to its best case.
 
-## The division it used to pay
+That reduction into the table is a **multiply-shift**, not a modulo: the table is sized to a power of two, so choosing the final slot is a multiply and a shift with no division anywhere on the path, and division is one of the slowest things a CPU does. The one key set that defeats a pure multiply, distinct powers of two, is caught at build time and routed through one extra mixing step, so a pathological set stays correct without taxing the common one. Every real key set takes the plain fast path.
 
-The original version had a hidden tax in that hot path: a modulo. It reduced the displaced hash into the table with `% index_size`, where `index_size` was a prime. A modulo is a division, and integer division is one of the slowest things a CPU does, tens of cycles where a multiply is a few. This season I took it out. Size the table to a power of two instead of a prime and the reduction becomes a **multiply-shift**: multiply by the bucket's constant and keep the top bits with a shift. No division at all. On the same key sets that is about 20% faster on arm64 and up to 37% faster on x86, where the division hurt most.
+## How it compares
 
-There is one catch, and it is a good one. Multiply-shift has a blind spot: keys that are distinct powers of two. For those, `key * multiplier` is a pure left shift, so a small multiplier never pushes any entropy into the top bits and every key lands on top of every other. Multiplication cannot dig itself out, because a product of shifts is still a shift. The only cure is a non-linear step. So the build is **adaptive**: it tries the fast path first, with no extra mixing, and only if the multiplier search cannot place the keys does it fall back to a version that runs each key through one cheap xorshift before the multiply. It records which path it took, and the lookup mirrors it. Every real key set I have takes the fast path. The pathological ones quietly pay for their own robustness, at build time, and nobody else is taxed for a problem they do not have.
+The engine is integer-only and never sees a string: you pick a hash, it takes the integer. So for string dispatch you hash the key, look the integer up in a `phf`, and (when the input might not be a member) compare against the one key at the slot to verify. On Xapiand's 192 field-type names (2 to 23 characters, a real mix of short and long), nanoseconds per lookup:
+
+| dispatch on 192 field-type names | ns/op |
+| :-- | ---: |
+| `gperf` (separate codegen step) | 14 |
+| **constexpr-phf**, hash-only | 18 |
+| **constexpr-phf**, hash + verify | 21 |
+| compile-time trie | 28 |
+| `std::unordered_map` | 29 |
+| `frozen::unordered_set` | 40 |
+| `std::set` | 82 |
+
+Two phf rows, two honest ways to use it. Hash-only is the fast path Xapiand runs: hash, index, done, no compare, which can misdispatch a stranger, so you feed it only members or guard the shape first. Verified adds the one compare at the slot and never false-matches, the apples-to-apples number against gperf, frozen, and the containers, which all verify. The hash is yours to pick and it matters: a word-at-a-time hash reads eight bytes a step, 21 ns verified on these longer names where byte-at-a-time FNV-1a takes 25. Both beat every container, the immutable `frozen` set, and a compile-time trie, and trail only [gperf](https://www.gnu.org/software/gperf/), which needs a separate codegen step constexpr-phf does not. And that is gperf's best case: on an all-short key set, the 570 English stop words, constexpr-phf edges ahead of gperf too, because a short key is a couple of hash steps and one compare while gperf still runs its generated `strcmp`. All of it is reproducible: the [comparison benchmarks](https://github.com/Kronuz/constexpr-phf/tree/master/bench) live in the repo.
+
+## Where it came from
 
 Its home, and the reason it exists, is [Xapiand](https://github.com/Kronuz/Xapiand), which dispatches on names constantly: field types, query operators, cast functions, the reserved words of its query language, dozens of small fixed sets, each one a `switch` on the far side of a hash. The pattern that recurs is worth showing whole, because it is prettier than a bare `switch` on an integer. You hash a set of names into a `phf`, then use the phf's dense output as the *values of an `enum`*, so the dispatch reads as a `switch` over named constants and the compiler gets the dense jump table it wanted all along:
 
