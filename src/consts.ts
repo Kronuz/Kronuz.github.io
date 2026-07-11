@@ -18,3 +18,15 @@ export const GISCUS = {
 	category: 'Announcements',
 	categoryId: 'DIC_kwDOAgHOEc4C-uYu',
 };
+
+// Discussions engine (self-hosted, a giscus alternative; see discussions/). Staged so
+// the public blog's engine matches the internal blog and the Xapiand docs. For now the
+// public blog USES giscus (above); MarkdownContent renders <Discussions> only when a
+// backend is configured and otherwise falls back to giscus, so setting DISCUSSIONS_BACKEND
+// to the deployed backend URL is the whole swap. The PUBLIC_DISCUSSIONS_BACKEND build env
+// var overrides this for local dev. Empty = giscus stays active.
+export const DISCUSSIONS_BACKEND = '';
+// Login suffix dropped when displaying handles (cosmetic; e.g. "_sso"). Empty = as-is.
+export const DISCUSSIONS_STRIP_SUFFIX = '';
+// Public GIPHY key; when set, the composer shows a client-side GIF picker. Empty = no GIF button.
+export const DISCUSSIONS_GIPHY_KEY = '';

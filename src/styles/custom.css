@@ -153,6 +153,11 @@ max-width: 100%;
 margin-inline: auto;
 }
 
+/* Round inline-code chips (shared with the Xapiand docs engine). */
+code {
+	border-radius: 4px;
+}
+
 /* Blockquotes read as quoted voice: italic prose, but keep inline code upright
    so monospace doesn't slant. */
 .sl-markdown-content blockquote {

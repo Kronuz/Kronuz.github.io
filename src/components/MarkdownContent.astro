@@ -12,8 +12,10 @@
 import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
 import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 import Giscus from './Giscus.astro';
+import Discussions from './Discussions.astro';
 import SnippetScript from './SnippetScript.astro';
 import { resolveSeries, resolveChronological } from '../lib/series.mjs';
+import { DISCUSSIONS_BACKEND, DISCUSSIONS_STRIP_SUFFIX, DISCUSSIONS_GIPHY_KEY } from '../consts';
 
 const { entry } = Astro.locals.starlightRoute;
 const isBlogPost = Boolean(entry?.data?.date);
@@ -38,16 +40,48 @@ const seriesNext = series?.next ?? null;
 const chrono = isBlogPost ? await resolveChronological(term) : null;
 const chronoPrev = chrono?.prev ?? null;
 const chronoNext = chrono?.next ?? null;
+// Comments: the public blog uses giscus for now. The Discussions engine is staged --
+// when DISCUSSIONS_BACKEND (or the PUBLIC_DISCUSSIONS_BACKEND env override) is set, blog
+// posts render the self-hosted <Discussions> widget instead; empty keeps giscus active.
+const title = entry?.data?.title;
+const subtitle = entry?.data?.subtitle;
+const url = Astro.url?.href;
+const backend = import.meta.env.PUBLIC_DISCUSSIONS_BACKEND || DISCUSSIONS_BACKEND;
+const inlineComments = Boolean(backend) && isBlogPost && Boolean(term);
 ---
 
 {isReservedBlogPage ? <slot /> : <BlogMarkdownContent>
 	{
 		inSeries && (
-			<p class="series-mobile not-content">
-				<span class="series-mobile-num">Part {series.index + 1} of {series.total}</span>
-				<span class="series-mobile-of">of</span>
-				<span class="series-mobile-name">{series.name}</span>
-			</p>
+			<details class="series-mobile not-content">
+				<summary class="series-mobile-summary">
+					<span class="series-mobile-num">Part {series.index + 1} of {series.total}</span>
+					<span class="series-mobile-of">of</span>
+					<span class="series-mobile-name">{series.name}</span>
+				</summary>
+				<ol class="series-mobile-list">
+					{series.parts.map((p) => (
+						<li>
+							{p.current ? (
+								<span class="series-mobile-row is-current">
+									<span class="series-mobile-rownum">{p.index + 1}</span>
+									<span>{p.title}</span>
+								</span>
+							) : p.reachable ? (
+								<a class:list={["series-mobile-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
+									<span class="series-mobile-rownum">{p.index + 1}</span>
+									<span>{p.title}</span>
+								</a>
+							) : (
+								<span class="series-mobile-row is-pending">
+									<span class="series-mobile-rownum">{p.index + 1}</span>
+									<span>{p.title}</span>
+								</span>
+							)}
+						</li>
+					))}
+				</ol>
+			</details>
 		)
 	}
 	<slot />
@@ -68,7 +102,9 @@ const chronoNext = chrono?.next ?? null;
 		)
 	}
 	{isBlogPost && <div class="post-divider" role="presentation" />}
-	{isBlogPost && <Giscus />}
+	{isBlogPost && (inlineComments
+		? <Discussions term={term} title={title} subtitle={subtitle} url={url} backend={backend} stripSuffix={DISCUSSIONS_STRIP_SUFFIX} giphyKey={DISCUSSIONS_GIPHY_KEY} />
+		: <Giscus />)}
 	{
 		(chronoPrev || chronoNext) && (
 			<div class="post-pagers post-pagers-chrono">
@@ -89,22 +125,39 @@ const chronoNext = chrono?.next ?? null;
 </BlogMarkdownContent>}
 
 <style>
-	/* Mobile-only series indicator. The full stepper lives in the right sidebar
-	   (the TableOfContents override), which Starlight hides below 72rem, so on small
-	   screens show a compact chip above the post instead. Styled as a distinct pill,
-	   not body text, so it reads as chrome rather than the start of the article. */
+	/* Mobile-only series nav. The full stepper lives in the right sidebar (the
+	   TableOfContents override), which Starlight hides below 72rem, so on small screens
+	   show a compact chip that expands to the full clickable part list (so mobile readers
+	   can see and jump within the series, not just step prev/next). */
 	.series-mobile {
+		margin: 1.5rem 0 0;
+	}
+	.series-mobile-summary {
 		display: inline-flex;
-		align-items: baseline;
+		align-items: center;
 		flex-wrap: wrap;
 		gap: 0.35rem;
-		margin: 1.5rem 0 0;
 		padding: 0.35rem 0.75rem;
 		border: 1px solid var(--sl-color-gray-5);
 		border-left: 3px solid var(--sl-color-text-accent);
 		border-radius: 1.2rem;
 		background: var(--sl-color-gray-6);
 		line-height: 1.4;
+		cursor: pointer;
+		list-style: none;
+	}
+	.series-mobile-summary::-webkit-details-marker {
+		display: none;
+	}
+	.series-mobile-summary::after {
+		content: '▸';
+		margin-inline-start: 0.15rem;
+		color: var(--sl-color-text-accent);
+		font-size: var(--sl-text-xs);
+		transition: transform 0.15s ease;
+	}
+	.series-mobile[open] .series-mobile-summary::after {
+		transform: rotate(90deg);
 	}
 	.series-mobile-num {
 		font-size: var(--sl-text-2xs);
@@ -122,6 +175,61 @@ const chronoNext = chrono?.next ?? null;
 		font-size: var(--sl-text-xs);
 		font-weight: 600;
 		color: var(--sl-color-white);
+	}
+	.series-mobile-list {
+		list-style: none;
+		margin: 0.75rem 0 0;
+		padding: 0 0 0 0.35rem;
+	}
+	.series-mobile-list li {
+		margin: 0;
+	}
+	.series-mobile-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding: 0.3rem 0.4rem;
+		border-radius: 0.4rem;
+		text-decoration: none;
+		color: var(--sl-color-gray-2);
+		font-size: var(--sl-text-sm);
+		line-height: 1.3;
+	}
+	a.series-mobile-row {
+		color: var(--sl-color-text-accent);
+	}
+	a.series-mobile-row:hover {
+		background: var(--sl-color-gray-6);
+	}
+	.series-mobile-rownum {
+		flex: 0 0 auto;
+		width: 1.4rem;
+		height: 1.4rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		border: 1px solid var(--sl-color-gray-4);
+		font-size: var(--sl-text-2xs);
+		font-weight: 600;
+		color: var(--sl-color-gray-2);
+	}
+	.series-mobile-row.is-current {
+		background: color-mix(in srgb, var(--sl-color-text-accent) 12%, transparent);
+		color: var(--sl-color-white);
+		font-weight: 600;
+	}
+	.series-mobile-row.is-current .series-mobile-rownum {
+		background: var(--sl-color-text-accent);
+		border-color: var(--sl-color-text-accent);
+		color: var(--sl-color-black);
+	}
+	.series-mobile-row.is-pending {
+		color: var(--sl-color-gray-4);
+	}
+	.series-mobile-row.is-pending .series-mobile-rownum {
+		color: var(--sl-color-gray-4);
+		border-style: dashed;
 	}
 	@media (min-width: 72rem) {
 		.series-mobile {
