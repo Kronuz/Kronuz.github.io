@@ -2,11 +2,11 @@
 title: "Many Ways to Be Similar"
 subtitle: "A family of string-distance metrics behind one interface, because there is no single answer to 'how close.'"
 description: "string-similarity is a header-only C++20 suite of string metrics: Levenshtein edit distance, Jaro and Jaro-Winkler, longest common substring and subsequence, Jaccard, Sørensen-Dice, and a Soundex-backed wrapper. They share one CRTP base, StringMetric<Impl>, so every metric exposes the same surface: a distance() and a similarity() in [0,1], a name(), and a description(). You pass both strings, or bind one and compare many against it. The point is that 'how similar are two strings' has many right answers depending on whether you care about edits, prefixes, shared tokens, or sound, and the uniform interface lets you pick and swap between them freely."
-excerpt: "There is no such thing as the string-similarity metric. A typo wants edit distance; a name wants prefix weighting; a set of tags wants token overlap; a misspelling wants sound. The twenty-first familiar admits this and ships a whole family, edit distance, Jaro-Winkler, Jaccard, Dice, and more, all behind one interface, so choosing the right notion of close is a matter of picking a class."
+excerpt: "There is no such thing as the string-similarity metric. A typo wants edit distance; a name wants prefix weighting; a set of tags wants token overlap; a misspelling wants sound. The twenty-second familiar admits this and ships a whole family, edit distance, Jaro-Winkler, Jaccard, Dice, and more, all behind one interface, so choosing the right notion of close is a matter of picking a class."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 21
+seriesOrder: 22
 tags:
   - familiars
   - cpp

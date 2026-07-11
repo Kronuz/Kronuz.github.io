@@ -2,11 +2,11 @@
 title: "The Seam"
 subtitle: "One interface between your application and the wire, and a writer that streams without remembering."
 description: "http is a generic HTTP/1.1 application framework on Asio coroutines that puts the application above the server behind a single seam: you implement one HttpHandler::handle(Request, ResponseWriter) method, and the framework parses bytes with http-parser, builds the Request, calls you, and frames the response. The ResponseWriter serves two shapes through one interface: buffered send() that sets Content-Length, or a streamed status()/write()/end() that turns into chunked encoding, so a huge result set or a database dump goes out incrementally and never has to sit in memory all at once. The search engine is one handler; a demo key-value store is another."
-excerpt: "Most HTTP frameworks make you think about the server. This one gives you exactly one thing to implement, a handler that takes a request and writes a response, and hides the socket, the parser, and the event loop entirely behind that seam. The thirteenth familiar, and the quiet cleverness is the writer: the same interface that sends a small buffered reply also streams a million-row result as chunks, never holding the whole thing in memory."
+excerpt: "Most HTTP frameworks make you think about the server. This one gives you exactly one thing to implement, a handler that takes a request and writes a response, and hides the socket, the parser, and the event loop entirely behind that seam. The fourteenth familiar, and the quiet cleverness is the writer: the same interface that sends a small buffered reply also streams a million-row result as chunks, never holding the whole thing in memory."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 13
+seriesOrder: 14
 tags:
   - familiars
   - cpp

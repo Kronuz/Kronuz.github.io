@@ -2,11 +2,11 @@
 title: "Sometimes a Mutex Is Right"
 subtitle: "A blocking channel that is not trying to be fast, only correct, with timeouts and a shutdown that actually drains."
 description: "queue is a thread-safe, bounded, blocking, double-ended MPMC queue built on a std::mutex, two condition variables, and a std::deque. It is deliberately not lock-free: it is the queue you reach for when you want a blocking channel with per-operation timeouts (negative blocks forever, zero is non-blocking, positive waits) and a clean two-stage shutdown, where end() stops new pushes but lets consumers drain what is left and finish() wakes every waiter and rejects everything. It pays a mutex on purpose, because the things it is good at, blocking with timeouts and an orderly teardown, are exactly the things lock-free queues make painful."
-excerpt: "After a chapter of lock-free structures that avoid mutexes at all costs, here is the honest counterweight: a queue that reaches straight for one. The twenty-third familiar is not chasing throughput. It is chasing the two things fast queues are bad at, waiting with a timeout and shutting down without losing or hanging on the items still in flight, and for those, a mutex and two condition variables are simply the right tool."
+excerpt: "After a chapter of lock-free structures that avoid mutexes at all costs, here is the honest counterweight: a queue that reaches straight for one. The twenty-fourth familiar is not chasing throughput. It is chasing the two things fast queues are bad at, waiting with a timeout and shutting down without losing or hanging on the items still in flight, and for those, a mutex and two condition variables are simply the right tool."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 23
+seriesOrder: 24
 tags:
   - familiars
   - cpp

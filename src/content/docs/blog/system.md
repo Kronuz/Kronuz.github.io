@@ -2,11 +2,11 @@
 title: "Asking the Machine"
 subtitle: "Reading a host's own limits, on systems that each hide the answer somewhere different."
 description: "system is Xapiand's process- and machine-level resource introspection: open and maximum file descriptors against the rlimit, total and per-process RAM and virtual memory, disk and inode capacity, and compiler, OS, and architecture identification strings. It is a small library whose entire difficulty is portability, because every operating system keeps these numbers somewhere different (proc files on Linux, sysctl on the BSDs and macOS, task info on Apple), and a server that wants to know how close it is to running out of descriptors or memory has to ask each of them in its own dialect."
-excerpt: "A long-running server should know its own limits: how many file descriptors it is burning against the cap, how much RAM the process holds, how much disk is left before writes start failing. None of those numbers has a portable source. The eighteenth familiar is the small, unglamorous library that asks each operating system for them in its own dialect, so the rest of the engine can just ask once."
+excerpt: "A long-running server should know its own limits: how many file descriptors it is burning against the cap, how much RAM the process holds, how much disk is left before writes start failing. None of those numbers has a portable source. The nineteenth familiar is the small, unglamorous library that asks each operating system for them in its own dialect, so the rest of the engine can just ask once."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 18
+seriesOrder: 19
 tags:
   - familiars
   - cpp

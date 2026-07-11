@@ -2,11 +2,11 @@
 title: "Built to Disappear"
 subtitle: "An atomic shared_ptr that becomes a one-line alias the moment the standard library grows its own."
 description: "atomic-shared-ptr provides atomic_shared_ptr<T>, thread-safe atomic operations over a std::shared_ptr<T> with the same member API as std::atomic: load, store, exchange, compare_exchange_weak and _strong, is_lock_free. It is the primitive lock-free data structures need to publish a new version of shared state atomically. Its defining trait is that it retires itself: where the standard library implements the C++20 std::atomic<std::shared_ptr<T>> specialization, the header becomes a plain alias and adds nothing; where it is not yet implemented, notably Apple clang's libc++, it provides the implementation. A polyfill written to vanish as the platform catches up."
-excerpt: "You want to atomically swap a shared_ptr, publish a new version of some shared state without a lock, and read it safely from other threads. C++20 finally standardized that, but not every compiler shipped it. The twenty-second familiar fills the gap where it is missing and, more interestingly, is written to delete itself the moment the standard library grows the feature, so the dependency has a built-in expiry date."
+excerpt: "You want to atomically swap a shared_ptr, publish a new version of some shared state without a lock, and read it safely from other threads. C++20 finally standardized that, but not every compiler shipped it. The twenty-third familiar fills the gap where it is missing and, more interestingly, is written to delete itself the moment the standard library grows the feature, so the dependency has a built-in expiry date."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 22
+seriesOrder: 23
 tags:
   - familiars
   - cpp

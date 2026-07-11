@@ -2,11 +2,11 @@
 title: "One Loop Per Core"
 subtitle: "The part of every TCP server you keep rewriting, written once."
 description: "reactor is a generic Asio server runtime: the shared-nothing, thread-per-core pool of event loops, the accept plumbing, and the graceful shutdown that every network protocol needs, with the protocol itself left entirely to you. You hand it a Session, a C++20 coroutine that serves one accepted connection, and it runs it across N reactors on N threads with no shared state. It picks the bind mode per platform (SO_REUSEPORT where the kernel load-balances, a shared acceptor where a second same-port bind is rejected) and gives each reactor an offload pool for blocking or CPU-heavy work. Kronuz/http, a Xapian remote server, and replication all ride the same runtime instead of each re-writing the accept loop."
-excerpt: "Every TCP server re-implements the same three unglamorous things: a pool of event loops across the cores, the accept loop that fans connections out to them, and the shutdown dance that tears it down without hanging. None of that is your protocol, and all of it is where the concurrency bugs live. The twelfth familiar owns exactly that and nothing else, so a new protocol is a coroutine, not a runtime."
+excerpt: "Every TCP server re-implements the same three unglamorous things: a pool of event loops across the cores, the accept loop that fans connections out to them, and the shutdown dance that tears it down without hanging. None of that is your protocol, and all of it is where the concurrency bugs live. The thirteenth familiar owns exactly that and nothing else, so a new protocol is a coroutine, not a runtime."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 12
+seriesOrder: 13
 tags:
   - familiars
   - cpp

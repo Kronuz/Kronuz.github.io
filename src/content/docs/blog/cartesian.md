@@ -2,11 +2,11 @@
 title: "The Earth Is Not a Ball"
 subtitle: "Turning latitude and longitude into vectors you can do geometry on, on an Earth that is lumpier than a sphere."
 description: "cartesian converts geodetic coordinates (latitude, longitude, ellipsoid height on some SRID) to and from geocentric Cartesian x/y/z vectors on the WGS84 ellipsoid, and adds the vector algebra (dot, cross, norm, normalize, angular distance) you need on those points. It converts between datums along the way with a 7-parameter Helmert transform, ships seventeen SRIDs with their ellipsoid parameters, and is the sibling library the HTM mesh runs on. The point is that doing geometry on the Earth means first turning surface coordinates into vectors, and doing it honestly means accounting for an Earth that is an ellipsoid, not a sphere, and for the different reference datums the world's maps were drawn on."
-excerpt: "Latitude and longitude are angles on a curved surface, and you cannot take the dot product of two angles. To do real geometry on the Earth, measure an angle between two cities, feed a region to a spatial index, you first turn each point into a vector in space. The nineteenth familiar does that conversion, honestly, across an Earth that is neither round nor drawn on a single map."
+excerpt: "Latitude and longitude are angles on a curved surface, and you cannot take the dot product of two angles. To do real geometry on the Earth, measure an angle between two cities, feed a region to a spatial index, you first turn each point into a vector in space. The twentieth familiar does that conversion, honestly, across an Earth that is neither round nor drawn on a single map."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 19
+seriesOrder: 20
 tags:
   - familiars
   - cpp

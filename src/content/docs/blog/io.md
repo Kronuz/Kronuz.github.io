@@ -2,11 +2,11 @@
 title: "The Syscalls That Lie"
 subtitle: "The EINTR retry, the fsync that isn't, and the one call you must never retry."
 description: "io is an EINTR-safe POSIX file and socket layer extracted verbatim from Xapiand. Every function in the io:: namespace mirrors a syscall of the same name but adds the retry and short-count handling a real storage or network engine needs: read, write, send, recv, fsync and friends retry through EINTR, write and pread loop until the whole buffer moves, open refuses to hand back a descriptor below stderr and sets O_CLOEXEC, and durability is made portable (fdatasync on Linux, F_FULLFSYNC on macOS for real on-platter sync, fallocate with fallbacks). The one deliberate exception is close(), which never retries on EINTR, because retrying close can double-close a file descriptor another thread has already reused."
-excerpt: "The POSIX calls at the bottom of every server are not as honest as they look. A read can be cut short by a signal and return having done nothing wrong. An fsync on macOS returns success without actually putting your data on the platter. And retrying a close() that was interrupted can silently destroy a file descriptor another thread just reused. The seventeenth familiar is the thin layer that knows all of this and does the boring, correct thing so the rest of the engine never has to."
+excerpt: "The POSIX calls at the bottom of every server are not as honest as they look. A read can be cut short by a signal and return having done nothing wrong. An fsync on macOS returns success without actually putting your data on the platter. And retrying a close() that was interrupted can silently destroy a file descriptor another thread just reused. The eighteenth familiar is the thin layer that knows all of this and does the boring, correct thing so the rest of the engine never has to."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 17
+seriesOrder: 18
 tags:
   - familiars
   - cpp

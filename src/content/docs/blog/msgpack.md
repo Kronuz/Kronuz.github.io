@@ -2,11 +2,11 @@
 title: "Copy on Write"
 subtitle: "A dynamic document value that serialises to MessagePack, patches like JSON, and copies for free."
 description: "msgpack is Xapiand's batteries-included MessagePack value library: the MsgPack copy-on-write value type with JSON-like map and array access, serialise and unserialise to the compact MessagePack wire format, typed accessors, RapidJSON and string_view adaptors, and an RFC 6902 JSON-Patch helper over the DOM. Its two clever bits are copy-on-write storage, so passing a document by value is a pointer bump until someone mutates it, and a forked msgpack-c exception header that makes the vendored library's exceptions inherit the host's base exception type, so a decode error travels through your own error hierarchy instead of a foreign one."
-excerpt: "A search engine passes documents around constantly: parse one, copy it into a request, hand it to a handler, serialise it to disk. If every copy of a document deep-copied the whole tree, that traffic would be pure waste. The fifteenth familiar is the document value that copies for free until you change it, speaks MessagePack on the wire, and patches like JSON in place."
+excerpt: "A search engine passes documents around constantly: parse one, copy it into a request, hand it to a handler, serialise it to disk. If every copy of a document deep-copied the whole tree, that traffic would be pure waste. The sixteenth familiar is the document value that copies for free until you change it, speaks MessagePack on the wire, and patches like JSON in place."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 15
+seriesOrder: 16
 tags:
   - familiars
   - cpp

@@ -2,11 +2,11 @@
 title: "Append Only"
 subtitle: "A blob store that never overwrites, so a crash can only ever cost you the last write."
 description: "storage is Xapiand's compressed, append-only, multi-volume blob store: it writes opaque binary records into fixed-size blocks in volume files, returns a stable offset for each, reads any record back by that offset, and transparently compresses large records with Zstandard. Its power is the append-only discipline. Because it never overwrites live data, only ever appends and advances, a crash mid-write can corrupt at most the tail it was writing, never a record already committed, which is what makes crash safety a property of the format rather than a prayer. The engine is one header-only template with the record framing and IO as injection seams."
-excerpt: "The scariest moment for a datastore is the one where the power goes out mid-write. If your store overwrites data in place, that moment can shred a record that was already safe. The fourteenth familiar refuses to overwrite anything, ever: it only appends. A crash can lose the write in flight, and nothing else, and that single discipline turns crash safety from a hope into a guarantee of the format."
+excerpt: "The scariest moment for a datastore is the one where the power goes out mid-write. If your store overwrites data in place, that moment can shred a record that was already safe. The fifteenth familiar refuses to overwrite anything, ever: it only appends. A crash can lose the write in flight, and nothing else, and that single discipline turns crash safety from a hope into a guarantee of the format."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 14
+seriesOrder: 15
 tags:
   - familiars
   - cpp

@@ -2,11 +2,11 @@
 title: "The Names Enums Throw Away"
 subtitle: "Getting an enum's name back at compile time, which the language keeps refusing to give you."
 description: "enum-reflection is a header-only C++20 reflective enum library. Its ENUM_CLASS macro defines a strongly-typed enum class and, alongside it, constexpr accessors that reflect it: turn a member into its source-code name, look a name back up to its member, both through a compile-time perfect hash, so the mapping is branch-light, heap-free, and usable in a static_assert. It exists because C++ throws enum names away: the compiler knows them and does not keep them, so every codebase re-solves logging and parsing enums by hand. The sibling utype adds toUType(e), the missing inverse of static_cast, returning an enum's value as exactly its underlying integer type without silently widening."
-excerpt: "The compiler knows the names of your enum members, you just wrote them, and then it throws them away, leaving you to hand-maintain a switch that maps each value back to its own name for every log line and every parse. The twenty-seventh familiar gives the names back, at compile time, through a perfect hash, so an enum and its strings are one constexpr mapping you can even check in a static_assert."
+excerpt: "The compiler knows the names of your enum members, you just wrote them, and then it throws them away, leaving you to hand-maintain a switch that maps each value back to its own name for every log line and every parse. The twenty-eighth familiar gives the names back, at compile time, through a perfect hash, so an enum and its strings are one constexpr mapping you can even check in a static_assert."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 27
+seriesOrder: 28
 tags:
   - familiars
   - cpp

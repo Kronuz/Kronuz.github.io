@@ -6,7 +6,7 @@ excerpt: "The cheapest work is the work you do before the program starts. This i
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 25
+seriesOrder: 26
 tags:
   - familiars
   - cpp

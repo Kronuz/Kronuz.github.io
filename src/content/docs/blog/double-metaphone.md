@@ -2,11 +2,11 @@
 title: "Smith and Schmidt"
 subtitle: "Matching names by how they sound, across spellings that share no letters."
 description: "double-metaphone is a standalone C++20 implementation of Lawrence Philips' Double Metaphone phonetic encoder, the 2000 successor to Soundex. It reads a word the way it is pronounced, understanding silent letters and non-English spellings, and emits two phonetic keys per word: a primary key for the dominant English reading and an alternate for a plausible foreign one. Two keys are what let Smith (SM0/XMT) and Schmidt (XMT/SMT) collapse onto a shared key, XMT, a pair Soundex never catches. It is the phonetic backbone for matching names and words by sound rather than spelling."
-excerpt: "Smith and Schmidt are the same name, and they share not one meaningful letter. Any system that matches on spelling will never connect them, which is a problem if you are searching for people, whose names arrive spelled every possible way. The twentieth familiar reads a word the way it is said, not written, and emits two keys so that a name and its foreign cousin finally meet."
+excerpt: "Smith and Schmidt are the same name, and they share not one meaningful letter. Any system that matches on spelling will never connect them, which is a problem if you are searching for people, whose names arrive spelled every possible way. The twenty-first familiar reads a word the way it is said, not written, and emits two keys so that a name and its foreign cousin finally meet."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 20
+seriesOrder: 21
 tags:
   - familiars
   - cpp

@@ -2,11 +2,11 @@
 title: "Down the Flume"
 subtitle: "Streaming a whole database over a wire, compressed and checked, without holding it in memory."
 description: "flume carries a file, or any fd-backed byte source, downstream over a byte channel: compressed, framed, integrity-checked, in bounded memory. It is the transport-layer counterpart to the compressors buffer codecs: compressors squeezes an in-memory buffer, flume owns the fd reading, the on-wire framing, and the end-to-end integrity check, and delegates the per-block squeeze to a codec policy. It defaults to Zstandard level 6, the ratio knee for bulk transfer (about 48% fewer bytes than LZ4 at 379 MB/s on one core), and treats the level as a knob rather than a wire-format decision, since a self-describing zstd frame decodes at any level regardless of what the other end used."
-excerpt: "Replicating a database means moving a file bigger than memory across a link, and doing it so that it arrives smaller, intact, and without ever loading the whole thing into RAM at either end. The sixteenth familiar is named after the wooden channel that floats logs downstream: you feed a file in one end and it comes out the other, compressed and checked, in bounded memory, at a ratio that turns bandwidth into headroom."
+excerpt: "Replicating a database means moving a file bigger than memory across a link, and doing it so that it arrives smaller, intact, and without ever loading the whole thing into RAM at either end. The seventeenth familiar is named after the wooden channel that floats logs downstream: you feed a file in one end and it comes out the other, compressed and checked, in bounded memory, at a ratio that turns bandwidth into headroom."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 16
+seriesOrder: 17
 tags:
   - familiars
   - cpp

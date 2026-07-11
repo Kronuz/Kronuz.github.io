@@ -2,11 +2,11 @@
 title: "The Pool and Its Parts"
 subtitle: "A fixed-size worker pool, and the thread primitives it hands you so you can build your own."
 description: "threadpool is a small, dependency-free C++20 fixed-size worker pool: construct it with a name format and a thread count, then hand it work three ways, fire-and-forget enqueue, bulk enqueue_bulk, or call-and-await-result async that returns a std::future. Each worker is a long-lived thread pulling tasks off a shared blocking queue. It is the pool Xapiand uses for its servers, indexers, and background work, and it ships the layers underneath it: a Thread CRTP base that turns any class with name() and operator() into a runnable joinable thread, a one-shot TaskQueue of packaged_tasks, and the mutex-backed concurrent queues the pool sits on, so you can build your own concurrency on the same parts."
-excerpt: "A thread pool is the least surprising thing in a concurrent codebase, which is exactly why it is worth getting plainly right rather than cleverly wrong. The twenty-fourth familiar is a straightforward fixed-size pool with three ways to submit work, and the quietly useful part is that it comes unbundled: the CRTP thread base, the task queue, and the blocking queues underneath are all exposed, so you can assemble your own."
+excerpt: "A thread pool is the least surprising thing in a concurrent codebase, which is exactly why it is worth getting plainly right rather than cleverly wrong. The twenty-fifth familiar is a straightforward fixed-size pool with three ways to submit work, and the quietly useful part is that it comes unbundled: the CRTP thread base, the task queue, and the blocking queues underneath are all exposed, so you can assemble your own."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 24
+seriesOrder: 25
 tags:
   - familiars
   - cpp

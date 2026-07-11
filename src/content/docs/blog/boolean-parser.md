@@ -2,11 +2,11 @@
 title: "The Shunting Yard"
 subtitle: "Turning a boolean query into something a machine can walk, in one pass over two stacks."
 description: "boolean-parser turns a human-written boolean query like 'a OR (b AND NOT c)' into two consumable forms: an RPN token queue produced by Dijkstra's shunting-yard algorithm, and, on demand, an AST of typed nodes. It handles AND/OR/NOT/XOR/MAYBE with precedence, parentheses, quoted phrases, and bracketed lists, joins adjacent terms with a default OR, and does all the lexing and parsing in the constructor. The shunting yard is the elegant heart: one linear pass, an output queue and an operator stack, no recursion, and the RPN it leaves is directly executable, which is why many callers never build the tree at all."
-excerpt: "Infix is how people write boolean queries and the worst way to evaluate them, because precedence and parentheses mean you cannot just read left to right. Dijkstra's shunting-yard algorithm fixes that in a single pass with two stacks, reshuffling 'a OR (b AND NOT c)' into a form a machine walks without ever recursing. The tenth familiar is that algorithm, and the query language it feeds never needs the parse tree at all."
+excerpt: "Infix is how people write boolean queries and the worst way to evaluate them, because precedence and parentheses mean you cannot just read left to right. Dijkstra's shunting-yard algorithm fixes that in a single pass with two stacks, reshuffling 'a OR (b AND NOT c)' into a form a machine walks without ever recursing. The eleventh familiar is that algorithm, and the query language it feeds never needs the parse tree at all."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 10
+seriesOrder: 11
 tags:
   - familiars
   - cpp

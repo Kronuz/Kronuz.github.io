@@ -2,11 +2,11 @@
 title: "Interchangeable Parts"
 subtitle: "Three compression formats behind one interface, swapped by changing a single word."
 description: "compressors wraps three genuinely different compression backends, deflate (zlib), lz4, and zstd, behind one uniform C++20 shape: a CRTP block-streaming base, a matching Data/CompressData/DecompressData class family per backend, and free-function helpers that take a string_view and return a string. Because the shape is identical, you swap deflate for lz4 for zstd by changing the function name and nothing else, and pick the tradeoff you want: broad interop, raw speed, or best ratio. deflate and lz4 also stream to and from file descriptors with the library's own EINTR-safe IO; the round-trip is byte-for-byte for every backend, including empty and incompressible input."
-excerpt: "Compression is a set of tradeoffs, interop versus speed versus ratio, and the honest answer is 'it depends,' which is useless if switching backends means rewriting your call sites. The eleventh familiar puts three incompatible formats behind one identical shape, so choosing between deflate, lz4, and zstd is a matter of changing a single word in your code, and nothing else."
+excerpt: "Compression is a set of tradeoffs, interop versus speed versus ratio, and the honest answer is 'it depends,' which is useless if switching backends means rewriting your call sites. The twelfth familiar puts three incompatible formats behind one identical shape, so choosing between deflate, lz4, and zstd is a matter of changing a single word in your code, and nothing else."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 11
+seriesOrder: 12
 tags:
   - familiars
   - cpp

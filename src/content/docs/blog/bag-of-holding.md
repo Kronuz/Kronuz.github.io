@@ -1,12 +1,12 @@
 ---
 title: "The Bag of Holding"
 subtitle: "The small, honest tools too little for a post of their own, and a look back at the whole party."
-description: "The closing of Familiars. A grab-bag of the smallest libraries carved out of Xapiand, the ones too little for a deep-dive on their own, tipped out and catalogued so none of them is lost: time helpers (times, time-point, epoch, nanosleep, datetime), string and byte tools (split, strings, static-string, stringified, escape, repr, base-x), digests (md5, sha256), number helpers (math, random, strict-stox), containers (lru-cache, bloom-filter, iterators, lazy), and the systems odds and ends (errno-names, located-exception, fs, allocators, scheduler, url-parser). Then a look back at what it means to take a whole system apart into small, standalone, honest tools."
+description: "The closing of Familiars. A grab-bag of the smallest libraries carved out of Xapiand, the ones too little for a deep-dive on their own, tipped out and catalogued so none of them is lost: time helpers (times, time-point, epoch, nanosleep, datetime), string and byte tools (split, strings, static-string, stringified, escape, repr), digests (md5, sha256), number helpers (math, random, strict-stox), containers (lru-cache, bloom-filter, iterators, lazy), and the systems odds and ends (errno-names, located-exception, fs, allocators, scheduler, url-parser). Then a look back at what it means to take a whole system apart into small, standalone, honest tools."
 excerpt: "Not every tool earns its own chapter. This is the last of the campaign: the bag of small, honest libraries too little for a post apiece, tipped out onto the table so none of them is lost, and then a look back at the whole party we assembled from one search engine, and what it meant to take it apart."
 date: 2026-07-10
 draft: true
 series: "Familiars"
-seriesOrder: 28
+seriesOrder: 29
 tags:
   - familiars
   - cpp
@@ -29,7 +29,6 @@ Every adventuring party accumulates a bag of small things that never get their o
 - **[strings](https://github.com/Kronuz/strings)**: a toolkit of `std::format`-style general string utilities.
 - **[static-string](https://github.com/Kronuz/static-string)** and **[stringified](https://github.com/Kronuz/stringified)**: a `constexpr` compile-time string, and a small `string_view` wrapper, the leaves a lot of the [compile-time chapter](/blog/compile-time-magic/) grows from.
 - **[escape](https://github.com/Kronuz/escape)** and **[repr](https://github.com/Kronuz/repr)**: turn an arbitrary byte buffer into a printable, escaped string, one for a log line, one for a single-line debug `repr`. The tools you reach for at 2 a.m. to see what is actually in a buffer.
-- **[base-x](https://github.com/Kronuz/base-x)**: a base-N encoder/decoder, the thing under short ids and base58/base62 text.
 
 ## Digests and numbers
 
