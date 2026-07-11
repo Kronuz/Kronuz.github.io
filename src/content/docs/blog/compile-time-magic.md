@@ -39,6 +39,19 @@ Underneath a lot of parsing sits the humble question "is this byte a digit? a le
 
 [term-color](https://github.com/Kronuz/term-color) has the cleverest trick of the three. A named color like `RED` or `STEEL_BLUE` expands, at compile time, into an ANSI escape sequence, but the problem is that terminals disagree about which escapes they understand: some do 16 colors, some 256, some 24-bit truecolor. So term-color emits **three escapes back to back, worst first**: the 16-color code, then the 256-color code, then the truecolor code. A terminal applies each escape it recognizes in turn and ends on the last one it supports, so the richest tier it can render wins, and a *single compile-time constant* is portable across every terminal without any runtime detection. When you do need one guaranteed tier, to honor a `--color` mode, the `NO_COLOR` convention, or a plain log file that should get no escapes at all, `collapse()` / `apply()` resolve the stacked string down at runtime. The default is a constant that just works; the runtime path is there for when "just works" is not precise enough.
 
+## The compile-time shelf
+
+These three are one corner of a larger idea, and the chapter they open is the rest of it: the Familiars that mainly live at build time, each moving a cost you would otherwise pay at runtime onto the compiler. Sorted by the job they do:
+
+- **Hashing.** [hashes](https://github.com/Kronuz/hashes): `constexpr` FNV-1a, djb2, a `constexpr` xxHash-64, integer mixers, jump-consistent hashing, and the `_fnv1a` / `_xx` literals. The string switch above stands on it.
+- **Perfect hashing.** [constexpr-phf](https://github.com/Kronuz/constexpr-phf): a minimal perfect hash over a *fixed* set of integer keys, built while the program compiles, so a known set of keys becomes a dense, collision-free, branch-free index into a table. The [next post](/blog/perfect-hash/) is all about it.
+- **Character classification.** [char-classify](https://github.com/Kronuz/char-classify): the locale-free `constexpr` byte tables above, `is_digit` and its siblings with nothing behind them but a masked array read.
+- **Enum reflection.** [enum-reflection](https://github.com/Kronuz/enum-reflection), with [utype](https://github.com/Kronuz/utype): turn an `enum` value back into the name you wrote it with, and the name back into the value, both resolved at compile time. Its [post](/blog/enum-reflection/) closes the chapter.
+- **Terminal color.** [term-color](https://github.com/Kronuz/term-color): the worst-first stacked ANSI constant above, portable across terminals with no runtime detection.
+- **Wide-integer arithmetic.** [uinteger_t](https://github.com/Kronuz/uinteger_t): arbitrary-width unsigned integers with `constexpr` arithmetic, so a 256-bit constant is folded by the compiler instead of computed at startup. Its post is [The Long Division](/blog/uinteger_t/).
+
+Different jobs, one habit: the answer is a constant the compiler already worked out.
+
 ## Where they fit
 
 Reach for these when a cost you keep paying at runtime, a string dispatch, a character check, a color code, could be a constant the compiler folds instead. Skip them where the input is genuinely dynamic and no compile-time form exists. They are small, but they are the honest shape of the idea the rest of this chapter runs on: do it once, at the build.
