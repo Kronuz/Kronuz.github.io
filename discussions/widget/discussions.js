@@ -1189,7 +1189,46 @@
     const preview = el("div", "gc-preview gc-body");
     preview.hidden = true;
 
-    let lastText = null, lastHtml = "";  // browser-side preview cache
+    let lastText = null, lastHtml = "";     // browser-side preview cache
+    let pfInflight = null, pfText = null, pfSeq = 0;  // in-flight request (dedup + staleness)
+    let lastPrefetchAt = 0;
+
+    // Render `text` to preview HTML via the backend, caching the result and de-duplicating
+    // concurrent requests for the same text. Shared by the Preview tab and the on-intent
+    // prefetch below, so a hover-warmed cache makes clicking Preview instant. A monotonic
+    // seq guards against a slow older response clobbering a newer one.
+    function fetchPreview(text) {
+      if (text === lastText) return Promise.resolve(lastHtml);   // cache hit
+      if (pfInflight && pfText === text) return pfInflight;       // already fetching this text
+      const seq = ++pfSeq;
+      pfText = text;
+      const p = (async () => {
+        const r = await api(cfg, "/api/preview", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: text }),
+        });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const d = await r.json();
+        const html = (d.html && d.html.trim()) ? d.html : '<p class="gc-muted">Nothing to preview.</p>';
+        if (seq === pfSeq) { lastText = text; lastHtml = html; }  // only cache the latest request
+        return html;
+      })();
+      pfInflight = p;
+      p.then(() => {}, () => {}).then(() => { if (pfInflight === p) { pfInflight = null; pfText = null; } });
+      return p;
+    }
+
+    // Warm the cache on *intent* to preview (hovering/focusing the Preview tab), throttled, so
+    // the round-trip finishes before the click — without prefetching for the many users who
+    // just type and submit. Skips when empty or already cached; fetchPreview de-dupes the rest.
+    function prefetchPreview() {
+      const text = ta.value;
+      if (!text.trim() || text === lastText) return;
+      const now = Date.now();
+      if (now - lastPrefetchAt < 500) return;   // throttle repeated intent
+      lastPrefetchAt = now;
+      fetchPreview(text).catch(() => {});        // ignore errors here; showPreview surfaces them
+    }
 
     function showWrite() {
       writeTab.classList.add("gc-tab-on"); previewTab.classList.remove("gc-tab-on");
@@ -1202,18 +1241,10 @@
       toolbar.hidden = true; ta.hidden = true; preview.hidden = false;
       const text = ta.value;
       if (!text.trim()) { preview.innerHTML = '<p class="gc-muted">Nothing to preview.</p>'; return; }
-      if (text === lastText) { preview.innerHTML = lastHtml; return; }  // unchanged → reuse
+      if (text === lastText) { preview.innerHTML = lastHtml; return; }  // instant (often hover-warmed)
       preview.innerHTML = '<p class="gc-muted">Loading preview…</p>';
       try {
-        const r = await api(cfg, "/api/preview", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: text }),
-        });
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        const d = await r.json();
-        lastHtml = (d.html && d.html.trim()) ? d.html : '<p class="gc-muted">Nothing to preview.</p>';
-        lastText = text;
-        preview.innerHTML = lastHtml;
+        preview.innerHTML = await fetchPreview(text);
       } catch (e) {
         preview.innerHTML = '<p class="gc-muted">Preview failed (' + e.message + ").</p>";
       }
@@ -1226,6 +1257,11 @@
       // Enabled composer: tabs switch, toolbar formats, submit posts.
       writeTab.addEventListener("click", showWrite);
       previewTab.addEventListener("click", showPreview);
+      // Prefetch on intent to open Preview (hover / keyboard focus / touch), throttled, so the
+      // round-trip is already done by click time — only for users who actually reach for it.
+      previewTab.addEventListener("pointerenter", prefetchPreview);
+      previewTab.addEventListener("focus", prefetchPreview);
+      previewTab.addEventListener("touchstart", prefetchPreview, { passive: true });
       submit = el("button", "gc-submit", editMode ? "Update comment" : (replyMode ? "Reply" : "Comment"));
       const onSubmit = submitter(root, cfg, opts);
       submit.addEventListener("click", () => onSubmit(ta, submit));
