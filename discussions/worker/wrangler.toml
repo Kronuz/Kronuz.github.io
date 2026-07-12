@@ -1,0 +1,33 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "discussions"
+main = "src/index.ts"
+compatibility_date = "2024-12-05"
+compatibility_flags = ["nodejs_compat"]
+
+# Local dev: `wrangler dev` binds this to a local (miniflare) SQLite file under
+# .wrangler/. For a real deploy, create the DB with `wrangler d1 create discussions`
+# and paste the returned database_id here.
+[[d1_databases]]
+binding = "DB"
+database_name = "discussions"
+database_id = "local-dev-placeholder"
+migrations_dir = "migrations"
+
+# Non-secret vars. Secrets (OAUTH_CLIENT_SECRET, SESSION_SECRET) are set with
+# `wrangler secret put NAME` (or in .dev.vars for local dev).
+[vars]
+REPO = "Kronuz/Kronuz.github.io"
+SITE_URL = "https://kronuz.github.io"
+REPO_URL = "https://github.com/Kronuz/Kronuz.github.io"
+ALLOWED_ORIGINS = "https://kronuz.github.io"
+ADMIN_LOGINS = "Kronuz"
+DEFAULT_TENANT_ID = "default"
+OAUTH_CLIENT_ID = ""
+PUBLIC_BASE_URL = "http://127.0.0.1:8787"
+OAUTH_SCOPE = "read:user"
+COOKIE_CROSS_SITE = "0"
+DISCUSSIONS_STRIP_SUFFIX = ""
+DISCUSSIONS_GIPHY_KEY = ""
+MAX_BODY = "65536"
+REQUEST_MAX_BYTES = "1048576"
+SESSION_TTL = "604800"
