@@ -51,7 +51,23 @@ fi
 
 # --- 4. first deploy (to learn the Worker's URL) -----------------------------
 say "Deploying (first pass, to obtain the Worker URL)"
-dout=$($WRANGLER deploy 2>&1); echo "$dout"
+if ! dout=$($WRANGLER deploy 2>&1); then
+  echo "$dout"
+  if printf '%s' "$dout" | grep -qiE "workers\.dev subdomain|register a workers\.dev|/workers/onboarding"; then
+    cat <<'TXT'
+
+Your Cloudflare account has no workers.dev subdomain yet (required before the first deploy).
+Register one (the onboarding link Cloudflare prints often 404s — navigate manually instead):
+  1. Open https://dash.cloudflare.com and pick your account.
+  2. In the sidebar open "Workers & Pages" (newer dashboards label it "Compute").
+  3. On first visit it prompts to choose a subdomain, e.g. "kronuz" -> *.kronuz.workers.dev.
+Then re-run ./deploy.sh — it resumes (the earlier steps are idempotent).
+TXT
+    exit 1
+  fi
+  die "First deploy failed (see the output above)."
+fi
+echo "$dout"
 url=$(printf '%s' "$dout" | grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' | head -1)
 [ -n "$url" ] || warn "Could not auto-detect the Worker URL from the deploy output above."
 
