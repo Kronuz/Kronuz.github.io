@@ -10,7 +10,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "discussions"
-database_id = "local-dev-placeholder"
+database_id = "4e2b8a6d-1b8b-4172-aad9-5ea9b905eabe"
 migrations_dir = "migrations"
 
 # Non-secret vars. Secrets (SESSION_SECRET, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET) are set
@@ -26,7 +26,7 @@ REPO_URL = "https://github.com/Kronuz/Kronuz.github.io"
 ALLOWED_ORIGINS = "https://kronuz.github.io"
 ADMIN_LOGINS = "Kronuz"
 DEFAULT_TENANT_ID = "default"
-PUBLIC_BASE_URL = "https://discussions.CHANGE-ME.workers.dev"
+PUBLIC_BASE_URL = "https://discussions.kronuz.workers.dev"
 OAUTH_SCOPE = "read:user"
 COOKIE_CROSS_SITE = "1"
 DISCUSSIONS_STRIP_SUFFIX = ""

@@ -71,18 +71,23 @@ echo "$dout"
 url=$(printf '%s' "$dout" | grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' | head -1)
 [ -n "$url" ] || warn "Could not auto-detect the Worker URL from the deploy output above."
 
-# --- 5. set PUBLIC_BASE_URL (unless a custom domain is already configured) ----
-if grep -q 'PUBLIC_BASE_URL = ".*CHANGE-ME.*"' wrangler.toml; then
+# --- 5. set PUBLIC_BASE_URL (fill the placeholder, or fix a stale workers.dev URL) ----
+cur=$(grep -oE 'PUBLIC_BASE_URL = "[^"]*"' wrangler.toml | sed 's/.*"\(.*\)"/\1/')
+if printf '%s' "$cur" | grep -q 'CHANGE-ME'; then
   if [ -n "$url" ]; then
     sedi "s#PUBLIC_BASE_URL = \".*\"#PUBLIC_BASE_URL = \"$url\"#" wrangler.toml
     say "Set PUBLIC_BASE_URL = $url in wrangler.toml"
   else
     warn "Edit wrangler.toml and set PUBLIC_BASE_URL to your Worker (or custom domain) URL, then re-run."
   fi
+elif [ -n "$url" ] && printf '%s' "$cur" | grep -q '\.workers\.dev' && [ "$cur" != "$url" ]; then
+  # A stale *.workers.dev URL (e.g. after changing the account subdomain) — self-correct.
+  sedi "s#PUBLIC_BASE_URL = \".*\"#PUBLIC_BASE_URL = \"$url\"#" wrangler.toml
+  warn "PUBLIC_BASE_URL was $cur but the Worker is at $url — updated it."
+  warn "Remember to update the GitHub OAuth App callback URL to $url/auth/callback."
 else
-  base=$(grep -oE 'PUBLIC_BASE_URL = "[^"]*"' wrangler.toml | sed 's/.*"\(.*\)"/\1/')
-  say "PUBLIC_BASE_URL already set to $base (respecting it; a custom domain?)"
-  url="$base"
+  say "PUBLIC_BASE_URL = ${cur:-<unset>} (respecting it; a custom domain?)"
+  url="${cur:-$url}"
 fi
 
 # --- 6. GitHub OAuth App -----------------------------------------------------
