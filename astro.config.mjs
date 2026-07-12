@@ -118,8 +118,15 @@ export default defineConfig({
 			// index, tag/author lists, project landings) so the blog and projects
 			// spaces behave the same. See src/starlightRouteData.ts.
 			routeMiddleware: './src/starlightRouteData.ts',
+			// "Edit source" points to the GitHub web editor (baseUrl + the page's source
+			// path), rendered next to the title by src/components/PageTitle.astro.
+			editLink: {
+				baseUrl: 'https://github.com/Kronuz/Kronuz.github.io/edit/master/',
+			},
 			components: {
 				PageTitle: './src/components/PageTitle.astro',
+				// The edit affordance lives next to the title; suppress Starlight's footer one.
+				EditLink: './src/components/EditLink.astro',
 				MarkdownContent: './src/components/MarkdownContent.astro',
 				TableOfContents: './src/components/TableOfContents.astro',
 				Footer: './src/components/Footer.astro',

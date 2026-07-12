@@ -1,88 +1,123 @@
 ---
 // Custom override of Starlight's PageTitle: renders the page <h1> with an optional category
-// emoji just before the title (announcement / tutorial / note), and an optional `subtitle`
-// line below it. Also renders the dev-only "Edit source" link here, so it sits in the
-// title's container next to the subtitle (above the content divider). Projects (rendered via
-// StarlightPage) hand their source path in through Astro.locals.editHref; blog posts we
-// resolve from the entry's filePath. The link only exists under `npm run dev`.
+// emoji just before the title (announcement / tutorial / note), an optional `subtitle` line
+// on its own row below, and an "Edit source" affordance next to the title.
+//
+// The primary "Edit source" link opens the page's source in the GitHub web editor
+// (editLink.baseUrl + the entry's source path, exposed as route.editUrl). It shows in both
+// dev and prod, matching the old Jekyll behavior. Under `npm run dev` we ALSO show a small
+// second icon that opens the same source in the local editor (handy while writing) -- so
+// locally you get both, in production only the GitHub link. Projects (rendered via
+// StarlightPage) hand their own href in through Astro.locals.editHref.
 import { Icon } from "@astrojs/starlight/components";
 
 const route = Astro.locals.starlightRoute;
 const { title, subtitle, category } = route.entry.data as {
-title: string;
-subtitle?: string;
-category?: string;
+	title: string;
+	subtitle?: string;
+	category?: string;
 };
 const CATEGORY = {
-announcement: { emoji: "📣", label: "Announcement" },
-tutorial: { emoji: "🛠️", label: "Tutorial" },
-note: { emoji: "💡", label: "Note" },
+	announcement: { emoji: "📣", label: "Announcement" },
+	tutorial: { emoji: "🛠️", label: "Tutorial" },
+	note: { emoji: "💡", label: "Note" },
 } as const;
 const cat = category ? CATEGORY[category as keyof typeof CATEGORY] : undefined;
 
+// GitHub web-editor link (route.editUrl = editLink.baseUrl + source path); projects fall
+// back to the href they pass through Astro.locals.editHref.
+const editUrl = route.editUrl as URL | string | undefined;
+const githubHref =
+	(editUrl ? ((editUrl as URL).href ?? String(editUrl)) : null) ??
+	((Astro.locals as Record<string, unknown>).editHref as string | undefined) ??
+	null;
+
+// Dev-only: open the source in the local editor. Blog posts resolve from the entry filePath.
 const isBlogPost = Boolean(route.entry?.data?.date);
-const editHref =
-(Astro.locals as Record<string, unknown>).editHref ??
-(import.meta.env.DEV && isBlogPost && route.entry?.filePath
-? `/__open-in-editor?file=${encodeURIComponent(`${process.cwd()}/${route.entry.filePath}`)}`
-: null);
+const localHref =
+	import.meta.env.DEV && isBlogPost && route.entry?.filePath
+		? `/__open-in-editor?file=${encodeURIComponent(`${process.cwd()}/${route.entry.filePath}`)}`
+		: null;
 ---
 
 <div class="kz-page-head">
-<h1 id="_top">{cat && <span class="post-category" role="img" aria-label={`${cat.label}: `} title={cat.label}>{cat.emoji}</span>}{title}</h1>
-{subtitle && <p class="page-subtitle">{subtitle}</p>}
-{editHref && (
-<a class="dev-edit" href="#" data-edit={editHref} data-astro-prefetch="false" title="Open this page's source in your editor" onclick="event.preventDefault();fetch(this.dataset.edit).catch(()=>{});">
-<Icon name="pencil" size="0.85em" /> Edit source
-</a>
-)}
+	<h1 id="_top">{cat && <span class="post-category" role="img" aria-label={`${cat.label}: `} title={cat.label}>{cat.emoji}</span>}{title}</h1>
+	{(githubHref || localHref) && (
+		<span class="kz-edit-group print:hidden">
+			{githubHref && (
+				<a class="kz-edit" href={githubHref} target="_blank" rel="noopener noreferrer" title="Edit this page on GitHub">
+					<Icon name="pencil" size="0.85em" /> <span>Edit source</span>
+				</a>
+			)}
+			{localHref && (
+				<a class="kz-edit-local" href="#" data-edit={localHref} data-astro-prefetch="false" title="Open the source in your local editor" onclick="event.preventDefault();fetch(this.dataset.edit).catch(()=>{});">
+					<Icon name="laptop" size="0.85em" />
+				</a>
+			)}
+		</span>
+	)}
+	{subtitle && <p class="page-subtitle">{subtitle}</p>}
 </div>
 
 <style>
-@layer starlight.core {
-h1 {
-margin-top: 1rem;
-font-size: var(--sl-text-h1);
-line-height: var(--sl-line-height-headings);
-font-weight: 600;
-color: var(--sl-color-white);
-}
-}
+	@layer starlight.core {
+		h1 {
+			margin-top: 1rem;
+			font-size: var(--sl-text-h1);
+			line-height: var(--sl-line-height-headings);
+			font-weight: 600;
+			color: var(--sl-color-white);
+		}
+	}
 
-/* Positioned context for the overlaid Edit-source link, without changing the title spacing. */
-.kz-page-head {
-position: relative;
-}
+	/* Title + edit link on the top row, subtitle on its own full-width row below: the edit
+	   affordance never overlaps a long subtitle. flex-wrap keeps a long title from crushing
+	   the link (it wraps the link under instead). */
+	.kz-page-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		column-gap: 1rem;
+	}
+	.kz-page-head h1 {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.kz-page-head .page-subtitle {
+		flex: 1 0 100%;
+		margin-top: 0.4rem;
+		margin-bottom: 0;
+		font-size: var(--sl-text-2xl);
+		font-weight: 400;
+		line-height: var(--sl-line-height-headings);
+		color: var(--sl-color-gray-3);
+	}
 
-.post-category {
-/* Match the title's size (not shrunk), with a clear gap before it. */
-margin-right: 0.35em;
-vertical-align: 0.02em;
-}
+	.post-category {
+		/* Match the title's size (not shrunk), with a clear gap before it. */
+		margin-right: 0.35em;
+		vertical-align: 0.02em;
+	}
 
-.page-subtitle {
-margin-top: 0.4rem;
-margin-bottom: 0;
-font-size: var(--sl-text-2xl);
-font-weight: 400;
-line-height: var(--sl-line-height-headings);
-color: var(--sl-color-gray-3);
-}
-
-/* Dev-only "Edit source" link: a transparent overlay at the bottom-right of the title block
-   (by the subtitle, above the content divider), taking no layout space. */
-.kz-page-head .dev-edit {
-position: absolute;
-bottom: 0;
-right: 0;
-display: inline-flex;
-align-items: center;
-gap: 0.3rem;
-font-size: var(--sl-text-xs);
-color: var(--sl-color-gray-3);
-text-decoration: none;
-}
-.kz-page-head .dev-edit:hover {
-color: var(--sl-color-text-accent);
-}
+	/* Edit affordance: the GitHub "Edit source" link, plus (dev only) a small local-editor
+	   icon beside it. Kept subtle and non-shrinking so it stays on the title's row. */
+	.kz-edit-group {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		white-space: nowrap;
+	}
+	.kz-edit-group a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+		text-decoration: none;
+	}
+	.kz-edit-group a:hover {
+		color: var(--sl-color-text-accent);
+	}
 </style>
