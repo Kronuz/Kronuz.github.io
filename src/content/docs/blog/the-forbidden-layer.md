@@ -5,6 +5,7 @@ description: "An honest, deliberately non-specific account of learning reverse e
 excerpt: "As a teenager I fell in love with the layer of the machine you are not supposed to touch: disassembly, SoftICE, the assembly I wrote and the viruses I never released. This is the honest version, the thrill of finding the parts that were not meant to be found, with the specific targets left where they belong, in the past."
 date: 2026-06-08
 draft: true
+featured: true
 series: "Opening Boxes"
 seriesOrder: 1
 tags:

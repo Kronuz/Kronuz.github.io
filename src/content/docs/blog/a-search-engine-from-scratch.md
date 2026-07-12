@@ -5,6 +5,7 @@ description: "A tour of Xapiand's real internals: a libev async core, Raft for c
 excerpt: "Dubalu needed search, so I wrote one in C++. Xapiand is not a new inverted index, it is the distributed, RESTful, storage-backed daemon I wrapped around Xapian: Raft consensus, a log-structured store, and a triangular mesh for the whole planet. Here is how it really fits together."
 date: 2026-06-08
 draft: true
+featured: true
 series: "Opening Boxes"
 seriesOrder: 5
 tags:

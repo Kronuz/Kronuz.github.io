@@ -5,6 +5,7 @@ description: "The standardization story behind lazy imports: PEP 690 proposed a 
 excerpt: "I tried to give lazy imports to all of Python. The Steering Council said no, for a good reason. So we did it again, properly: explicit, opt-in, and pointedly not touching the dictionary internals I had been so proud of. The second time, they said yes."
 date: 2026-06-08
 draft: true
+featured: true
 series: "Opening Boxes"
 seriesOrder: 8
 tags:

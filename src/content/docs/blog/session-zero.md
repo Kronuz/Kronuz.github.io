@@ -5,6 +5,7 @@ description: "An introduction to Familiars, a series of standalone C++ libraries
 excerpt: "I spent years building a distributed search engine, and when I finally stepped back from it I did not keep the engine. I kept the tools. Sixty-odd small, sharp libraries fell out of Xapiand, each one a self-contained idea worth knowing on its own. This is the campaign to open them, one familiar at a time."
 date: 2026-07-10
 draft: true
+featured: true
 series: "Familiars"
 seriesOrder: 0
 tags:

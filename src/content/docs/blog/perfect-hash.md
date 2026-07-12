@@ -5,6 +5,7 @@ description: "constexpr-phf is a header-only, fully constexpr minimal perfect ha
 excerpt: "An ordinary hash table has bad days: two keys collide, the lookup degrades to a probe or a chain, and worst-case is worse than average. If you know all your keys at compile time, you can eliminate the bad day entirely. The twenty-seventh familiar builds a minimal perfect hash over a fixed key set while the program compiles, so every lookup is a fixed handful of arithmetic and two array reads, forever, with no collision possible."
 date: 2026-07-10
 draft: true
+featured: true
 series: "Familiars"
 seriesOrder: 27
 tags:

@@ -5,6 +5,7 @@ description: "From a borrowed Commodore 64 in 1980s Mexico City to a feature in 
 excerpt: "I have spent my whole life opening boxes I was not supposed to open. This is the story of all of them, from a borrowed Commodore 64 to a feature in the Python language, and the same restless kid behind each one."
 date: 2026-06-07
 draft: true
+featured: true
 authors: kronuz
 tags:
   - life

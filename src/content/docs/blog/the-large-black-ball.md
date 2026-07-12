@@ -5,6 +5,7 @@ description: "The deep version of the Cinder Lazy Imports story: why Instagram S
 excerpt: "Instagram Server loaded 28,000 modules just to start, and its dependency graph rendered as a solid black ball. The fix was to make Python lazy: import a thing only when you reach for it. Doing that safely meant going into the most dangerous part of the language."
 date: 2026-06-08
 draft: true
+featured: true
 series: "Opening Boxes"
 seriesOrder: 7
 tags:
