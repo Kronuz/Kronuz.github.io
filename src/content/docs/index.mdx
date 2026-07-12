@@ -4,7 +4,7 @@ description: Notes, experiments, and write-ups from Germán Méndez Bravo (Kronu
 template: splash
 hero:
   title: |
-    <span class="kz-repl"><span class="kz-line"><span class="kz-prompt">&gt;&gt;&gt; </span><span class="kz-kw">import</span> kronuz</span><span class="kz-line"><span class="kz-prompt">&gt;&gt;&gt; </span>kronuz.whoami()</span><span class="kz-line kz-out"><span class="kz-sizer" aria-hidden="true">'a Python engineer in the runtime layer'</span><span class="kz-answerwrap"><span class="kz-str" id="kz-answer">'a Python engineer in the runtime layer'</span><span class="kz-caret" aria-hidden="true"></span></span></span></span>
+    <span class="kz-repl"><span class="kz-line"><span class="kz-prompt">&gt;&gt;&gt; </span><span class="kz-kw">import</span> kronuz</span><span class="kz-line"><span class="kz-prompt">&gt;&gt;&gt; </span>kronuz.whoami()</span><span class="kz-line kz-out"><span class="kz-sizer" aria-hidden="true">'C and C++ at heart, Python by chance'</span><span class="kz-answerwrap"><span class="kz-str" id="kz-answer">'C and C++ at heart, Python by chance'</span><span class="kz-caret" aria-hidden="true"></span></span></span></span>
   image:
     html: |
       <img src="/img/logo.png" width="900" height="1022" alt="Kronuz logo" style="width:100%;height:auto;" />
@@ -31,18 +31,23 @@ import { Card } from '@astrojs/starlight/components';
 import ReplHero from '../../components/ReplHero.astro';
 
 <div class="hero-cards">
+	<Card title="⚙️ C & C++">
+		Where I actually live: cache-aware, branch-free, filed until it's *elegant*.
+
+		[The Familiars →](/blog/)
+	</Card>
+	<Card title="🔬 Reverse Engineering">
+		Reading software the way it *didn't want to be read* — since SoftICE and DOSBox.
+
+		[About me →](/about/)
+	</Card>
 	<Card title="🐍 Python Internals">
-		Imports, async, and the runtime — *down to the CPython patch*.
+		Around Python by chance, long enough to *make imports lazy* (PEP 810).
 
 		[Read the blog →](/blog/)
 	</Card>
-	<Card title="⚡ Efficiency">
-		Wins measured in *dollars and watts*, not just milliseconds.
-
-		[Read the blog →](/blog/)
-	</Card>
-	<Card title="🔬 Investigations">
-		Gnarly bugs chased to the root, *with the evidence shown*.
+	<Card title="⚡ Proven, Not Claimed">
+		Elegant algorithms, *benchmarked against all comers*. Wins in dollars and watts.
 
 		[All posts →](/blog/)
 	</Card>
