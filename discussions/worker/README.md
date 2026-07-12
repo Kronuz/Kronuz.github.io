@@ -87,6 +87,20 @@ The scope is `read:user` — sign-in learns who the reader is, nothing more. Put
 and a generated client secret into the secrets above (`deploy.sh` prompts for them) or into
 `.dev.vars` for local testing.
 
+### GIF picker (optional)
+
+The comment composer shows a GIPHY GIF picker when the tenant has a `giphy_key`. It's a
+public key (served to browsers via `/api/config`, and the browser calls GIPHY directly with
+rating forced to `g`), so use one you're comfortable exposing on a public site. `deploy.sh`
+prompts for it; to set or change it later:
+
+```bash
+wrangler d1 execute discussions --remote \
+  --command "UPDATE tenants SET giphy_key='YOUR_GIPHY_KEY' WHERE id='default'"
+```
+
+Leave it empty to hide the picker.
+
 ## Deploy
 
 ```bash

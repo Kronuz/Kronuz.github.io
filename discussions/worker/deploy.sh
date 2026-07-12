@@ -113,6 +113,25 @@ else
   warn "Skipped OAuth secrets. Sign-in stays disabled until OAUTH_CLIENT_ID + OAUTH_CLIENT_SECRET are set."
 fi
 
+# --- 6b. GIF picker (optional): the composer's GIPHY picker ------------------
+say "GIF picker (optional)"
+cat <<'TXT'
+A public GIPHY API key enables the comment composer's GIF picker. The key is served to
+browsers via /api/config, so use one you're comfortable exposing on a public site.
+TXT
+def_tenant=$(grep -oE 'DEFAULT_TENANT_ID = "[^"]*"' wrangler.toml | sed 's/.*"\(.*\)"/\1/'); def_tenant=${def_tenant:-default}
+printf 'GIPHY API key (blank to skip; leaves any existing key unchanged): '
+read -r GKEY
+if [ -n "$GKEY" ]; then
+  gkey_esc=$(printf '%s' "$GKEY" | sed "s/'/''/g")
+  $WRANGLER d1 execute discussions --remote \
+    --command "UPDATE tenants SET giphy_key='$gkey_esc' WHERE id='$def_tenant'" \
+    && say "GIF picker enabled for tenant '$def_tenant'." \
+    || warn "Could not set giphy_key (set it later with a d1 execute UPDATE)."
+else
+  warn "Skipped the GIF picker (existing giphy_key, if any, left unchanged)."
+fi
+
 # --- 7. final deploy (applies PUBLIC_BASE_URL + any new secrets) --------------
 say "Deploying (final)"
 $WRANGLER deploy || die "deploy failed"
