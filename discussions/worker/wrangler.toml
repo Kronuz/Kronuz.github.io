@@ -5,16 +5,20 @@ compatibility_date = "2024-12-05"
 compatibility_flags = ["nodejs_compat"]
 
 # Local dev: `wrangler dev` binds this to a local (miniflare) SQLite file under
-# .wrangler/. For a real deploy, create the DB with `wrangler d1 create discussions`
-# and paste the returned database_id here.
+# .wrangler/. For a real deploy, `deploy.sh` (or `wrangler d1 create discussions`)
+# fills in the database_id below.
 [[d1_databases]]
 binding = "DB"
 database_name = "discussions"
 database_id = "local-dev-placeholder"
 migrations_dir = "migrations"
 
-# Non-secret vars. Secrets (OAUTH_CLIENT_SECRET, SESSION_SECRET) are set with
-# `wrangler secret put NAME` (or in .dev.vars for local dev).
+# Non-secret vars. Secrets (SESSION_SECRET, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET) are set
+# with `wrangler secret put NAME` (deploy.sh does this), or in .dev.vars for local dev.
+# PUBLIC_BASE_URL must be this Worker's public URL (it's the OAuth redirect base); deploy.sh
+# sets it after the first deploy. COOKIE_CROSS_SITE=1 makes the session cookie
+# SameSite=None; Secure, required because the blog and this Worker are different sites;
+# .dev.vars overrides it to 0 for same-site localhost dev.
 [vars]
 REPO = "Kronuz/Kronuz.github.io"
 SITE_URL = "https://kronuz.github.io"
@@ -22,10 +26,9 @@ REPO_URL = "https://github.com/Kronuz/Kronuz.github.io"
 ALLOWED_ORIGINS = "https://kronuz.github.io"
 ADMIN_LOGINS = "Kronuz"
 DEFAULT_TENANT_ID = "default"
-OAUTH_CLIENT_ID = ""
-PUBLIC_BASE_URL = "http://127.0.0.1:8787"
+PUBLIC_BASE_URL = "https://discussions.CHANGE-ME.workers.dev"
 OAUTH_SCOPE = "read:user"
-COOKIE_CROSS_SITE = "0"
+COOKIE_CROSS_SITE = "1"
 DISCUSSIONS_STRIP_SUFFIX = ""
 DISCUSSIONS_GIPHY_KEY = ""
 MAX_BODY = "65536"
