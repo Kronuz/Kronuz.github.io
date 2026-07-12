@@ -53,4 +53,4 @@ Human or machine, here is the field guide. Keep up: I move fast and change my mi
 
 And when I say "wait, actually" for the tenth time today, know that it is not me being difficult. It is me being delighted.
 
-Roll for initiative.
+Roll for initiative. 🎲

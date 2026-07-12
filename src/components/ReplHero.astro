@@ -41,7 +41,17 @@
 	// fresh answer (minus the display quotes, so the console prints it cleanly).
 	const kronuz = {
 		whoami() { return answers[Math.floor(Math.random() * answers.length)].replace(/^'|'$/g, ''); },
-		help()   { return 'try kronuz.whoami(), then read the source. that is more my style anyway.'; },
+		hello()  {
+			return [
+				'you looked under the hood, which makes you exactly my kind of person.',
+				"say hi and mention 'xmodem' so I know you came in through here:",
+				'  german.mb@gmail.com',
+				'  https://www.linkedin.com/in/kronuz/',
+				'  https://github.com/Kronuz',
+				'I read every one. roll for initiative. 🎲',
+			].join('\n');
+		},
+		help()   { return 'try kronuz.whoami(), or kronuz.hello() to actually say hi.'; },
 		toString() { return '<kronuz: reverse engineer at heart>'; },
 	};
 	// @ts-ignore , intentional global for the console easter egg.
@@ -50,7 +60,7 @@
 	// For the curious who open the console. If you are reading this, you are exactly my
 	// kind of person: the ones who look under the hood. Go on, call it.
 	console.log(
-		"%c>>> kronuz.whoami()\n%cyou opened the console, so you are my kind of person. go on, call it:  kronuz.whoami()\n(then read the source, and push it further than it should go. roll for initiative.)",
+		"%c>>> kronuz.whoami()\n%cyou opened the console, so you are my kind of person.\ncall it:  kronuz.whoami()    or say hi:  kronuz.hello()\nroll for initiative. 🎲",
 		"color:#7fbf7f;font-weight:bold;font-family:monospace",
 		"color:#7fbf7f;font-family:monospace"
 	);
