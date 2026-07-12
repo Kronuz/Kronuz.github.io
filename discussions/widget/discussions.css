@@ -375,3 +375,50 @@
    to the accent and nudge it 2px further left so it forms a 2px accent border around
    the tail, continuous with the ring (the ::after fill is left unchanged). */
 .gc-target > .gc-bubble::before { border-right-color: var(--gc-accent); left: -10px; }
+
+/* --- Narrow / mobile layout -------------------------------------------------
+   The composer needs the full width on phones: reclaim the avatar gutter, let the
+   markdown toolbar wrap (so every tool is reachable instead of clipping off the edge
+   under the box's overflow:hidden), and make the primary action (Comment / Sign in
+   with GitHub) a full-width tap target. Comment bubbles already reflow fine, so this
+   is composer-focused. */
+@media (max-width: 600px) {
+  /* Reclaim the avatar gutter for the compose box (top-level composer only; reply and
+     edit composers have no avatar). */
+  .gc-composer { gap: 8px; }
+  .gc-composer > .gc-avatar { display: none; }
+
+  /* Tabs stay on their row; the toolbar drops to its own full-width row below and
+     wraps, so no tool button is clipped. */
+  .gc-toolbar { flex: 1 1 100%; flex-wrap: wrap; align-self: stretch; margin-bottom: 0; }
+
+  /* Slightly larger touch targets for the markdown tools. */
+  .gc-tool { width: 32px; height: 32px; }
+
+  /* Reclaim toolbar space so the GIF button fits. The dividers are decorative, and the
+     markdown-help hint's `margin-left:auto` would otherwise absorb the free space and keep
+     the row from wrapping (clipping the GIF button off the edge), so both are dropped. */
+  .gc-tool-divider,
+  .gc-md-hint { display: none; }
+
+  /* Actions stack: the hint above, the primary button full-width beneath it. */
+  .gc-compose-actions { flex-wrap: wrap; gap: 8px; }
+  .gc-compose-actions .gc-hint { flex: 1 1 100%; }
+  .gc-submit,
+  .gc-signin-btn {
+    width: 100%; flex: 1 1 100%;
+    justify-content: center; padding: 10px 16px; font-size: 0.95rem;
+  }
+
+  /* Reply / edit have a Cancel beside the button: keep them on one row (button takes
+     the remaining width) rather than two stacked full-width buttons. */
+  .gc-reply-footer .gc-compose-actions,
+  .gc-composer-edit .gc-compose-actions { flex-wrap: nowrap; }
+  .gc-reply-footer .gc-compose-actions .gc-cancel,
+  .gc-composer-edit .gc-compose-actions .gc-cancel { flex: 0 0 auto; }
+  .gc-reply-footer .gc-compose-actions .gc-submit,
+  .gc-composer-edit .gc-compose-actions .gc-submit { flex: 1 1 auto; width: auto; }
+
+  /* Keep the GIF popup within the viewport on a narrow screen. */
+  .gc-gif { max-width: calc(100vw - 16px); }
+}
