@@ -2,47 +2,59 @@
 // Animates the landing hero's REPL: kronuz.whoami() "answers" by typing out a
 // rotating line that ends on the warm Kronuz caret (#kz-answer lives in the
 // splash <h1>, set via hero.title). Reduced-motion users keep the static answer.
+// Also exposes a real, callable `kronuz` on window, so anyone who opens the
+// console can actually run kronuz.whoami() (see the easter egg below).
 ---
 
 <script>
+	const el = document.getElementById('kz-answer');
+	// Kept short on purpose: these type out in the hero and must fit a phone screen.
+	const answers = [
+		"'C and C++, Python by chance'",
+		"'reads what the code hides'",
+		"'a reverse engineer at heart'",
+		"'the SoftICE kid, grown up'",
+		"'redraws only what changed'",
+		"'benchmarks over opinions'",
+		"'proof, not adjectives'",
+		"'files it until it is elegant'",
+		"'always one more benchmark'",
+		"'a perfect hash, no collisions'",
+		"'pays for less than it imports'",
+		"'Germán offline, Kronuz online'",
+		"'co-author of PEP 810'",
+		"'makes Python explain itself'",
+		"'the reason imports got lazy'",
+		"'named the frozen loop'",
+		"'runtime patches, no redeploy'",
+		"'convinced the GIL is optional'",
+		"'immortal objects, no churn'",
+		"'keeps the GC off the hot path'",
+		"'seconds off start-up'",
+		"'wins in dollars and watts'",
+		"'happiest a layer below'",
+		"'here for the stack traces'",
+		"'allergic to blocking in async'",
+	];
+
+	// A real, callable kronuz for whoever opens the console. whoami() returns a
+	// fresh answer (minus the display quotes, so the console prints it cleanly).
+	const kronuz = {
+		whoami() { return answers[Math.floor(Math.random() * answers.length)].replace(/^'|'$/g, ''); },
+		help()   { return 'try kronuz.whoami(), then read the source. that is more my style anyway.'; },
+		toString() { return '<kronuz: reverse engineer at heart>'; },
+	};
+	// @ts-ignore , intentional global for the console easter egg.
+	window.kronuz = kronuz;
+
 	// For the curious who open the console. If you are reading this, you are exactly my
-	// kind of person: the ones who look under the hood. (See you in the source.)
+	// kind of person: the ones who look under the hood. Go on, call it.
 	console.log(
-		"%c>>> kronuz.whoami()\n%c'a reverse engineer at heart. you opened the console, so read the source, ask how it works, and push it a little further than it is supposed to go. roll for initiative.'",
+		"%c>>> kronuz.whoami()\n%cyou opened the console, so you are my kind of person. go on, call it:  kronuz.whoami()\n(then read the source, and push it further than it should go. roll for initiative.)",
 		"color:#7fbf7f;font-weight:bold;font-family:monospace",
 		"color:#7fbf7f;font-family:monospace"
 	);
-	const el = document.getElementById('kz-answer');
-	const answers = [
-		"'C and C++ at heart, Python by chance'",
-		"'reads code that would rather stay hidden'",
-		"'a reverse engineer who wandered into the runtime'",
-		"'the SoftICE kid, all grown up'",
-		"'redraws only the pixels that changed'",
-		"'benchmarks first, opinions second'",
-		"'proof, not adjectives'",
-		"'files an algorithm until it is elegant'",
-		"'will ask for one more benchmark'",
-		"'a perfect hash for a fixed set of keys'",
-		"'pays for less than it imports'",
-		"'a Python engineer in the runtime layer'",
-		"'Germán offline, Kronuz online'",
-		"'co-author of PEP 810, lazy imports'",
-		"'out to make Python explain itself'",
-		"'the reason imports got lazy'",
-		"'named the line that froze the loop'",
-		"'runtime patches, no redeploy required'",
-		"'still convinced the GIL is optional'",
-		"'immortal objects, no refcount churn'",
-		"'keeps the GC out of the hot path'",
-		"'kept the CoW pages from stampeding'",
-		"'seconds off start-up, hours at scale'",
-		"'efficiency in dollars and watts'",
-		"'happiest a layer below the application'",
-		"'here for the stack traces'",
-		"'asking if the docs are still true'",
-		"'allergic to a blocking call in async'",
-	];
+
 	const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	if (el && !reduce) {
 		const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
