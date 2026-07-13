@@ -37,8 +37,8 @@ pelican content -o published -s publishconf.py && \
 The second life was Jekyll, in 2018. The migration post was four lines long and ended on a hopeful command:
 
 ```sh
-~/Kronuz.github.io $ gem install jekyll bundler
-~/Kronuz.github.io $ bundle exec jekyll serve
+gem install jekyll bundler
+bundle exec jekyll serve
 ```
 
 Here is the thing both of these had in common. The setup was a delight for exactly one afternoon. Write a post, run a command, push, watch it deploy. Magic. The trouble is always the *second* post. By then you have forgotten the command, the Ruby version has drifted, bundler wants a word, a gem refuses to build, and the gap between "I have a thought" and "it is published" has quietly grown wide enough to fall into. So the thoughts stayed in my head, which is the worst possible place for them.
