@@ -57,6 +57,19 @@ export interface DiscussionRow {
   createdAt: number;
 }
 
+/** A recent comment joined to its post (title/url), for the owner's Atom feed. */
+export interface RecentComment {
+  id: string;
+  term: string;
+  parent_id: string | null;
+  author_login: string;
+  author_name: string | null;
+  body_md: string;
+  created_at: number;
+  post_title: string | null;
+  post_url: string | null;
+}
+
 export interface ReactionGroup {
   content: string;
   count: number;
@@ -341,6 +354,32 @@ export class Database {
       .bind(tenantId, term)
       .first<Record<string, unknown>>();
     return (r?.n as number) ?? 0;
+  }
+
+  /** The most recent (non-hidden) comments across a whole tenant, newest first, each joined
+   * to its post title/url. Powers the owner's private Atom feed. */
+  async commentsRecent(tenantId: string, limit: number): Promise<RecentComment[]> {
+    const r = await this.db
+      .prepare(
+        "SELECT c.id, c.term, c.parent_id, c.author_login, c.author_name, c.body_md, c.created_at, " +
+          "d.title AS post_title, d.url AS post_url " +
+          "FROM comments c LEFT JOIN discussions d ON d.tenant_id = c.tenant_id AND d.term = c.term " +
+          "WHERE c.tenant_id=? AND c.hidden_at IS NULL " +
+          "ORDER BY c.created_at DESC, c.id DESC LIMIT ?",
+      )
+      .bind(tenantId, limit)
+      .all<Record<string, unknown>>();
+    return (r.results || []).map((x) => ({
+      id: String(x.id),
+      term: String(x.term),
+      parent_id: (x.parent_id as string) ?? null,
+      author_login: String(x.author_login),
+      author_name: (x.author_name as string) ?? null,
+      body_md: String(x.body_md ?? ""),
+      created_at: Number(x.created_at),
+      post_title: (x.post_title as string) ?? null,
+      post_url: (x.post_url as string) ?? null,
+    }));
   }
 
   async commentsReplies(parentIds: string[]): Promise<Record<string, CommentRow[]>> {

@@ -132,6 +132,35 @@ else
   warn "Skipped the GIF picker (existing giphy_key, if any, left unchanged)."
 fi
 
+# --- 6c. New-comment notifications (optional) -------------------------------
+say "New-comment notifications (optional)"
+cat <<'TXT'
+Get pinged when a comment lands, and/or subscribe to a private Atom feed of recent comments.
+  - Webhook: set NOTIFY_KIND in wrangler.toml (slack | discord | telegram) and store the
+    webhook URL as the NOTIFY_WEBHOOK secret (for telegram, also set NOTIFY_TELEGRAM_CHAT
+    in [vars], and use the bot sendMessage URL).
+  - Atom feed: set the NOTIFY_FEED_TOKEN secret, then point your RSS reader at
+    <Worker URL>/api/comments/feed?token=<token>.
+TXT
+printf 'Webhook URL for new-comment pings (blank to skip): '
+read -r NWH
+if [ -n "$NWH" ]; then
+  printf '%s' "$NWH" | $WRANGLER secret put NOTIFY_WEBHOOK \
+    && say "NOTIFY_WEBHOOK set (channel = NOTIFY_KIND in wrangler.toml)." \
+    || warn "Could not set NOTIFY_WEBHOOK."
+else
+  warn "Skipped the webhook (no NOTIFY_WEBHOOK)."
+fi
+printf 'Atom feed token (blank to skip; enables /api/comments/feed): '
+read -r NFT
+if [ -n "$NFT" ]; then
+  printf '%s' "$NFT" | $WRANGLER secret put NOTIFY_FEED_TOKEN \
+    && say "NOTIFY_FEED_TOKEN set. Feed: ${url:-<Worker URL>}/api/comments/feed?token=..." \
+    || warn "Could not set NOTIFY_FEED_TOKEN."
+else
+  warn "Skipped the comments Atom feed (no NOTIFY_FEED_TOKEN)."
+fi
+
 # --- 7. final deploy (applies PUBLIC_BASE_URL + any new secrets) --------------
 say "Deploying (final)"
 $WRANGLER deploy || die "deploy failed"

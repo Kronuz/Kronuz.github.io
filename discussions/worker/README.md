@@ -101,6 +101,24 @@ wrangler d1 execute discussions --remote \
 
 Leave it empty to hide the picker.
 
+### New-comment notifications (optional)
+
+By default a new comment just lands in D1 and nothing tells you. Two opt-in ways to know:
+
+- **Webhook ping** — set `NOTIFY_KIND` in `wrangler.toml` to `slack`, `discord`, or `telegram`,
+  and store the destination as the `NOTIFY_WEBHOOK` secret (`wrangler secret put NOTIFY_WEBHOOK`).
+  On each new comment the Worker POSTs a short *"New comment by X on <post>"* message to it,
+  fire-and-forget (via `waitUntil`, so it never delays the commenter). For Telegram, use the bot
+  `https://api.telegram.org/bot<token>/sendMessage` URL and also set `NOTIFY_TELEGRAM_CHAT` in
+  `[vars]`. Unset `NOTIFY_WEBHOOK` = disabled.
+- **Private Atom feed** — set the `NOTIFY_FEED_TOKEN` secret, then subscribe your RSS reader to
+  `<Worker URL>/api/comments/feed?token=<token>`. It lists the tenant's most recent (non-hidden)
+  comments, newest first, each linking to its post. Without a valid token the endpoint 404s (so
+  it doesn't exist for anyone else). RSS readers send no `Origin`, so origin enforcement doesn't
+  block them.
+
+`deploy.sh` prompts for both secrets.
+
 ## Deploy
 
 ```bash
@@ -151,6 +169,7 @@ Authenticated endpoints need a session: sign in through the widget (set the OAut
 | `GET /api/me` | — | current identity + admin flag |
 | `GET /api/config` | — | per-tenant widget config (resolved from Origin) |
 | `GET /api/discussions` | `?term=&after=&first=` | a page's thread |
+| `GET /api/comments/feed` | `?token=` | owner's private Atom feed of recent comments (`NOTIFY_FEED_TOKEN`) |
 | `POST /api/comments` | `{body, term, title?, subtitle?, url?, reply_to_id?}` | add a comment/reply |
 | `POST /api/comments/edit` | `{comment_id, body}` | author or moderator |
 | `POST /api/comments/delete` | `{comment_id}` | author or moderator |

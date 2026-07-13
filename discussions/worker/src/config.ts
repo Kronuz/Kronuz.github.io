@@ -29,6 +29,11 @@ export interface Env {
   MAX_BODY?: string;
   REQUEST_MAX_BYTES?: string;
   SESSION_TTL?: string;
+  // New-comment notifications (all optional; unset = disabled).
+  NOTIFY_KIND?: string; // slack | discord | telegram — picks the webhook payload shape
+  NOTIFY_WEBHOOK?: string; // secret: webhook URL (or a Telegram bot sendMessage URL)
+  NOTIFY_TELEGRAM_CHAT?: string; // telegram chat id (telegram only)
+  NOTIFY_FEED_TOKEN?: string; // secret: gates GET /api/comments/feed
 }
 
 /** Always allow the local Astro dev server (npm run dev) so the widget can read/post

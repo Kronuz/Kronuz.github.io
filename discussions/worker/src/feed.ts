@@ -1,0 +1,64 @@
+/**
+ * A private Atom feed of the most recent comments across a tenant, so the blog owner can
+ * subscribe in any RSS reader and see new comments without email or a webhook. Gated by
+ * the NOTIFY_FEED_TOKEN secret (a `?token=` query), since comment bodies are not otherwise
+ * a public read here.
+ */
+import type { Cfg } from "./config.js";
+import type { RecentComment } from "./db.js";
+
+function xmlEscape(s: string): string {
+  return (s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function iso(epochSec: number): string {
+  return new Date(epochSec * 1000).toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
+function excerpt(s: string, n = 500): string {
+  const one = (s || "").replace(/\s+/g, " ").trim();
+  return one.length > n ? one.slice(0, n - 1) + "\u2026" : one;
+}
+
+export function atomFeed(cfg: Cfg, rows: RecentComment[]): string {
+  const site = cfg.siteUrl || cfg.publicBaseUrl;
+  const feedId = (cfg.publicBaseUrl || site) + "/api/comments/feed";
+  const nowIso = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+  const updated = rows.length ? iso(rows[0].created_at) : nowIso;
+  const entries = rows
+    .map((r) => {
+      const link = r.post_url || site;
+      const postName = r.post_title || r.term;
+      const who = r.author_name || r.author_login;
+      const kind = r.parent_id ? "reply" : "comment";
+      return [
+        "  <entry>",
+        `    <title>${xmlEscape(`${who} \u2014 ${kind} on ${postName}`)}</title>`,
+        `    <link href="${xmlEscape(link)}"/>`,
+        `    <id>${xmlEscape(`${feedId}#${r.id}`)}</id>`,
+        `    <updated>${iso(r.created_at)}</updated>`,
+        `    <published>${iso(r.created_at)}</published>`,
+        `    <author><name>${xmlEscape(who)}</name></author>`,
+        `    <summary type="text">${xmlEscape(excerpt(r.body_md))}</summary>`,
+        "  </entry>",
+      ].join("\n");
+    })
+    .join("\n");
+  return [
+    '<?xml version="1.0" encoding="utf-8"?>',
+    '<feed xmlns="http://www.w3.org/2005/Atom">',
+    `  <title>${xmlEscape(`Comments \u2014 ${cfg.repo || site}`)}</title>`,
+    `  <id>${xmlEscape(feedId)}</id>`,
+    `  <updated>${updated}</updated>`,
+    `  <link href="${xmlEscape(site)}"/>`,
+    `  <link rel="self" href="${xmlEscape(feedId)}"/>`,
+    entries,
+    "</feed>",
+    "",
+  ].join("\n");
+}

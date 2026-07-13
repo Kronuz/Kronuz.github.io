@@ -20,6 +20,8 @@ import { RateLimit } from "./ratelimit.js";
 import { CookieSessionStore } from "./sessions.js";
 import { SelfHostedStore, type Viewer } from "./store.js";
 import { loadTenants, type TenantRegistry } from "./tenants.js";
+import { notifyNewComment } from "./notify.js";
+import { atomFeed } from "./feed.js";
 
 type Vars = {
   cfg: Cfg;
@@ -57,6 +59,14 @@ function limit(c: Ctx, limiter: RateLimit, viewer: Viewer | null): void {
   if (retry !== null) {
     throw new HttpError(429, "Too many requests; slow down.", { "Retry-After": String(retry) });
   }
+}
+
+// Constant-time-ish compare for the feed's ?token= (the length leak is acceptable here).
+function safeEq(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
 }
 
 // --- context helpers ---------------------------------------------------------
@@ -301,6 +311,22 @@ app.get("/api/discussions", async (c) => {
   );
 });
 
+// A private Atom feed of the tenant's most recent comments, for the owner's RSS reader.
+// Gated by NOTIFY_FEED_TOKEN (unset -> 404, so it doesn't exist without a token). RSS
+// readers send no Origin, so origin enforcement doesn't block them.
+app.get("/api/comments/feed", async (c) => {
+  const token = c.env.NOTIFY_FEED_TOKEN || "";
+  const given = c.req.query("token") || "";
+  if (!token || !safeEq(token, given)) throw new HttpError(404, "not found");
+  limit(c, rl.read, null);
+  const tenantId = c.env.DEFAULT_TENANT_ID || "default";
+  const rows = await c.get("db").commentsRecent(tenantId, 50);
+  return c.body(atomFeed(c.get("cfg"), rows), 200, {
+    "content-type": "application/atom+xml; charset=utf-8",
+    "cache-control": "no-store",
+  });
+});
+
 app.post("/api/comments", async (c) => {
   const body = await c.req.json<{
     body: string;
@@ -312,18 +338,32 @@ app.post("/api/comments", async (c) => {
   }>();
   const viewer = await currentViewer(c);
   limit(c, rl.post, viewer);
-  return c.json(
-    (await c.get("store").addComment({
-      tenantId: requestTenant(c),
-      term: body.term ?? null,
-      title: body.title ?? null,
-      subtitle: body.subtitle ?? null,
-      url: body.url ?? null,
-      body: body.body,
-      replyToId: body.reply_to_id ?? null,
-      viewer,
-    })) as object,
-  );
+  const created = await c.get("store").addComment({
+    tenantId: requestTenant(c),
+    term: body.term ?? null,
+    title: body.title ?? null,
+    subtitle: body.subtitle ?? null,
+    url: body.url ?? null,
+    body: body.body,
+    replyToId: body.reply_to_id ?? null,
+    viewer,
+  });
+  // Fire-and-forget owner notification (a no-op unless NOTIFY_WEBHOOK is set).
+  let ctx: { waitUntil(p: Promise<unknown>): void } | undefined;
+  try {
+    ctx = c.executionCtx;
+  } catch {
+    ctx = undefined;
+  }
+  notifyNewComment(c.env, ctx, {
+    author: viewer?.name || viewer?.login || "someone",
+    authorLogin: viewer?.login || "",
+    postTitle: body.title ?? null,
+    postUrl: body.url ?? null,
+    body: body.body,
+    isReply: Boolean(body.reply_to_id),
+  });
+  return c.json(created as object);
 });
 
 app.post("/api/comments/edit", async (c) => {
