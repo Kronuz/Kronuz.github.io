@@ -25,39 +25,58 @@ function excerpt(s: string, n = 500): string {
   return one.length > n ? one.slice(0, n - 1) + "\u2026" : one;
 }
 
+// A stable timestamp for the empty-feed placeholder, so the feed doesn't churn its
+// <updated> on every poll before any real comment exists.
+const EMPTY_TS = "2020-01-01T00:00:00Z";
+
+function entry(parts: string[]): string {
+  return ["  <entry>", ...parts, "  </entry>"].join("\n");
+}
+
 export function atomFeed(cfg: Cfg, rows: RecentComment[]): string {
   const site = cfg.siteUrl || cfg.publicBaseUrl;
   const feedId = (cfg.publicBaseUrl || site) + "/api/comments/feed";
-  const nowIso = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
-  const updated = rows.length ? iso(rows[0].created_at) : nowIso;
-  const entries = rows
-    .map((r) => {
-      const link = r.post_url || site;
-      const postName = r.post_title || r.term;
-      const who = r.author_name || r.author_login;
-      const kind = r.parent_id ? "reply" : "comment";
-      return [
-        "  <entry>",
-        `    <title>${xmlEscape(`${who} \u2014 ${kind} on ${postName}`)}</title>`,
-        `    <link href="${xmlEscape(link)}"/>`,
-        `    <id>${xmlEscape(`${feedId}#${r.id}`)}</id>`,
-        `    <updated>${iso(r.created_at)}</updated>`,
-        `    <published>${iso(r.created_at)}</published>`,
-        `    <author><name>${xmlEscape(who)}</name></author>`,
-        `    <summary type="text">${xmlEscape(excerpt(r.body_md))}</summary>`,
-        "  </entry>",
-      ].join("\n");
-    })
-    .join("\n");
+  const author = cfg.repo || site || "Comments";
+  const updated = rows.length ? iso(rows[0].created_at) : EMPTY_TS;
+  // A brand-new backend has no comments, and many readers refuse to subscribe to a feed
+  // with zero entries — so emit one stable placeholder until a real comment arrives.
+  const items = rows.length
+    ? rows.map((r) => {
+        const link = r.post_url || site;
+        const postName = r.post_title || r.term;
+        const who = r.author_name || r.author_login;
+        const kind = r.parent_id ? "reply" : "comment";
+        return entry([
+          `    <title>${xmlEscape(`${who} \u2014 ${kind} on ${postName}`)}</title>`,
+          `    <link href="${xmlEscape(link)}"/>`,
+          `    <id>${xmlEscape(`${feedId}#${r.id}`)}</id>`,
+          `    <updated>${iso(r.created_at)}</updated>`,
+          `    <published>${iso(r.created_at)}</published>`,
+          `    <author><name>${xmlEscape(who)}</name></author>`,
+          `    <summary type="text">${xmlEscape(excerpt(r.body_md))}</summary>`,
+        ]);
+      })
+    : [
+        entry([
+          "    <title>No comments yet</title>",
+          `    <link href="${xmlEscape(site)}"/>`,
+          `    <id>${xmlEscape(`${feedId}#placeholder`)}</id>`,
+          `    <updated>${EMPTY_TS}</updated>`,
+          `    <published>${EMPTY_TS}</published>`,
+          `    <author><name>${xmlEscape(author)}</name></author>`,
+          "    <summary type=\"text\">New comments will appear here as they are posted.</summary>",
+        ]),
+      ];
   return [
     '<?xml version="1.0" encoding="utf-8"?>',
     '<feed xmlns="http://www.w3.org/2005/Atom">',
     `  <title>${xmlEscape(`Comments \u2014 ${cfg.repo || site}`)}</title>`,
     `  <id>${xmlEscape(feedId)}</id>`,
     `  <updated>${updated}</updated>`,
+    `  <author><name>${xmlEscape(author)}</name></author>`,
     `  <link href="${xmlEscape(site)}"/>`,
     `  <link rel="self" href="${xmlEscape(feedId)}"/>`,
-    entries,
+    items.join("\n"),
     "</feed>",
     "",
   ].join("\n");

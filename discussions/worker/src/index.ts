@@ -183,13 +183,16 @@ app.use("*", (c, next) =>
 
 // Origin enforcement (the multi-tenant security crux): a cross-origin API request whose
 // Origin is not a registered tenant is rejected, so a random site can't post into (or read)
-// another blog's threads. Skip wildcard mode, OPTIONS (CORS handled it), and /api/health.
+// another blog's threads. Skip wildcard mode, OPTIONS (CORS handled it), /api/health, and
+// the token-gated comments feed (a public endpoint external RSS readers fetch from any
+// origin; the feed token is its access control, not the request Origin).
 app.use("*", async (c, next) => {
   const cfg = c.get("cfg");
   if (!cfg.wildcard && c.req.method !== "OPTIONS") {
     const origin = c.req.header("origin");
     const path = new URL(c.req.url).pathname;
-    if (origin && path.startsWith("/api/") && path !== "/api/health") {
+    const exempt = path === "/api/health" || path === "/api/comments/feed";
+    if (origin && path.startsWith("/api/") && !exempt) {
       const registered = DEV_ORIGINS.includes(origin) || c.get("tenants").idForOrigin(origin) !== null;
       if (!registered) return c.json({ detail: "origin not registered" }, 403);
     }
