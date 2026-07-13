@@ -395,11 +395,12 @@
   /* Slightly larger touch targets for the markdown tools. */
   .gc-tool { width: 32px; height: 32px; }
 
-  /* Reclaim toolbar space so the GIF button fits. The dividers are decorative, and the
-     markdown-help hint's `margin-left:auto` would otherwise absorb the free space and keep
-     the row from wrapping (clipping the GIF button off the edge), so both are dropped. */
-  .gc-tool-divider,
+  /* The markdown-help hint's `margin-left:auto` would absorb the free space and keep the
+     toolbar from wrapping (clipping the GIF button), so drop it on mobile. Keep the group
+     dividers (between the tool groups, and before GIF), but hide the leading one, which
+     would otherwise float at the start of the toolbar's own row. */
   .gc-md-hint { display: none; }
+  .gc-toolbar > .gc-tool-divider:first-child { display: none; }
 
   /* Actions stack: the hint above, the primary button full-width beneath it. */
   .gc-compose-actions { flex-wrap: wrap; gap: 8px; }

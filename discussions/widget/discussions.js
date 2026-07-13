@@ -1171,17 +1171,23 @@
     if (cfg.giphyKey) {
       const gifWrap = el("span", "gc-gif-wrap");
       const gifBtn = el("button", "gc-tool gc-tool-gif", "GIF");
-      gifBtn.type = "button"; gifBtn.title = "Add a GIF"; gifBtn.tabIndex = -1;
-      gifBtn.disabled = !signedIn;
+      gifBtn.type = "button"; gifBtn.tabIndex = -1;
+      gifBtn.title = signedIn ? "Add a GIF" : "Sign in to add a GIF";
+      gifBtn.addEventListener("mousedown", (e) => e.preventDefault());
       gifWrap.appendChild(gifBtn);
       if (signedIn) {
         gifPanel = buildGifPicker(ta, cfg, gifBtn);
         gifWrap.appendChild(gifPanel);
-        gifBtn.addEventListener("mousedown", (e) => e.preventDefault());
         gifBtn.addEventListener("click", () => {
           if (gifPanel.hidden) gifPanel.gcOpen(); else gifPanel.gcClose();
         });
+      } else {
+        // Configured but signed out: keep the GIF button visible (it signals the blog
+        // supports GIFs) and turn a click into a sign-in nudge, like the Sign in button.
+        gifBtn.addEventListener("click", () => openLogin(cfg));
       }
+      // A divider separates the GIF button from the list group before it.
+      toolbar.insertBefore(el("span", "gc-tool-divider"), mdHint);
       toolbar.insertBefore(gifWrap, mdHint);
     }
 
