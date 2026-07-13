@@ -194,9 +194,14 @@ font-style: normal;
 .kz-repl {
 display: block;
 max-width: 100%;
+/* Never let the REPL's nowrap lines push the page into a horizontal scroll. */
+overflow-x: clip;
 font-family: var(--__sl-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
 font-weight: 400;
-font-size: clamp(0.8rem, min(0.8rem + 1.1vw, calc((100vw - 2.5rem) / 26)), 1.5rem);
+/* Size the font so the longest answer line (~31 mono chars, reserved by .kz-sizer) fills
+   the width without overflowing, capped at 1.5rem. The old divisor (26) left the phone
+   font too small and clipped the longer answers; ~20 fills the width and fits them. */
+font-size: clamp(0.85rem, calc((100vw - 3rem) / 20), 1.5rem);
 line-height: 1.7;
 text-align: left;
 letter-spacing: 0;
