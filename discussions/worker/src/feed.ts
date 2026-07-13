@@ -42,18 +42,21 @@ export function atomFeed(cfg: Cfg, rows: RecentComment[]): string {
   // with zero entries — so emit one stable placeholder until a real comment arrives.
   const items = rows.length
     ? rows.map((r) => {
-        const link = r.post_url || site;
         const postName = r.post_title || r.term;
         const who = r.author_name || r.author_login;
         const kind = r.parent_id ? "reply" : "comment";
+        // Deep-link straight to the comment on its post: the widget sets each comment's
+        // DOM id and scroll-highlights `#<comment-id>` (the same URL its "Copy link" makes).
+        const permalink = r.post_url ? `${r.post_url}#${r.id}` : `${site}#${r.id}`;
         return entry([
           `    <title>${xmlEscape(`${who} \u2014 ${kind} on ${postName}`)}</title>`,
-          `    <link href="${xmlEscape(link)}"/>`,
-          `    <id>${xmlEscape(`${feedId}#${r.id}`)}</id>`,
+          `    <link href="${xmlEscape(permalink)}"/>`,
+          `    <id>${xmlEscape(permalink)}</id>`,
           `    <updated>${iso(r.created_at)}</updated>`,
           `    <published>${iso(r.created_at)}</published>`,
           `    <author><name>${xmlEscape(who)}</name></author>`,
           `    <summary type="text">${xmlEscape(excerpt(r.body_md))}</summary>`,
+          `    <content type="html">${xmlEscape(r.body_html || "")}</content>`,
         ]);
       })
     : [
