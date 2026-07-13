@@ -1259,6 +1259,15 @@ grid-template-columns: auto 1fr auto;
 	color: var(--sl-color-text-accent);
 }
 
+/* The /blog/ index list pager ("Newer/Older posts", rendered by our PrevNextLinks override)
+   gets a divider above it and the same top spacing as the article's chronological pager
+   (.post-pagers-chrono), so it sits off from the post list the same way. */
+.pagination-links.blog-list-pager {
+	margin-top: 2.5rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--sl-color-gray-5);
+}
+
 /* (starlight-blog's built-in per-post footer pager is suppressed at the source: our
    PrevNextLinks override renders nothing on post pages — see src/overrides — since we render
    our own series + chronological pagers above the comments. Only the /blog/ list-pager

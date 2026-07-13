@@ -37,17 +37,17 @@ const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 
 
 {
 	show && (
-		<nav class="pagination-links" aria-label="Blog pagination" data-pagefind-ignore>
+		<nav class="pagination-links blog-list-pager" aria-label="Blog pagination" data-pagefind-ignore>
 			{prev && (
 				<a href={prev.href} rel="prev">
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_LEFT} />
-					<span><span class="link-title">{prevTitle}</span></span>
+					<span>Previous<br /><span class="link-title">{prevTitle}</span></span>
 				</a>
 			)}
 			{next && (
 				<a href={next.href} rel="next">
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_RIGHT} />
-					<span><span class="link-title">{nextTitle}</span></span>
+					<span>Next<br /><span class="link-title">{nextTitle}</span></span>
 				</a>
 			)}
 		</nav>
