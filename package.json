@@ -6,10 +6,10 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "dev:prod": "astro dev --mode production",
-    "build": "astro build",
-    "preview": "astro preview",
+    "dev": "TZ=UTC astro dev",
+    "dev:prod": "TZ=UTC astro dev --mode production",
+    "build": "TZ=UTC astro build",
+    "preview": "TZ=UTC astro preview",
     "astro": "astro",
     "publish": "node scripts/publish-post.mjs",
     "postinstall": "patch-package"
