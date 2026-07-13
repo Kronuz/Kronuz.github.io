@@ -25,61 +25,69 @@ const showToc = tocHasHeadings(toc);
 		<nav class="series-aside" aria-label="Series navigation">
 			<h2 class="series-aside-title">{series.name}</h2>
 			<p class="series-aside-sub">Part {series.index + 1} of {series.total}</p>
-			{series.chapters ? (
-				series.chapters.map((ch) => (
-					<details class="series-chapter" open={ch.hasCurrent}>
-						<summary class:list={["series-chapter-head", ch.hasCurrent && "is-here"]}>
-							<span class="series-chapter-name">{ch.title}</span>
-							<span class="series-chapter-count">{ch.parts.length}</span>
-						</summary>
-						<ol class="series-aside-list">
-							{ch.parts.map((p) => (
-								<li>
-									{p.current ? (
-										<span class="series-aside-row is-current">
-											<span class="series-aside-num">{p.index + 1}</span>
-											<span class="series-aside-text">{p.title}</span>
-										</span>
-									) : p.reachable ? (
-										<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
-											<span class="series-aside-num">{p.index + 1}</span>
-											<span class="series-aside-text">{p.title}</span>
-										</a>
-									) : (
-										<span class="series-aside-row is-pending">
-											<span class="series-aside-num">{p.index + 1}</span>
-											<span class="series-aside-text">{p.title}</span>
-										</span>
-									)}
-								</li>
-							))}
-						</ol>
-					</details>
-				))
-			) : (
-				<ol class="series-aside-list">
-					{series.parts.map((p) => (
-						<li>
-							{p.current ? (
-								<span class="series-aside-row is-current">
-									<span class="series-aside-num">{p.index + 1}</span>
-									<span class="series-aside-text">{p.title}</span>
-								</span>
-							) : p.reachable ? (
-								<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
-									<span class="series-aside-num">{p.index + 1}</span>
-									<span class="series-aside-text">{p.title}</span>
-								</a>
-							) : (
-								<span class="series-aside-row is-pending">
-									<span class="series-aside-num">{p.index + 1}</span>
-									<span class="series-aside-text">{p.title}</span>
-								</span>
-							)}
-						</li>
-					))}
-				</ol>
+			{series.chapters && (
+				<Fragment>
+					<input type="checkbox" id="series-group-aside" class="series-group-input" checked />
+					<label for="series-group-aside" class="series-group-toggle" title="Group by chapter">
+						<span class="series-group-track"><span class="series-group-thumb" /></span>
+						<span class="series-group-text">Group</span>
+					</label>
+					<div class="series-grouped">
+						{series.chapters.map((ch) => (
+							<details class="series-chapter" open={ch.hasCurrent}>
+								<summary class:list={["series-chapter-head", ch.hasCurrent && "is-here"]}>
+									<span class="series-chapter-name">{ch.title}</span>
+									<span class="series-chapter-count">{ch.parts.length}</span>
+								</summary>
+								<ol class="series-aside-list">
+									{ch.parts.map((p) => (
+										<li>
+											{p.current ? (
+												<span class="series-aside-row is-current">
+													<span class="series-aside-num">{p.index + 1}</span>
+													<span class="series-aside-text">{p.title}</span>
+												</span>
+											) : p.reachable ? (
+												<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
+													<span class="series-aside-num">{p.index + 1}</span>
+													<span class="series-aside-text">{p.title}</span>
+												</a>
+											) : (
+												<span class="series-aside-row is-pending">
+													<span class="series-aside-num">{p.index + 1}</span>
+													<span class="series-aside-text">{p.title}</span>
+												</span>
+											)}
+										</li>
+									))}
+								</ol>
+							</details>
+						))}
+					</div>
+				</Fragment>
 			)}
+			<ol class:list={["series-aside-list", series.chapters && "series-flat"]}>
+				{series.parts.map((p) => (
+					<li>
+						{p.current ? (
+							<span class="series-aside-row is-current">
+								<span class="series-aside-num">{p.index + 1}</span>
+								<span class="series-aside-text">{p.title}</span>
+							</span>
+						) : p.reachable ? (
+							<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
+								<span class="series-aside-num">{p.index + 1}</span>
+								<span class="series-aside-text">{p.title}</span>
+							</a>
+						) : (
+							<span class="series-aside-row is-pending">
+								<span class="series-aside-num">{p.index + 1}</span>
+								<span class="series-aside-text">{p.title}</span>
+							</span>
+						)}
+					</li>
+				))}
+			</ol>
 		</nav>
 	)
 }
@@ -255,5 +263,66 @@ const showToc = tocHasHeadings(toc);
 	}
 	.series-chapter .series-aside-list::before {
 		left: calc(1.9rem - 1px);
+	}
+
+	/* --- "Group" toggle: flip the stepper between chapters and flat read order --- */
+	/* Pure CSS: a visually-hidden but focusable checkbox drives the two views. Default
+	   checked = grouped; unchecked = flat read order (1..N). No JS, so it resets per page. */
+	.series-group-input {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		opacity: 0;
+		margin: 0;
+	}
+	.series-grouped {
+		display: none;
+	}
+	.series-group-input:checked ~ .series-grouped {
+		display: block;
+	}
+	.series-group-input:checked ~ .series-flat {
+		display: none;
+	}
+	.series-group-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0 0 0.6rem;
+		cursor: pointer;
+		user-select: none;
+		font-size: var(--sl-text-2xs);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+	.series-group-track {
+		position: relative;
+		flex: 0 0 auto;
+		width: 1.7rem;
+		height: 1rem;
+		border-radius: 1rem;
+		background: var(--sl-color-gray-5);
+		transition: background 0.15s ease;
+	}
+	.series-group-thumb {
+		position: absolute;
+		top: 0.13rem;
+		left: 0.13rem;
+		width: 0.74rem;
+		height: 0.74rem;
+		border-radius: 50%;
+		background: var(--sl-color-white);
+		transition: transform 0.15s ease;
+	}
+	.series-group-input:checked ~ .series-group-toggle .series-group-track {
+		background: var(--sl-color-text-accent);
+	}
+	.series-group-input:checked ~ .series-group-toggle .series-group-thumb {
+		transform: translateX(0.7rem);
+	}
+	.series-group-input:focus-visible ~ .series-group-toggle .series-group-track {
+		outline: 2px solid var(--sl-color-text-accent);
+		outline-offset: 2px;
 	}
 </style>

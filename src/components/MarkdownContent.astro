@@ -59,7 +59,48 @@ const inlineComments = Boolean(backend) && isBlogPost && Boolean(term);
 					<span class="series-mobile-of">of</span>
 					<span class="series-mobile-name">{series.name}</span>
 				</summary>
-				<ol class="series-mobile-list">
+				{series.chapters && (
+					<Fragment>
+						<input type="checkbox" id="series-group-mobile" class="series-group-input" checked />
+						<label for="series-group-mobile" class="series-group-toggle" title="Group by chapter">
+							<span class="series-group-track"><span class="series-group-thumb" /></span>
+							<span class="series-group-text">Group</span>
+						</label>
+						<div class="series-grouped">
+							{series.chapters.map((ch) => (
+								<div class="series-mobile-chapter">
+									<p class="series-mobile-chaptername">
+										<span>{ch.title}</span>
+										<span class="series-mobile-chaptercount">{ch.parts.length}</span>
+									</p>
+									<ol class="series-mobile-list">
+										{ch.parts.map((p) => (
+											<li>
+												{p.current ? (
+													<span class="series-mobile-row is-current">
+														<span class="series-mobile-rownum">{p.index + 1}</span>
+														<span>{p.title}</span>
+													</span>
+												) : p.reachable ? (
+													<a class:list={["series-mobile-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
+														<span class="series-mobile-rownum">{p.index + 1}</span>
+														<span>{p.title}</span>
+													</a>
+												) : (
+													<span class="series-mobile-row is-pending">
+														<span class="series-mobile-rownum">{p.index + 1}</span>
+														<span>{p.title}</span>
+													</span>
+												)}
+											</li>
+										))}
+									</ol>
+								</div>
+							))}
+						</div>
+					</Fragment>
+				)}
+				<ol class:list={["series-mobile-list", series.chapters && "series-flat"]}>
 					{series.parts.map((p) => (
 						<li>
 							{p.current ? (
@@ -180,6 +221,91 @@ const inlineComments = Boolean(backend) && isBlogPost && Boolean(term);
 		list-style: none;
 		margin: 0.75rem 0 0;
 		padding: 0 0 0 0.35rem;
+	}
+	/* Chapter grouping inside the mobile chip (mirrors the desktop stepper). */
+	.series-mobile-chapter + .series-mobile-chapter {
+		margin-top: 0.4rem;
+	}
+	.series-mobile-chaptername {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0.6rem 0 0.1rem;
+		font-size: var(--sl-text-xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--sl-color-white);
+	}
+	.series-mobile-chaptercount {
+		font-size: var(--sl-text-2xs);
+		font-weight: 600;
+		color: var(--sl-color-gray-3);
+		background: var(--sl-color-gray-6);
+		border-radius: 999px;
+		padding: 0.02rem 0.4rem;
+	}
+	.series-mobile-chapter .series-mobile-list {
+		margin-top: 0.1rem;
+	}
+	/* "Group" toggle: flip the mobile list between chapters and flat read order.
+	   Pure CSS (default grouped; resets per page). Same control as the desktop stepper. */
+	.series-group-input {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		opacity: 0;
+		margin: 0;
+	}
+	.series-grouped {
+		display: none;
+	}
+	.series-group-input:checked ~ .series-grouped {
+		display: block;
+	}
+	.series-group-input:checked ~ .series-flat {
+		display: none;
+	}
+	.series-group-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0.75rem 0 0;
+		cursor: pointer;
+		user-select: none;
+		font-size: var(--sl-text-2xs);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+	.series-group-track {
+		position: relative;
+		flex: 0 0 auto;
+		width: 1.7rem;
+		height: 1rem;
+		border-radius: 1rem;
+		background: var(--sl-color-gray-5);
+		transition: background 0.15s ease;
+	}
+	.series-group-thumb {
+		position: absolute;
+		top: 0.13rem;
+		left: 0.13rem;
+		width: 0.74rem;
+		height: 0.74rem;
+		border-radius: 50%;
+		background: var(--sl-color-white);
+		transition: transform 0.15s ease;
+	}
+	.series-group-input:checked ~ .series-group-toggle .series-group-track {
+		background: var(--sl-color-text-accent);
+	}
+	.series-group-input:checked ~ .series-group-toggle .series-group-thumb {
+		transform: translateX(0.7rem);
+	}
+	.series-group-input:focus-visible ~ .series-group-toggle .series-group-track {
+		outline: 2px solid var(--sl-color-text-accent);
+		outline-offset: 2px;
 	}
 	.series-mobile-list li {
 		margin: 0;
