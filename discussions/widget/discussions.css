@@ -396,11 +396,10 @@
   .gc-tool { width: 32px; height: 32px; }
 
   /* The markdown-help hint's `margin-left:auto` would absorb the free space and keep the
-     toolbar from wrapping (clipping the GIF button), so drop it on mobile. Keep the group
-     dividers (between the tool groups, and before GIF), but hide the leading one, which
-     would otherwise float at the start of the toolbar's own row. */
+     toolbar from wrapping (clipping the GIF button), so drop it on mobile. Hide the tool
+     dividers too: kept in, a divider before the GIF button pushes it onto its own line. */
   .gc-md-hint { display: none; }
-  .gc-toolbar > .gc-tool-divider:first-child { display: none; }
+  .gc-tool-divider { display: none; }
 
   /* Actions stack: the hint above, the primary button full-width beneath it. */
   .gc-compose-actions { flex-wrap: wrap; gap: 8px; }

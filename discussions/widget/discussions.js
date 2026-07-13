@@ -1171,20 +1171,17 @@
     if (cfg.giphyKey) {
       const gifWrap = el("span", "gc-gif-wrap");
       const gifBtn = el("button", "gc-tool gc-tool-gif", "GIF");
-      gifBtn.type = "button"; gifBtn.tabIndex = -1;
-      gifBtn.title = signedIn ? "Add a GIF" : "Sign in to add a GIF";
-      gifBtn.addEventListener("mousedown", (e) => e.preventDefault());
+      gifBtn.type = "button"; gifBtn.title = "Add a GIF"; gifBtn.tabIndex = -1;
+      // Shown whenever GIPHY is configured, disabled until signed in (like the other tools).
+      gifBtn.disabled = !signedIn;
       gifWrap.appendChild(gifBtn);
       if (signedIn) {
         gifPanel = buildGifPicker(ta, cfg, gifBtn);
         gifWrap.appendChild(gifPanel);
+        gifBtn.addEventListener("mousedown", (e) => e.preventDefault());
         gifBtn.addEventListener("click", () => {
           if (gifPanel.hidden) gifPanel.gcOpen(); else gifPanel.gcClose();
         });
-      } else {
-        // Configured but signed out: keep the GIF button visible (it signals the blog
-        // supports GIFs) and turn a click into a sign-in nudge, like the Sign in button.
-        gifBtn.addEventListener("click", () => openLogin(cfg));
       }
       // A divider separates the GIF button from the list group before it.
       toolbar.insertBefore(el("span", "gc-tool-divider"), mdHint);
@@ -1381,6 +1378,15 @@
     window.addEventListener("message", function (e) {
       if (e.data === "gc-auth-done") {
         // Re-resolve auth, then re-render the list so reactions become interactive.
+        refresh(root, cfg).then(function () { if (cfg.term) load(root, cfg); });
+      }
+    });
+    // Mobile fallback: the OAuth flow often opens in a new tab where window.opener (and so
+    // the postMessage above) does not bridge back. When the reader returns to this tab, the
+    // session cookie is already set, so re-resolve auth on the way back in. Guarded on
+    // SIGNED_IN so a plain tab switch while signed in costs nothing.
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible" && !SIGNED_IN) {
         refresh(root, cfg).then(function () { if (cfg.term) load(root, cfg); });
       }
     });

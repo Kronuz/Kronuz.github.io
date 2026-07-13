@@ -259,7 +259,15 @@ app.get("/auth/callback", async (c) => {
 });
 
 app.post("/auth/logout", (c) => {
-  deleteCookie(c, "gc_session", { path: "/" });
+  const cfg = c.get("cfg");
+  // Clear with the SAME attributes the cookie was set with. A SameSite=None; Secure cookie
+  // (cross-site) is only cleared by a deletion cookie that also carries them; a plain
+  // delete is treated as SameSite=Lax and ignored cross-site, so sign-out would do nothing.
+  deleteCookie(c, "gc_session", {
+    path: "/",
+    sameSite: cfg.cookieCrossSite ? "None" : "Lax",
+    secure: cfg.cookieCrossSite,
+  });
   return c.json({ ok: true });
 });
 
