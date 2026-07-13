@@ -136,20 +136,28 @@ export default defineConfig({
 				SocialIcons: './src/components/SocialIcons.astro',
 			},
 		}),
-		// Brand the GitHub Pages host as "Kronuz.github.io" everywhere in the output.
-		// Astro lowercases the host of every generated absolute URL (new URL() normalizes
-		// it), so `site` can't carry the capital K; GitHub serves the host case-insensitively,
-		// so rewrite it in the built files instead (canonical, og:url, sitemap, RSS, the
-		// Giscus theme URL, ...). Matching only "//kronuz.github.io" is deliberate: it skips
-		// the bare 'kronuz.github.io' literal the Giscus theme compares against
+		// Brand the GitHub Pages host as "Kronuz.github.io" in the built output's *visible*
+		// URLs (nav/body hrefs, the Giscus theme URL, ...). Astro lowercases the host of every
+		// generated absolute URL (new URL() normalizes it), so `site` can't carry the capital
+		// K; GitHub serves the host case-insensitively, so we rewrite it in the built files.
+		// BUT machine-read URLs must stay on the canonical lowercase host: the RSS feed +
+		// sitemap (.xml, skipped entirely) and, in HTML, the feed-autodiscovery <link>, <link
+		// rel=canonical>, and og:url/twitter:url meta. A mixed-case host there gets rejected by
+		// case-sensitive feed readers / TLS host checks (Reeder "couldn't find a feed") or
+		// de-duplicated wrong by crawlers. Matching only "//kronuz.github.io" is deliberate: it
+		// skips the bare 'kronuz.github.io' literal the Giscus theme compares against
 		// location.hostname, which the browser always reports lowercased.
 		{
 			name: 'kz-brand-host-case',
 			hooks: {
 				'astro:build:done': async ({ dir, logger }) => {
-					const exts = new Set(['.html', '.xml', '.txt', '.js', '.css', '.json']);
+					// .xml (feed + sitemap) is never branded; HTML is branded, then the machine
+					// tags below are restored to the lowercase host.
+					const exts = new Set(['.html', '.txt', '.js', '.css', '.json']);
 					const needle = '//kronuz.github.io';
-					const replacement = '//Kronuz.github.io';
+					const branded = '//Kronuz.github.io';
+					const machineTag =
+						/<(?:link|meta)\b[^>]*(?:\brel=["']?(?:canonical|alternate)["']?|type=["']application\/(?:rss|atom)\+xml["']|(?:property|name)=["'](?:og:url|twitter:url)["'])[^>]*>/gi;
 					let files = 0;
 					const walk = async (d) => {
 						for (const ent of await readdir(d, { withFileTypes: true })) {
@@ -158,10 +166,15 @@ export default defineConfig({
 								await walk(p);
 							} else if (exts.has(extname(ent.name))) {
 								const s = await readFile(p, 'utf8');
-								if (s.includes(needle)) {
-									await writeFile(p, s.replaceAll(needle, replacement));
-									files++;
+								if (!s.includes(needle)) continue;
+								let out = s.replaceAll(needle, branded);
+								if (extname(ent.name) === '.html') {
+									// Keep feed-autodiscovery, canonical, and social URLs on the
+									// canonical lowercase host so readers/crawlers accept them.
+									out = out.replace(machineTag, (tag) => tag.replaceAll(branded, needle));
 								}
+								await writeFile(p, out);
+								files++;
 							}
 						}
 					};
