@@ -1,0 +1,50 @@
+---
+// Override of starlight-blog's PrevNextLinks.astro (wired via a Vite resolveId redirect in
+// astro.config.mjs). Renders the same .pagination-links > a[rel] structure as every other
+// pager on the site (styled in custom.css) instead of a Starlight LinkCard, so the /blog/
+// "Older/Newer posts" list pager matches the per-post and docs pagers.
+//
+// Kept inside a <div class="pagination"> wrapper: starlight-blog also renders this component
+// in each post's footer, which we hide with `.post-footer .pagination { display:none }`
+// (we render our own post pager). The visible list pager on /blog/ isn't in .post-footer, so
+// it shows; the inner .pagination-links > a carries the shared styling either way.
+interface Link {
+	href: string;
+	label?: string;
+}
+interface Props {
+	config: { prevNextLinksOrder?: string };
+	next: Link | undefined;
+	prev: Link | undefined;
+}
+
+const { config, next, prev } = Astro.props;
+const reverse = config?.prevNextLinksOrder !== 'chronological';
+const t = Astro.locals.t;
+const prevTitle = prev?.label ?? t(reverse ? 'starlightBlog.pagination.prev' : 'starlightBlog.pagination.next');
+const nextTitle = next?.label ?? t(reverse ? 'starlightBlog.pagination.next' : 'starlightBlog.pagination.prev');
+
+const ARROW_LEFT = '<path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/>';
+const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/>';
+---
+
+{
+	(prev || next) && (
+		<div class="pagination" data-pagefind-ignore>
+			<nav class="pagination-links" aria-label="Blog pagination">
+				{prev && (
+					<a href={prev.href} rel="prev">
+						<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_LEFT} />
+						<span><span class="link-title">{prevTitle}</span></span>
+					</a>
+				)}
+				{next && (
+					<a href={next.href} rel="next">
+						<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_RIGHT} />
+						<span><span class="link-title">{nextTitle}</span></span>
+					</a>
+				)}
+			</nav>
+		</div>
+	)
+}

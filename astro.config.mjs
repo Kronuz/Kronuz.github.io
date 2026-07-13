@@ -37,6 +37,23 @@ export default defineConfig({
 		server: {
 			allowedHosts: true,
 		},
+		plugins: [
+			// Route starlight-blog's PrevNextLinks.astro (the "Older/Newer posts" list pager
+			// on /blog/, and the built-in per-post footer pager) to our own override, so it
+			// renders the same .pagination-links > a[rel] structure as every other pager on
+			// the site instead of a Starlight LinkCard. The import is relative inside the
+			// dependency, so match it by specifier + importer here (no bare-specifier alias).
+			{
+				name: 'kz-override-prevnextlinks',
+				enforce: 'pre',
+				resolveId(source, importer) {
+					if (importer && importer.includes('starlight-blog') && /\/PrevNextLinks\.astro$/.test(source)) {
+						return fileURLToPath(new URL('./src/overrides/PrevNextLinks.astro', import.meta.url));
+					}
+					return null;
+				},
+			},
+		],
 	},
 	// GFM tables in .mdx, and external links (http/https) open in a new tab.
 	// Internal relative links (/blog/...) and mailto are left alone.

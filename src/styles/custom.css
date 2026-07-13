@@ -1261,7 +1261,9 @@ grid-template-columns: auto 1fr auto;
 
 /* We render the chronological blog pager ourselves, below the article next to the
    series pager (see MarkdownContent.astro / .post-pagers), so hide starlight-blog's
-   own copy in the post footer to avoid showing it twice. PostTags stay. */
+   own copy in the post footer to avoid showing it twice. PostTags stay. (starlight-blog's
+   PrevNextLinks is overridden to render .pagination-links too — see src/overrides — so its
+   /blog/ list-pager instance matches every other pager; this hides only the footer copy.) */
 .post-footer .pagination {
 	display: none;
 }
