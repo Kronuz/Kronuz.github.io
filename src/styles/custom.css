@@ -933,6 +933,22 @@ grid-template-columns: auto 1fr auto;
 	}
 }
 
+/* Mobile tap behavior. Starlight's LinkCard already makes the whole card clickable (a
+   stretched `a::before` covering the card), but the browser's tap-highlight and text
+   selection land on the text-sized <a>, not that overlay — so a tap flashes a small
+   rectangle over the rounded card (the "double button" / broken-border effect) and a
+   long-press selects just the title, splitting it from the button. Suppress both and give
+   the whole card a single pressed state, so it reads as one tap target. */
+.pagination .sl-link-card a {
+	-webkit-tap-highlight-color: transparent;
+	-webkit-user-select: none;
+	user-select: none;
+}
+.pagination .sl-link-card:active {
+	border-color: var(--sl-color-text-accent);
+	background: var(--sl-color-gray-6);
+}
+
 /* (The dev-only "Edit source" link now lives in the PageTitle override, positioned by the
    subtitle — see PageTitle.astro.) */
 
