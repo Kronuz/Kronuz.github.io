@@ -806,8 +806,24 @@
     setTimeout(function () { target.classList.remove("gc-target"); }, 2400);
   }
 
+  // The session token (identity, HMAC-signed) lives in localStorage so sign-in works without
+  // a cross-site cookie, which mobile Safari blocks. It rides as an Authorization: Bearer
+  // header on every API call; the cross-site cookie stays a same-site/desktop fallback.
+  function gcToken(val) {
+    var key = "gc:token";
+    try {
+      if (arguments.length === 0) return localStorage.getItem(key) || "";
+      if (val == null) { localStorage.removeItem(key); return ""; }
+      localStorage.setItem(key, val); return val;
+    } catch (_) { return ""; }
+  }
+
   function api(cfg, path, opts) {
-    return fetch((cfg.backend || "") + path, Object.assign({ credentials: "include" }, opts || {}));
+    opts = opts || {};
+    var headers = Object.assign({}, opts.headers);
+    var tok = gcToken();
+    if (tok) headers["Authorization"] = "Bearer " + tok;
+    return fetch((cfg.backend || "") + path, Object.assign({ credentials: "include" }, opts, { headers: headers }));
   }
 
   async function fetchMe(cfg) {
@@ -835,8 +851,21 @@
   }
 
   function openLogin(cfg) {
-    const url = (cfg.backend || "") + "/auth/login?return=" + encodeURIComponent(location.href);
-    window.open(url, "gc-oauth", "width=600,height=720");
+    // Full-page redirect (not a popup): the OAuth callback returns here with the token in the
+    // URL fragment, which works on mobile where a popup's window.opener/postMessage do not.
+    location.href = (cfg.backend || "") + "/auth/login?return=" + encodeURIComponent(location.href);
+  }
+
+  // On load, pick up a token handed back by the OAuth redirect (#gc_token=...), stash it, and
+  // strip it from the URL so it isn't left in history or the address bar.
+  function absorbAuthToken() {
+    var h = location.hash || "";
+    var m = h.match(/[#&]gc_token=([^&]*)/);
+    if (!m) return;
+    gcToken(decodeURIComponent(m[1]));
+    var rest = h.replace(/[#&]gc_token=[^&]*/, "");
+    if (rest === "#") rest = "";
+    try { history.replaceState(null, "", location.pathname + location.search + rest); } catch (_) {}
   }
 
   function submitter(root, cfg, opts) {
@@ -1303,6 +1332,7 @@
         const out = el("a", null, "Sign out"); out.href = "#";
         out.addEventListener("click", async (e) => {
           e.preventDefault();
+          gcToken(null);
           await api(cfg, "/auth/logout", { method: "POST" }).catch(function () {});
           refresh(root, cfg);
         });
@@ -1396,6 +1426,7 @@
   }
 
   function init() {
+    absorbAuthToken();
     document.querySelectorAll(".gc[data-term]").forEach(mount);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

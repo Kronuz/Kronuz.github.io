@@ -66,7 +66,11 @@ function requestTenant(c: Ctx): string {
 }
 
 async function currentSession(c: Ctx) {
-  const sid = getCookie(c, "gc_session");
+  // Prefer the Authorization: Bearer token (the cross-platform path; the widget keeps it in
+  // localStorage), falling back to the cookie for same-site/desktop callers.
+  const auth = c.req.header("authorization");
+  let sid = auth && auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!sid) sid = getCookie(c, "gc_session") || "";
   if (!sid) return null;
   return c.get("sessions").get(sid);
 }
@@ -163,7 +167,7 @@ app.use("*", (c, next) =>
     },
     credentials: true,
     allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type"],
+    allowHeaders: ["Content-Type", "Authorization"],
   })(c, next),
 );
 
@@ -233,7 +237,8 @@ app.get("/auth/callback", async (c) => {
   const cfg = c.get("cfg");
   const code = c.req.query("code") || "";
   const state = c.req.query("state") || "";
-  if (!(await readState(cfg.sessionSecret, state))) throw new HttpError(400, "bad state");
+  const st = await readState(cfg.sessionSecret, state);
+  if (!st) throw new HttpError(400, "bad state");
   const { token } = await gh.exchangeCode(cfg, code);
   const u = await gh.user(token);
   const value = await c.get("sessions").create({
@@ -242,6 +247,8 @@ app.get("/auth/callback", async (c) => {
     name: u.name || u.login,
     url: u.html_url ?? null,
   });
+  // Cookie still set for same-site/desktop callers; the token in the redirect fragment below
+  // is the cross-platform delivery, since mobile browsers block the cross-site cookie.
   setCookie(c, "gc_session", value, {
     httpOnly: true,
     sameSite: cfg.cookieCrossSite ? "None" : "Lax",
@@ -249,13 +256,20 @@ app.get("/auth/callback", async (c) => {
     maxAge: cfg.sessionTtl,
     path: "/",
   });
-  return c.html(
-    "<!doctype html><meta charset=utf-8>" +
-      "<body style='font-family:sans-serif;padding:2rem'>" +
-      "Signed in. You can close this window." +
-      "<script>if(window.opener){window.opener.postMessage('gc-auth-done','*')}" +
-      "setTimeout(function(){window.close()},300)</script>",
-  );
+  // Redirect back to the blog page, handing the widget the session token in the URL fragment.
+  // The return URL's origin is validated against the allow-list so the callback can't be used
+  // as an open redirect to an arbitrary site.
+  let ret = st.r || "";
+  try {
+    const o = new URL(ret).origin;
+    const ok =
+      cfg.wildcard || DEV_ORIGINS.includes(o) || c.get("tenants").origins().has(o) || cfg.allowedOrigins.includes(o);
+    if (!ok) ret = "";
+  } catch {
+    ret = "";
+  }
+  if (!ret) ret = cfg.siteUrl || "/";
+  return c.redirect(ret.split("#")[0] + "#gc_token=" + encodeURIComponent(value));
 });
 
 app.post("/auth/logout", (c) => {
