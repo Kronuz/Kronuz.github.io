@@ -808,147 +808,6 @@ grid-template-columns: auto 1fr auto;
 }
 }
 
-/* Unify the prev/next pagers. starlight-blog's chronological pagination at the foot
-   of each blog post renders as big Starlight LinkCards (title + large arrow, shadow).
-   Restyle those cards to match the custom series prev/next buttons defined in
-   MarkdownContent.astro (.series-foot-link): a compact bordered button with a small
-   uppercase "Previous"/"Next" label over an accent title, and an accent hover. This
-   targets the stable semantic classes from PrevNextLinks -> CardGrid -> LinkCard
-   (.pagination .sl-link-card / .stack / .title / .icon), not Astro's scoped hashes. */
-.pagination .sl-link-card {
-	gap: 0.5rem;
-	padding: 0.6rem 0.9rem;
-	border-color: var(--sl-color-gray-5);
-	border-radius: 0.5rem;
-	box-shadow: none;
-	transition: border-color 0.15s ease, background 0.15s ease;
-}
-.pagination .sl-link-card:hover {
-	border-color: var(--sl-color-text-accent);
-	background: var(--sl-color-gray-6);
-}
-.pagination .sl-link-card .stack {
-	gap: 0.25rem;
-	min-width: 0;
-}
-/* Inject the directional label the native card's DOM doesn't carry, matching
-   .series-foot-dir. :has() drives prev vs next; the pseudo sits above the title. */
-.pagination .sl-link-card .stack::before {
-	font-size: var(--sl-text-xs);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	color: var(--sl-color-gray-3);
-	white-space: nowrap;
-}
-.pagination .sl-link-card:has(a[rel='prev']) .stack::before {
-	content: 'Previous';
-}
-.pagination .sl-link-card:has(a[rel='next']) .stack::before {
-	content: 'Next';
-}
-/* The series pager (the .series-pager nav) keeps its "in series" wording; the
-   chronological pager stays the plain "Previous"/"Next". Higher specificity than the
-   base labels above, so it wins for the series pager only. */
-.pagination.series-pager .sl-link-card:has(a[rel='prev']) .stack::before {
-	content: 'Previous in series';
-}
-.pagination.series-pager .sl-link-card:has(a[rel='next']) .stack::before {
-	content: 'Next in series';
-}
-/* In `npm run dev` the series pager may link a not-yet-published neighbor so the pager can
-   be previewed; grey that card like the stepper's is-pending item (muted title + label,
-   dashed border). LinkCard forwards our class onto its inner <a>, so target via :has().
-   Production never links an unpublished part, so this only appears under npm run dev. */
-.pagination.series-pager .sl-link-card:has(a.is-pending) {
-	border-style: dashed;
-}
-.pagination.series-pager .sl-link-card:has(a.is-pending) .title,
-.pagination.series-pager .sl-link-card:has(a.is-pending) .stack::before {
-	color: var(--sl-color-gray-4);
-}
-.pagination.series-pager .sl-link-card:has(a.is-pending):hover .title,
-.pagination.series-pager .sl-link-card:has(a.is-pending):hover .stack::before {
-	color: var(--sl-color-text-accent);
-}
-.pagination .sl-link-card:hover .stack::before {
-	color: var(--sl-color-text-accent);
-}
-/* Title matches .series-foot-title: smaller, semibold, accent. Kept to a single line
-   with an ellipsis so a long post title doesn't wrap the button to two rows (the
-   arrow + Previous/Next label already signal direction; the full title is one click
-   away). min-width:0 on the stack above lets the grid cell shrink for the ellipsis. */
-.pagination .sl-link-card .title {
-	display: block;
-	font-size: var(--sl-text-sm);
-	font-weight: 600;
-	color: var(--sl-color-text-accent);
-	line-height: 1.3;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-/* Shrink the oversized arrow down to a small, muted directional cue. */
-.pagination .sl-link-card .icon {
-	font-size: 1em;
-	color: var(--sl-color-gray-3);
-	align-self: center;
-}
-.pagination .sl-link-card:hover .icon {
-	color: var(--sl-color-text-accent);
-}
-
-/* Layout for .pagination, mirrored from starlight-blog's PrevNextLinks scoped CSS so
-   the series pager (which reuses .pagination + CardGrid + LinkCard but not that
-   component's scoped styles) lays out identically to the chronological pager: two
-   equal columns that stack on narrow widths, prev on the left with a flipped arrow,
-   next forced to the right column. Also makes a single button stay 50%, not full
-   width. These duplicate the native pager's own rules (same values), harmlessly. */
-.pagination {
-	container-type: inline-size;
-}
-.pagination .card-grid {
-	gap: 1rem;
-	grid-template-columns: 1fr;
-	grid-template-rows: 1fr 1fr;
-}
-.pagination .sl-link-card:has(a[rel='prev']) {
-	grid-template-columns: auto 1fr;
-}
-.pagination .sl-link-card:has(a[rel='prev']) span {
-	order: 2;
-}
-.pagination .sl-link-card:has(a[rel='prev']) svg {
-	transform: matrix(-1, 0, 0, 1, 0, 0);
-}
-.pagination .sl-link-card:has(a[rel='next']) span {
-	text-align: end;
-}
-@container (min-width: 30rem) {
-	.pagination .card-grid {
-		grid-template-columns: 1fr 1fr;
-		grid-template-rows: 1fr;
-	}
-	.pagination .sl-link-card:has(a[rel='next']) {
-		grid-column: 2;
-	}
-}
-
-/* Mobile tap behavior. Starlight's LinkCard already makes the whole card clickable (a
-   stretched `a::before` covering the card), but the browser's tap-highlight and text
-   selection land on the text-sized <a>, not that overlay — so a tap flashes a small
-   rectangle over the rounded card (the "double button" / broken-border effect) and a
-   long-press selects just the title, splitting it from the button. Suppress both and give
-   the whole card a single pressed state, so it reads as one tap target. */
-.pagination .sl-link-card a {
-	-webkit-tap-highlight-color: transparent;
-	-webkit-user-select: none;
-	user-select: none;
-}
-.pagination .sl-link-card:active {
-	border-color: var(--sl-color-text-accent);
-	background: var(--sl-color-gray-6);
-}
-
 /* (The dev-only "Edit source" link now lives in the PageTitle override, positioned by the
    subtitle — see PageTitle.astro.) */
 
@@ -1301,29 +1160,52 @@ grid-template-columns: auto 1fr auto;
 	background-color: var(--sl-color-gray-3);
 }
 
-/* About / Projects (and any non-blog doc page) render Starlight's default
-   <Pagination> (.pagination-links) — a different DOM from the blog's LinkCard pager
-   above (plain <a> with an arrow + a "Previous/Next" line + a big white .link-title).
-   Restyle it to match the blog pager: a compact bordered button, a small uppercase
-   muted Previous/Next label over an accent title (single-line ellipsis), an accent
-   border + gray-6 hover, and the arrow shrunk to a muted directional cue. These
-   selectors are unlayered, so they win over Starlight's @layer starlight.core. */
+/* Prev/next pagers — unified across all three sites. Every pager renders the SAME
+   structure, .pagination-links > a[rel], where each <a> IS the whole bordered button (an
+   arrow + a small uppercase Previous/Next label over an accent .link-title). That covers
+   Starlight's native docs <Pagination> (About / Projects / the Xapiand docs) AND the blog's
+   custom series + chronological pagers (hand-rolled with the same markup in
+   MarkdownContent.astro). This block is self-contained (it doesn't lean on Starlight's
+   scoped component CSS), so the hand-rolled and native pagers look identical; it's unlayered,
+   so it wins over Starlight's @layer starlight.core. */
+.pagination-links {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+	gap: 1rem;
+}
 .pagination-links a {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
 	gap: 0.5rem;
+	width: 100%;
 	padding: 0.6rem 0.9rem;
-	border-color: var(--sl-color-gray-5);
+	border: 1px solid var(--sl-color-gray-5);
 	border-radius: 0.5rem;
 	box-shadow: none;
 	color: var(--sl-color-gray-2);
+	text-decoration: none;
+	overflow-wrap: anywhere;
 	transition: border-color 0.15s ease, background 0.15s ease;
+	/* The whole <a> is the button: keep the mobile tap-highlight + text selection from
+	   flashing/selecting a sub-rectangle instead of the button. */
+	-webkit-tap-highlight-color: transparent;
+	-webkit-user-select: none;
+	user-select: none;
 }
-.pagination-links a:hover {
+/* Next sits on the right, arrow after the label. */
+.pagination-links a[rel='next'] {
+	justify-content: end;
+	text-align: end;
+	flex-direction: row-reverse;
+}
+.pagination-links a:hover,
+.pagination-links a:active {
 	border-color: var(--sl-color-text-accent);
 	background: var(--sl-color-gray-6);
 }
-/* The span carries the "Previous"/"Next" label as its first text line (before the
-   <br>): small, uppercase, muted, accent on hover. min-width:0 lets the title below
-   it shrink for the ellipsis. */
+/* The span's first text line is the "Previous"/"Next" label (before the <br>): small,
+   uppercase, muted, accent on hover. min-width:0 lets the title below shrink for ellipsis. */
 .pagination-links a > span {
 	min-width: 0;
 	font-size: var(--sl-text-xs);
@@ -1332,12 +1214,12 @@ grid-template-columns: auto 1fr auto;
 	line-height: 1.3;
 	color: var(--sl-color-gray-3);
 }
-.pagination-links a:hover > span {
+.pagination-links a:hover > span,
+.pagination-links a:active > span {
 	color: var(--sl-color-text-accent);
 }
-/* The page title: smaller, semibold, accent, single line with ellipsis — not the
-   default oversized 2xl white. text-transform:none so it isn't uppercased like the
-   label that sits above it. */
+/* The page/post title: smaller, semibold, accent, single line with ellipsis (not the
+   native oversized 2xl white). text-transform:none so it isn't uppercased like the label. */
 .pagination-links a .link-title {
 	display: block;
 	font-size: var(--sl-text-sm);
@@ -1350,12 +1232,30 @@ grid-template-columns: auto 1fr auto;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-/* Shrink the oversized 1.5rem arrow to a small muted cue, accent on hover. */
+/* Arrow shrunk from the native 1.5rem to a small muted directional cue, accent on hover. */
 .pagination-links a svg {
+	flex-shrink: 0;
+	width: 1em;
+	height: 1em;
 	font-size: 1em;
 	color: var(--sl-color-gray-3);
 }
-.pagination-links a:hover svg {
+.pagination-links a:hover svg,
+.pagination-links a:active svg {
+	color: var(--sl-color-text-accent);
+}
+/* Dev-only: the series pager may link a not-yet-published neighbor so the series can be
+   previewed under `npm run dev`; grey that button (muted label + title, dashed border) like
+   the stepper's is-pending item. Production never links an unpublished part. */
+.pagination-links a.is-pending {
+	border-style: dashed;
+}
+.pagination-links a.is-pending > span,
+.pagination-links a.is-pending .link-title {
+	color: var(--sl-color-gray-4);
+}
+.pagination-links a.is-pending:hover > span,
+.pagination-links a.is-pending:hover .link-title {
 	color: var(--sl-color-text-accent);
 }
 

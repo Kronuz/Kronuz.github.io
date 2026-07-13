@@ -10,7 +10,6 @@
 // ("you already have a MarkdownContent override") and skip its own registration.
 // That's expected: we re-import its override below, so the blog frame still renders.
 import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
-import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 import Giscus from './Giscus.astro';
 import Discussions from './Discussions.astro';
 import SnippetScript from './SnippetScript.astro';
@@ -48,6 +47,11 @@ const subtitle = entry?.data?.subtitle;
 const url = Astro.url?.href;
 const backend = import.meta.env.PUBLIC_DISCUSSIONS_BACKEND || DISCUSSIONS_BACKEND;
 const inlineComments = Boolean(backend) && isBlogPost && Boolean(term);
+// Prev/next arrows for the hand-rolled pagers (same glyphs as Starlight's Icon left/right-
+// arrow), so these pagers render the exact .pagination-links > a structure the native docs
+// pager uses — each <a> is the whole button. See .pagination-links in custom.css.
+const ARROW_LEFT = '<path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/>';
+const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/>';
 ---
 
 {isReservedBlogPage ? <slot /> : <BlogMarkdownContent>
@@ -129,15 +133,19 @@ const inlineComments = Boolean(backend) && isBlogPost && Boolean(term);
 	{
 		(seriesPrev || seriesNext) && (
 			<div class="post-pagers post-pagers-series">
-				<nav class="pagination series-pager" aria-label="Series navigation" data-pagefind-ignore>
-					<CardGrid>
-						{seriesPrev && (
-							<LinkCard href={`/blog/${seriesPrev.slug}/`} rel="prev" class={seriesPrev.pending ? "is-pending" : undefined} title={seriesPrev.title} />
-						)}
-						{seriesNext && (
-							<LinkCard href={`/blog/${seriesNext.slug}/`} rel="next" class={seriesNext.pending ? "is-pending" : undefined} title={seriesNext.title} />
-						)}
-					</CardGrid>
+				<nav class="pagination-links series-pager" aria-label="Series navigation" data-pagefind-ignore>
+					{seriesPrev && (
+						<a href={`/blog/${seriesPrev.slug}/`} rel="prev" class:list={{ "is-pending": seriesPrev.pending }}>
+							<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_LEFT} />
+							<span>Previous in series<br /><span class="link-title">{seriesPrev.title}</span></span>
+						</a>
+					)}
+					{seriesNext && (
+						<a href={`/blog/${seriesNext.slug}/`} rel="next" class:list={{ "is-pending": seriesNext.pending }}>
+							<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_RIGHT} />
+							<span>Next in series<br /><span class="link-title">{seriesNext.title}</span></span>
+						</a>
+					)}
 				</nav>
 			</div>
 		)
@@ -149,15 +157,19 @@ const inlineComments = Boolean(backend) && isBlogPost && Boolean(term);
 	{
 		(chronoPrev || chronoNext) && (
 			<div class="post-pagers post-pagers-chrono">
-				<nav class="pagination" aria-label="Blog navigation" data-pagefind-ignore>
-					<CardGrid>
-						{chronoPrev && (
-							<LinkCard href={`/blog/${chronoPrev.slug}/`} rel="prev" title={chronoPrev.title} />
-						)}
-						{chronoNext && (
-							<LinkCard href={`/blog/${chronoNext.slug}/`} rel="next" title={chronoNext.title} />
-						)}
-					</CardGrid>
+				<nav class="pagination-links" aria-label="Blog navigation" data-pagefind-ignore>
+					{chronoPrev && (
+						<a href={`/blog/${chronoPrev.slug}/`} rel="prev">
+							<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_LEFT} />
+							<span>Previous<br /><span class="link-title">{chronoPrev.title}</span></span>
+						</a>
+					)}
+					{chronoNext && (
+						<a href={`/blog/${chronoNext.slug}/`} rel="next">
+							<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_RIGHT} />
+							<span>Next<br /><span class="link-title">{chronoNext.title}</span></span>
+						</a>
+					)}
 				</nav>
 			</div>
 		)
@@ -364,9 +376,9 @@ const inlineComments = Boolean(backend) && isBlogPost && Boolean(term);
 		}
 	}
 
-	/* Two prev/next pagers, each .pagination (LinkCards in a CardGrid) sharing the
-	   native pager's styling via custom.css. The series pager sits right where the
-	   article ends; the chronological pager sits at the very bottom, above the
+	/* Two prev/next pagers, each a native-style .pagination-links (hand-rolled <a> buttons
+	   matching Starlight's docs pager; styled in custom.css). The series pager sits right
+	   where the article ends; the chronological pager sits at the very bottom, above the
 	   tags/footer, with a divider above it separating it from the comments.
 	   (starlight-blog's own chronological pager is hidden in custom.css.) */
 	.post-pagers {
