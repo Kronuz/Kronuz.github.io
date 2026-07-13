@@ -422,3 +422,14 @@
   /* Keep the GIF popup within the viewport on a narrow screen. */
   .gc-gif { max-width: calc(100vw - 16px); }
 }
+
+/* iOS/iPadOS Safari auto-zooms in when a focused field's font-size is < 16px, and won't
+   zoom back out on its own — it leaves the page horizontally scrolled and misaligned.
+   Bump every text-entry control to 16px on touch devices so focusing never triggers the
+   zoom. Scoped to touch (not a width breakpoint) so it also covers iPads, and leaves
+   desktop density (14px) unchanged. */
+@media (hover: none) and (pointer: coarse) {
+  .gc textarea,
+  .gc input,
+  .gc select { font-size: 16px; }
+}
