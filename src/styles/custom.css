@@ -1259,14 +1259,10 @@ grid-template-columns: auto 1fr auto;
 	color: var(--sl-color-text-accent);
 }
 
-/* We render the chronological blog pager ourselves, below the article next to the
-   series pager (see MarkdownContent.astro / .post-pagers), so hide starlight-blog's
-   own copy in the post footer to avoid showing it twice. PostTags stay. (starlight-blog's
-   PrevNextLinks is overridden to render .pagination-links too — see src/overrides — so its
-   /blog/ list-pager instance matches every other pager; this hides only the footer copy.) */
-.post-footer .pagination {
-	display: none;
-}
+/* (starlight-blog's built-in per-post footer pager is suppressed at the source: our
+   PrevNextLinks override renders nothing on post pages — see src/overrides — since we render
+   our own series + chronological pagers above the comments. Only the /blog/ list-pager
+   instance renders.) */
 
 /* Blog post metadata: keep the Draft/Featured badges on the same line as the date
    instead of a separate full-width row below it, and render them as compact pills.
