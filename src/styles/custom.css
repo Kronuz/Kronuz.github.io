@@ -289,6 +289,27 @@ margin: 0;
 font-size: var(--sl-text-sm);
 color: var(--sl-color-gray-3);
 }
+.kz-copyright .kz-sep { margin: 0 0.4rem; color: var(--sl-color-gray-4); }
+.kz-manifesto-link {
+color: var(--sl-color-gray-3);
+text-decoration: none;
+transition: color 0.15s ease;
+}
+.kz-manifesto-link:hover { color: var(--sl-color-white); text-decoration: underline; }
+
+/* A ```plain fence renders as frameless, background-less verbatim text, so a
+   quoted document (the Hacker Manifesto, an ASCII banner, an email) reads as
+   text on the page instead of a "code box". Border + background live on the
+   <pre>; the frame drop-shadow lives on the <figure>. Use ```text / ```txt for
+   a normal framed plaintext block. */
+.expressive-code pre[data-language='plain'] {
+background: transparent;
+border: none;
+border-radius: 0;
+}
+.expressive-code figure.frame:has(> pre[data-language='plain']) {
+box-shadow: none;
+}
 .kz-social {
 display: flex;
 gap: 1.15rem;

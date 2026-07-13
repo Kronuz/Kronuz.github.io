@@ -29,7 +29,11 @@ const year = new Date().getFullYear();
 	<Pagination />
 
 	<div class="kz-site-footer">
-		<p class="kz-copyright">&copy; {year} Germán Méndez Bravo</p>
+		<p class="kz-copyright">
+			&copy; {year} Germán Méndez Bravo
+			<span class="kz-sep" aria-hidden="true">·</span>
+			<a class="kz-manifesto-link" href="/blog/the-conscience-of-a-hacker/">The Conscience of a Hacker</a>
+		</p>
 		<div class="kz-social">
 			{
 				social.map((s) => (
