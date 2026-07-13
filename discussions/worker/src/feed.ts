@@ -76,6 +76,7 @@ export function atomFeed(cfg: Cfg, rows: RecentComment[]): string {
     `  <title>${xmlEscape(`Comments \u2014 ${cfg.repo || site}`)}</title>`,
     `  <id>${xmlEscape(feedId)}</id>`,
     `  <updated>${updated}</updated>`,
+    `  <icon>${xmlEscape(site.replace(/\/+$/, "") + "/favicon.ico")}</icon>`,
     `  <author><name>${xmlEscape(author)}</name></author>`,
     `  <link href="${xmlEscape(site)}"/>`,
     `  <link rel="self" href="${xmlEscape(feedId)}"/>`,
