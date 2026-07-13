@@ -161,13 +161,13 @@ const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 
 					{chronoPrev && (
 						<a href={`/blog/${chronoPrev.slug}/`} rel="prev">
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_LEFT} />
-							<span>Previous<br /><span class="link-title">{chronoPrev.title}</span></span>
+							<span>Newer<br /><span class="link-title">{chronoPrev.title}</span></span>
 						</a>
 					)}
 					{chronoNext && (
 						<a href={`/blog/${chronoNext.slug}/`} rel="next">
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_RIGHT} />
-							<span>Next<br /><span class="link-title">{chronoNext.title}</span></span>
+							<span>Older<br /><span class="link-title">{chronoNext.title}</span></span>
 						</a>
 					)}
 				</nav>

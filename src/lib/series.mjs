@@ -114,10 +114,11 @@ export async function resolveSeries(term) {
 
 // Chronological prev/next across all blog posts (entries with a date), so we can render
 // the blog pager ourselves right next to the series pager instead of where starlight-blog
-// forces it (the post footer, below the comments). We use plain chronological order
-// (Previous = older post, Next = newer post) so it points the same way as the series
-// pager (whose Next is the next, later part) rather than mirroring it. Drafts are
-// excluded only in production, matching starlight-blog.
+// forces it (the post footer, below the comments). Reverse-chronological, matching the
+// /blog/ index list pager: `prev` (the left button) is the NEWER post, `next` (the right
+// button) is the OLDER post — so "Newer/Older" points the same way on a post and on the
+// index. (The series pager is separate and keeps its own part-order Previous/Next.) Drafts
+// are excluded only in production, matching starlight-blog.
 export async function resolveChronological(term) {
 	const slug = (term ?? '').split('/').pop();
 	const docs = await getCollection('docs');
@@ -127,6 +128,6 @@ export async function resolveChronological(term) {
 	const i = posts.findIndex((e) => bareSlug(e.id) === slug);
 	if (i < 0) return { prev: null, next: null };
 	const link = (e) => (e ? { slug: bareSlug(e.id), title: e.data.title } : null);
-	// Array is newest-first: posts[i+1] is older (Previous), posts[i-1] is newer (Next).
-	return { prev: link(posts[i + 1]), next: link(posts[i - 1]) };
+	// Array is newest-first: posts[i-1] is newer (prev/left), posts[i+1] is older (next/right).
+	return { prev: link(posts[i - 1]), next: link(posts[i + 1]) };
 }
