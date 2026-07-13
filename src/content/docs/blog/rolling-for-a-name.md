@@ -7,6 +7,7 @@ date: 2026-07-09
 draft: true
 series: "Familiars"
 seriesOrder: 1
+chapter: "Little Languages"
 tags:
   - familiars
   - cpp

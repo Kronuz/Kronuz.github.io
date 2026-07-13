@@ -21,6 +21,12 @@ export const collections = {
 						// "Opening Boxes"), and its position within that series.
 						series: z.string().optional(),
 						seriesOrder: z.number().optional(),
+						// Chapter grouping within a long series: a display title (e.g.
+						// "Lock-Free"). Parts sharing a chapter collapse into one section in
+						// the sidebar stepper, in first-appearance order; the linear
+						// seriesOrder path is unchanged. All parts must be tagged for grouping
+						// to kick in, else the stepper stays a flat list.
+						chapter: z.string().optional(),
 						// On a *draft* part of a series, `upcoming: true` shows it greyed and
 						// un-linked in the series stepper (a "disabled" item teasing a part
 						// that's on the way), instead of hiding it. Ignored once the post is

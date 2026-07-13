@@ -7,6 +7,7 @@ date: 2026-07-10
 draft: true
 series: "Familiars"
 seriesOrder: 23
+chapter: "Lock-Free"
 tags:
   - familiars
   - cpp

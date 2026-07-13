@@ -7,6 +7,7 @@ date: 2026-07-11
 draft: true
 series: "Familiars"
 seriesOrder: 10
+chapter: "Bytes"
 tags:
   - familiars
   - cpp

@@ -25,28 +25,61 @@ const showToc = tocHasHeadings(toc);
 		<nav class="series-aside" aria-label="Series navigation">
 			<h2 class="series-aside-title">{series.name}</h2>
 			<p class="series-aside-sub">Part {series.index + 1} of {series.total}</p>
-			<ol class="series-aside-list">
-				{series.parts.map((p) => (
-					<li>
-						{p.current ? (
-							<span class="series-aside-row is-current">
-								<span class="series-aside-num">{p.index + 1}</span>
-								<span class="series-aside-text">{p.title}</span>
-							</span>
-						) : p.reachable ? (
-							<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
-								<span class="series-aside-num">{p.index + 1}</span>
-								<span class="series-aside-text">{p.title}</span>
-							</a>
-						) : (
-							<span class="series-aside-row is-pending">
-								<span class="series-aside-num">{p.index + 1}</span>
-								<span class="series-aside-text">{p.title}</span>
-							</span>
-						)}
-					</li>
-				))}
-			</ol>
+			{series.chapters ? (
+				series.chapters.map((ch) => (
+					<details class="series-chapter" open={ch.hasCurrent}>
+						<summary class:list={["series-chapter-head", ch.hasCurrent && "is-here"]}>
+							<span class="series-chapter-name">{ch.title}</span>
+							<span class="series-chapter-count">{ch.parts.length}</span>
+						</summary>
+						<ol class="series-aside-list">
+							{ch.parts.map((p) => (
+								<li>
+									{p.current ? (
+										<span class="series-aside-row is-current">
+											<span class="series-aside-num">{p.index + 1}</span>
+											<span class="series-aside-text">{p.title}</span>
+										</span>
+									) : p.reachable ? (
+										<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
+											<span class="series-aside-num">{p.index + 1}</span>
+											<span class="series-aside-text">{p.title}</span>
+										</a>
+									) : (
+										<span class="series-aside-row is-pending">
+											<span class="series-aside-num">{p.index + 1}</span>
+											<span class="series-aside-text">{p.title}</span>
+										</span>
+									)}
+								</li>
+							))}
+						</ol>
+					</details>
+				))
+			) : (
+				<ol class="series-aside-list">
+					{series.parts.map((p) => (
+						<li>
+							{p.current ? (
+								<span class="series-aside-row is-current">
+									<span class="series-aside-num">{p.index + 1}</span>
+									<span class="series-aside-text">{p.title}</span>
+								</span>
+							) : p.reachable ? (
+								<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}>
+									<span class="series-aside-num">{p.index + 1}</span>
+									<span class="series-aside-text">{p.title}</span>
+								</a>
+							) : (
+								<span class="series-aside-row is-pending">
+									<span class="series-aside-num">{p.index + 1}</span>
+									<span class="series-aside-text">{p.title}</span>
+								</span>
+							)}
+						</li>
+					))}
+				</ol>
+			)}
 		</nav>
 	)
 }
@@ -157,5 +190,70 @@ const showToc = tocHasHeadings(toc);
 	   link color above; the hover underline stays as the link affordance. */
 	a.series-aside-row.is-pending .series-aside-text {
 		color: var(--sl-color-gray-4);
+	}
+
+	/* --- Chapter grouping (collapsible book-TOC for long series) --- */
+	.series-chapter {
+		margin: 0;
+	}
+	.series-chapter + .series-chapter {
+		margin-top: 0.1rem;
+	}
+	/* The chapter header (a <summary>): our own disclosure triangle, no native marker. */
+	.series-chapter-head {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.3rem 0.35rem;
+		border-radius: 0.4rem;
+		cursor: pointer;
+		list-style: none;
+		color: var(--sl-color-white);
+		font-size: var(--sl-text-xs);
+		font-weight: 600;
+	}
+	.series-chapter-head::-webkit-details-marker {
+		display: none;
+	}
+	.series-chapter-head::before {
+		content: '';
+		flex: 0 0 auto;
+		width: 0;
+		height: 0;
+		border-left: 4px solid currentColor;
+		border-top: 4px solid transparent;
+		border-bottom: 4px solid transparent;
+		opacity: 0.55;
+		transition: transform 0.15s ease;
+	}
+	.series-chapter[open] > .series-chapter-head::before {
+		transform: rotate(90deg);
+	}
+	.series-chapter-head:hover {
+		background: var(--sl-color-gray-6);
+	}
+	/* A collapsed chapter that holds the current part still reads as "you are here". */
+	.series-chapter-head.is-here .series-chapter-name {
+		color: var(--sl-color-text-accent);
+	}
+	.series-chapter-name {
+		flex: 1 1 auto;
+	}
+	.series-chapter-count {
+		flex: 0 0 auto;
+		font-size: var(--sl-text-2xs);
+		font-weight: 600;
+		color: var(--sl-color-gray-3);
+		background: var(--sl-color-gray-6);
+		border-radius: 999px;
+		padding: 0.02rem 0.4rem;
+	}
+	/* Indent the parts under a chapter and shift the rail to match the deeper circles. */
+	.series-chapter .series-aside-list {
+		padding-left: 0.9rem;
+		margin-bottom: 0.15rem;
+	}
+	.series-chapter .series-aside-list::before {
+		left: calc(1.9rem - 1px);
 	}
 </style>

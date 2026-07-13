@@ -7,6 +7,7 @@ date: 2026-07-09
 draft: true
 series: "Familiars"
 seriesOrder: 2
+chapter: "Forbidden Layer"
 tags:
   - familiars
   - cpp

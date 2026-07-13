@@ -53,6 +53,9 @@ export async function resolveSeries(term) {
 			title: e.data.title,
 			index: i,
 			current: i === index,
+			// Chapter grouping title (frontmatter `chapter`), used only by the sidebar
+			// stepper; null when this series isn't chapter-tagged.
+			chapter: e.data.chapter ?? null,
 			// Reachable = there's a page to link to. Published parts always have one; a draft
 			// has a built page only in `npm run dev`, so it's reachable there but not in
 			// production (where an unpublished part stays un-linked, so nothing dead-links).
@@ -63,6 +66,33 @@ export async function resolveSeries(term) {
 		};
 	});
 
+	// Group parts into chapters (frontmatter `chapter`), for the sidebar stepper only.
+	// Chapters are visual grouping: the linear path — parts[], prev/next, "Part N of M" —
+	// is untouched. They appear in first-appearance order (parts are already seriesOrder-
+	// sorted) with each chapter's parts in that same order. Only kicks in when every
+	// visible part is tagged and there's more than one distinct chapter; otherwise the
+	// stepper falls back to the flat list (`chapters` stays null).
+	let chapters = null;
+	if (parts.every((p) => p.chapter) && new Set(parts.map((p) => p.chapter)).size > 1) {
+		const byTitle = new Map();
+		chapters = [];
+		for (const p of parts) {
+			let ch = byTitle.get(p.chapter);
+			if (!ch) {
+				ch = {
+					title: p.chapter,
+					id: p.chapter.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+					parts: [],
+					hasCurrent: false,
+				};
+				byTitle.set(p.chapter, ch);
+				chapters.push(ch);
+			}
+			ch.parts.push(p);
+			if (p.current) ch.hasCurrent = true;
+		}
+	}
+
 	const prevP = index > 0 ? parts[index - 1] : null;
 	const nextP = index < parts.length - 1 ? parts[index + 1] : null;
 	return {
@@ -72,6 +102,8 @@ export async function resolveSeries(term) {
 		index,
 		total: parts.length,
 		parts,
+		// Chapter grouping for the sidebar stepper (null when not chapter-tagged).
+		chapters,
 		// The pagers point at any reachable neighbor (published always; a draft only in
 		// `npm run dev`), carrying `pending` so the pager can grey a dev-only draft link the
 		// same way the stepper greys an is-pending item.

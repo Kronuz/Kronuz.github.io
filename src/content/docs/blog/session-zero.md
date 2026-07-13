@@ -8,6 +8,7 @@ draft: true
 featured: true
 series: "Familiars"
 seriesOrder: 0
+chapter: "Prologue"
 tags:
   - familiars
   - cpp

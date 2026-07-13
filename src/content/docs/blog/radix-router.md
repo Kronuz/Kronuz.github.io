@@ -7,6 +7,7 @@ date: 2026-07-10
 draft: true
 series: "Familiars"
 seriesOrder: 4
+chapter: "Network"
 tags:
   - familiars
   - cpp

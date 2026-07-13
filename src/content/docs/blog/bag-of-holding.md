@@ -7,6 +7,7 @@ date: 2026-07-10
 draft: true
 series: "Familiars"
 seriesOrder: 29
+chapter: "Trinkets"
 tags:
   - familiars
   - cpp

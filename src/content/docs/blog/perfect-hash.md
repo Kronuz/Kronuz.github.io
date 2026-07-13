@@ -8,6 +8,7 @@ draft: true
 featured: true
 series: "Familiars"
 seriesOrder: 27
+chapter: "Compile-Time"
 tags:
   - familiars
   - cpp
