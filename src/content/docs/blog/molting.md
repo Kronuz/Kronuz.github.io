@@ -1,7 +1,7 @@
 ---
 title: "Molting"
 subtitle: "Down to the core"
-description: I ran prezto for years and tuned a 500-line prompt on top of it. This is how I left the framework for kronuzsh, a ~700-line zsh setup I own, what porting the prompt broke, and the small things a framework quietly does for you that you only notice once they stop.
+description: I ran prezto for years and tuned a 500-line prompt on top of it. This is how I left the framework for KronuZSH, a ~700-line zsh setup I own, what porting the prompt broke, and the small things a framework quietly does for you that you only notice once they stop.
 excerpt: I'd worn prezto for years, a 22,000-line framework I used a sliver of. So I lifted out the one part I loved, my prompt, wrote the few hundred lines around it I'd have wanted anyway, and left the rest. Then I spent days discovering what the framework had quietly been doing for me all along.
 date: 2026-06-16
 draft: true
@@ -24,16 +24,16 @@ None of it was bad. It's careful, well-worn code. But it was a whole house built
 
 So I asked the obvious question. What if I just kept the room?
 
-## kronuzsh
+## KronuZSH
 
 The plan was small and a little reckless: lift the prompt out of the framework, vendor the two or three plugins I actually load, write the twenty-odd lines of options and history and completion I'd want on any machine anyway, and source them directly. No init system. No modules. No fork to reconcile. Just files I read.
 
-I called it [kronuzsh](https://github.com/Kronuz/kronuzsh), because naming a thing is half of finishing it.
+I called it [KronuZSH](https://github.com/Kronuz/KronuZSH), because naming a thing is half of finishing it.
 
-```d2 alt="prezto loaded 42 modules through an init system to build the shell; kronuzsh sources eight short files directly and the prompt stands on its own."
+```d2 alt="prezto loaded 42 modules through an init system to build the shell; KronuZSH sources eight short files directly and the prompt stands on its own."
 direction: down
 old: "prezto\n42 modules, ~22,000 lines\nan init system wiring them together" { shape: rectangle }
-new: "kronuzsh\n8 sourced files, ~700 lines\nthe prompt standing on its own" { shape: rectangle }
+new: "KronuZSH\n8 sourced files, ~700 lines\nthe prompt standing on its own" { shape: rectangle }
 old -> new: "kept the one room"
 ```
 
@@ -72,7 +72,7 @@ There were smaller ones. gitstatusd needs job control, so it fails in a shell wi
 
 When it settled, the trade looked like this:
 
-| | prezto | kronuzsh |
+| | prezto | KronuZSH |
 |---|---|---|
 | zsh source | ~22,000 lines | ~700 lines |
 | files / modules | 42 modules | 14 files |
@@ -112,15 +112,15 @@ That is what a framework actually costs you, and what leaving one teaches. The l
 
 ## Try it
 
-kronuzsh lives at [github.com/Kronuz/kronuzsh](https://github.com/Kronuz/kronuzsh). Clone it, run the installer, open a fresh shell:
+KronuZSH lives at [github.com/Kronuz/KronuZSH](https://github.com/Kronuz/KronuZSH). Clone it, run the installer, open a fresh shell:
 
 ```bash
-git clone --recursive https://github.com/Kronuz/kronuzsh.git ~/.config/kronuzsh
-cd ~/.config/kronuzsh && ./install.sh
+git clone --recursive https://github.com/Kronuz/KronuZSH.git ~/.config/KronuZSH
+cd ~/.config/KronuZSH && ./install.sh
 exec zsh
 ```
 
-`install.sh` symlinks the runcoms (`~/.zshrc` and friends) into `$HOME`, backing up anything it replaces, and pulls in the plugin submodules. It's idempotent, and `./install.sh --uninstall` puts your old setup back. The prompt leans on a few [Nerd Font](https://www.nerdfonts.com/) glyphs (the OS logo, the git markers), so point your terminal at one. [JetBrains Mono](https://www.jetbrains.com/lp/mono/) is a safe all-rounder and MesloLGS is the old reliable for a prompt; I keep a longer, opinionated (and surely incomplete) list of coding fonts in the repo at [NerdFonts.md](https://github.com/Kronuz/kronuzsh/blob/main/NerdFonts.md). One iTerm2 gotcha worth knowing: pick the plain `… Nerd Font`, not the `… Nerd Font Mono` variant, or the icons shrink to dots. Without one the prompt still works; the logo just shows as a box. Machine-specific tweaks (host color, the logo, tool hooks) go in a git-ignored `local.zsh`, so the tracked files stay the same everywhere.
+`install.sh` symlinks the runcoms (`~/.zshrc` and friends) into `$HOME`, backing up anything it replaces, and pulls in the plugin submodules. It's idempotent, and `./install.sh --uninstall` puts your old setup back. The prompt leans on a few [Nerd Font](https://www.nerdfonts.com/) glyphs (the OS logo, the git markers), so point your terminal at one. [JetBrains Mono](https://www.jetbrains.com/lp/mono/) is a safe all-rounder and MesloLGS is the old reliable for a prompt; I keep a longer, opinionated (and surely incomplete) list of coding fonts in the repo at [NerdFonts.md](https://github.com/Kronuz/KronuZSH/blob/main/NerdFonts.md). One iTerm2 gotcha worth knowing: pick the plain `… Nerd Font`, not the `… Nerd Font Mono` variant, or the icons shrink to dots. Without one the prompt still works; the logo just shows as a box. Machine-specific tweaks (host color, the logo, tool hooks) go in a git-ignored `local.zsh`, so the tracked files stay the same everywhere.
 
 ## Where it landed
 
