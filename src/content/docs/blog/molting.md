@@ -1,7 +1,7 @@
 ---
 title: "Molting"
 subtitle: "Down to the core"
-description: I ran prezto for years and tuned a 500-line prompt on top of it. This is how I left the framework for KronuZSH, a ~700-line zsh setup I own, what porting the prompt broke, and the small things a framework quietly does for you that you only notice once they stop.
+description: I ran prezto for years and tuned a 500-line prompt on top of it. This is how I left the framework for KronuZSH, a ~1,200-line zsh setup I own, what porting the prompt broke, and the small things a framework quietly does for you that you only notice once they stop.
 excerpt: I'd worn prezto for years, a 22,000-line framework I used a sliver of. So I lifted out the one part I loved, my prompt, wrote the few hundred lines around it I'd have wanted anyway, and left the rest. Then I spent days discovering what the framework had quietly been doing for me all along.
 date: 2026-06-16
 draft: true
@@ -26,33 +26,36 @@ So I asked the obvious question. What if I just kept the room?
 
 ## KronuZSH
 
-The plan was small and a little reckless: lift the prompt out of the framework, vendor the two or three plugins I actually load, write the twenty-odd lines of options and history and completion I'd want on any machine anyway, and source them directly. No init system. No modules. No fork to reconcile. Just files I read.
+The plan was small and a little reckless: lift the prompt out of the framework, vendor the handful of plugins I actually load, write the twenty-odd lines of options and history and completion I'd want on any machine anyway, and source them directly. No init system. No modules. No fork to reconcile. Just files I read.
 
 I called it [KronuZSH](https://github.com/Kronuz/KronuZSH), because naming a thing is half of finishing it.
 
-```d2 alt="prezto loaded 42 modules through an init system to build the shell; KronuZSH sources eight short files directly and the prompt stands on its own."
+```d2 alt="prezto loaded 42 modules through an init system to build the shell; KronuZSH sources ten short files directly and the prompt stands on its own."
 direction: down
 old: "prezto\n42 modules, ~22,000 lines\nan init system wiring them together" { shape: rectangle }
-new: "KronuZSH\n8 sourced files, ~700 lines\nthe prompt standing on its own" { shape: rectangle }
+new: "KronuZSH\n10 sourced files, ~1,200 lines\nthe prompt standing on its own" { shape: rectangle }
 old -> new: "kept the one room"
 ```
 
 The entry point is the whole idea on one screen:
 
 ```bash
-# runcoms/zshrc: the interactive entry point
-source "$KRONUZSH/options.zsh"
-source "$KRONUZSH/history.zsh"
-source "$KRONUZSH/completion.zsh"
-source "$KRONUZSH/keybindings.zsh"
-source "$KRONUZSH/aliases.zsh"
-source "$KRONUZSH/terminal.zsh"
-source "$KRONUZSH/plugins.zsh"
-source "$KRONUZSH/prompt.zsh"
+# runcoms/zshrc: the interactive entry point (env lives in zshenv)
+source "$KRONUZSH/lib/options.zsh"
+source "$KRONUZSH/lib/history.zsh"
+source "$KRONUZSH/lib/colors.zsh"          # canonical $LS_COLORS, before completion
+source "$KRONUZSH/lib/completion.zsh"
+source "$KRONUZSH/lib/keybindings.zsh"
+source "$KRONUZSH/lib/aliases.zsh"
+source "$KRONUZSH/lib/terminal.zsh"
+source "$KRONUZSH/lib/plugins.zsh"
+source "$KRONUZSH/integrations/init.zsh"   # optional external tools, each guarded
+source "$KRONUZSH/lib/prompt.zsh"
 prompt_kronuz_setup
+setopt PROMPT_SUBST                          # expand the prompt's deferred ${(e)...}
 ```
 
-Eight files, in the order they load, each short enough to read in a sitting. No discovery, no registration, no async loader deciding what runs when. If something is wrong, it's in one of eight files, and I can open it.
+Ten files, in the order they load, each short enough to read in a sitting. No discovery, no registration, no async loader deciding what runs when. If something is wrong, it's in one of ten files, and I can open it. One of them, `integrations/init.zsh`, wires in the modern CLI tools I lean on (fzf, bat, zoxide, ripgrep, and friends) when they're installed and stays silent when they aren't.
 
 ## Porting the prompt
 
@@ -60,7 +63,7 @@ The prompt was the hard part, and I knew it would be.
 
 Those 528 lines didn't stand alone. They reached into prezto's plumbing: the editor module told the prompt which keymap was active, a git-info module fed it the repository state, an async helper kept the whole thing from blocking the shell on a slow `git` call. To lift the prompt out, I had to rebuild that floor underneath it.
 
-So I did, natively. Git status comes from [gitstatusd](https://github.com/romkatv/gitstatus) when it's there, which is fast, with a plain `git` fallback for when it isn't. The venv, the active keymap, the abbreviated path, all computed directly in the prompt instead of read out of a framework. It came out at 403 lines, leaner than the original, and now it leans on nothing but zsh.
+So I did, natively. Git status comes from [gitstatusd](https://github.com/romkatv/gitstatus) when it's there, which is fast, with a plain `git` fallback for when it isn't. The venv, the active keymap, the abbreviated path, all computed directly in the prompt instead of read out of a framework. It came out at 403 lines, leaner than the original, and leaning on nothing but zsh. (It's grown to about 850 since, as I kept adding segments and knobs; bigger than the prezto prompt now, but every line is mine.)
 
 The port was not clean. The best bug took an afternoon.
 
@@ -74,12 +77,12 @@ When it settled, the trade looked like this:
 
 | | prezto | KronuZSH |
 |---|---|---|
-| zsh source | ~22,000 lines | ~700 lines |
+| zsh source | ~22,000 lines | ~1,200 lines |
 | files / modules | 42 modules | 14 files |
-| the prompt | 528 lines, in the framework | 403 lines, standalone |
+| the prompt | 528 lines, in the framework | 851 lines, standalone |
 | plugins | a module loader | 4 git submodules |
 
-About thirty times less code, and the part I cared about came out smaller and free. I symlinked it onto my laptop and my dev VM, archived the old `.zprezto`, and for the first time in years my shell was something I'd read end to end.
+About eighteen times less code, and the part I cared about came out standalone and free. I symlinked it onto my laptop and my dev VM, archived the old `.zprezto`, and for the first time in years my shell was something I'd read end to end.
 
 It Just Works. Mostly. Which brings me to the part I didn't see coming.
 
@@ -120,10 +123,10 @@ cd ~/.config/KronuZSH && ./install.sh
 exec zsh
 ```
 
-`install.sh` symlinks the runcoms (`~/.zshrc` and friends) into `$HOME`, backing up anything it replaces, and pulls in the plugin submodules. It's idempotent, and `./install.sh --uninstall` puts your old setup back. The prompt leans on a few [Nerd Font](https://www.nerdfonts.com/) glyphs (the OS logo, the git markers), so point your terminal at one. [JetBrains Mono](https://www.jetbrains.com/lp/mono/) is a safe all-rounder and MesloLGS is the old reliable for a prompt; I keep a longer, opinionated (and surely incomplete) list of coding fonts in the repo at [NerdFonts.md](https://github.com/Kronuz/KronuZSH/blob/main/NerdFonts.md). One iTerm2 gotcha worth knowing: pick the plain `… Nerd Font`, not the `… Nerd Font Mono` variant, or the icons shrink to dots. Without one the prompt still works; the logo just shows as a box. Machine-specific tweaks (host color, the logo, tool hooks) go in a git-ignored `local.zsh`, so the tracked files stay the same everywhere.
+`install.sh` symlinks the runcoms (`~/.zshrc` and friends) into `$HOME`, backing up anything it replaces, and pulls in the plugin submodules. It's idempotent, and `./install.sh --uninstall` puts your old setup back. The prompt leans on a few [Nerd Font](https://www.nerdfonts.com/) glyphs (the OS logo, the git markers), so point your terminal at one. [JetBrains Mono](https://www.jetbrains.com/lp/mono/) is a safe all-rounder and MesloLGS is the old reliable for a prompt; I keep a longer, opinionated (and surely incomplete) list of coding fonts in the repo at [nerd_fonts.md](https://github.com/Kronuz/KronuZSH/blob/main/nerd_fonts.md). One iTerm2 gotcha worth knowing: pick the plain `… Nerd Font`, not the `… Nerd Font Mono` variant, or the icons shrink to dots. Without one the prompt still works; the logo just shows as a box. Machine-specific tweaks (host color, the logo, tool hooks) go in a git-ignored `~/.zshrc.local`, so the tracked files stay the same everywhere.
 
 ## Where it landed
 
-My dotfiles are 700 lines I can hold in my head. The prompt is mine, the bindings are mine, the eight files load in an order I chose, and there's no fork drifting years behind anything. When something's off now, I open a file and fix it, instead of grepping a framework to find out what it had decided on my behalf.
+My dotfiles are about 1,200 lines I can hold in my head. The prompt is mine, the bindings are mine, the ten files load in an order I chose, and there's no fork drifting years behind anything. When something's off now, I open a file and fix it, instead of grepping a framework to find out what it had decided on my behalf.
 
 I rebuilt the floor I'd been standing on without looking. It turns out it wasn't much floor. But you have to pull it up to know that, and you have to miss a few boards before you learn what they were holding.
