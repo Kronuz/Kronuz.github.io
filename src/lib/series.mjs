@@ -131,3 +131,13 @@ export async function resolveChronological(term) {
 	// Array is newest-first: posts[i-1] is newer (prev/left), posts[i+1] is older (next/right).
 	return { prev: link(posts[i - 1]), next: link(posts[i + 1]) };
 }
+
+// Total number of visible blog posts (entries with a date), matching the set the /blog/
+// index paginates and the sidebar draws "Recent posts" from. Drafts count only in dev, like
+// starlight-blog. Used by the sidebar to decide whether a "View more" link is warranted.
+export async function countBlogPosts() {
+	const docs = await getCollection('docs');
+	return docs.filter(
+		(e) => e.data.date && (import.meta.env.MODE !== 'production' || e.data.draft !== true),
+	).length;
+}

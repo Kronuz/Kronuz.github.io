@@ -15,7 +15,7 @@ import { pluginRestCurl } from './src/plugins/ec-rest-curl.mjs';
 import kronuzDark from './src/styles/kronuz-dark.json';
 import kronuzLight from './src/styles/kronuz-light.json';
 
-import { SITE_DESCRIPTION, SITE_TITLE } from './src/consts';
+import { BLOG_POST_COUNT, RECENT_POST_COUNT, SITE_DESCRIPTION, SITE_TITLE } from './src/consts';
 import { sidebarConfig } from './src/lib/sidebar.mjs';
 
 import { readdir, readFile, writeFile } from 'node:fs/promises';
@@ -103,6 +103,11 @@ export default defineConfig({
 					// We own the header nav (Blog + Projects) via our ThemeSelect
 					// override, so disable the plugin's built-in single "Blog" link.
 					navigation: 'none',
+					// Sidebar "Recent posts" size and /blog/ index page size. Kept in
+					// src/consts.ts so the sidebar "View more" link can compute the page
+					// that continues after the recent list.
+					recentPostCount: RECENT_POST_COUNT,
+					postCount: BLOG_POST_COUNT,
 					authors: {
 						kronuz: {
 							name: 'Germán Méndez Bravo',

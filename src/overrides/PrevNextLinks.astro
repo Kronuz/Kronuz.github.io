@@ -33,10 +33,6 @@ const show = !isBlogPost && (prev || next);
 
 const ARROW_LEFT = '<path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/>';
 const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/>';
-// A zero-width space fills the small label line the per-post pagers use for "Previous/Next",
-// so the list buttons are the same two-line height without showing that word (this pager's
-// "Newer/Older posts" already says the direction). Reserves the line via real font metrics.
-const LABEL_SPACER = '\u200B';
 ---
 
 {
@@ -45,13 +41,13 @@ const LABEL_SPACER = '\u200B';
 			{prev && (
 				<a href={prev.href} rel="prev">
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_LEFT} />
-					<span>{LABEL_SPACER}<br /><span class="link-title">{prevTitle}</span></span>
+					<span><span class="link-title">{prevTitle}</span></span>
 				</a>
 			)}
 			{next && (
 				<a href={next.href} rel="next">
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" set:html={ARROW_RIGHT} />
-					<span>{LABEL_SPACER}<br /><span class="link-title">{nextTitle}</span></span>
+					<span><span class="link-title">{nextTitle}</span></span>
 				</a>
 			)}
 		</nav>
