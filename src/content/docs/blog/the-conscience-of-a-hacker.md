@@ -137,3 +137,5 @@ but you can't stop us all... after all, we're all alike.
 ---
 
 *"The Conscience of a Hacker" ("The Hacker Manifesto") was written by The Mentor (Loyd Blankenship) and first published in Phrack Inc., Volume One, Issue 7, Phile 3 of 10, on January 8, 1986. Copyright remains with its author; it is reproduced here in full and unaltered, with attribution, for non-commercial educational and cultural purposes, not as a claim of ownership. Original at [phrack.org/issues/7/3](https://phrack.org/issues/7/3).*
+
+*The manifesto is set in IBM VGA 8x16, the classic DOS text-mode font, from the [Ultimate Oldschool PC Font Pack](https://int10h.org/oldschool-pc-fonts/readme/) by VileR, used under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
