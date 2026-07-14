@@ -9,11 +9,6 @@ tags:
   - culture
   - hacking
   - phrack
-head:
-  - tag: link
-    attrs:
-      rel: stylesheet
-      href: https://fonts.googleapis.com/css2?family=VT323&display=swap
 ---
 
 There's a short essay I keep coming back to. It was written on January 8, 1986, after its author had been arrested, by someone who signed it **The Mentor**, Loyd Blankenship. Months later, it appeared in [Phrack, Volume One, Issue 7](https://phrack.org/issues/7/3), as "Phile 3 of 10". Its real title is *The Conscience of a Hacker*. Most people just call it **The Hacker Manifesto**.
@@ -31,12 +26,19 @@ It still lands.
 <style>
 /* CRT-terminal styling for this post's manifesto block only (this <style> loads
    only on this page). It's a raw <pre class="crt">, not an Expressive Code fence,
-   so we own every pixel: retro VT-terminal font (loaded via the head link in
-   frontmatter), green-phosphor glow in dark mode, and a mobile fit that scales
-   the whole 79-column terminal to the screen instead of scrolling. VT323's
-   advance is 0.4em/char, so 79 cols = 31.6em must fit the width. min(1.4rem,
-   2.8vw) holds the size at 1.4rem on wide screens and shrinks it to fit down to
-   ~320px (the two cross over near 800px), so it never scrolls. */
+   so we own every pixel: a self-hosted DOS text-mode font (IBM VGA 8x16, from the
+   Ultimate Oldschool PC Font Pack at int10h.org, CC BY-SA 4.0; the .woff lives in
+   public/fonts/), a green-phosphor glow in dark mode, and a mobile fit that scales
+   the whole terminal to the screen instead of scrolling. This font's advance is
+   0.5em/char, so 80 cols = 40em must fit the width. min(1.12rem, 2.24vw) holds the
+   size on wide screens and shrinks it to fit down to ~320px, so it never scrolls.
+   (These are VT323's old 1.4rem / 2.8vw scaled by 0.8 = its 0.4em advance over this
+   font's 0.5em, so the rendered line width is unchanged from the VT323 version.) */
+@font-face {
+  font-family: "Web437 IBM VGA 8x16";
+  src: url("/fonts/Web437_IBM_VGA_8x16.woff") format("woff");
+  font-display: swap;
+}
 .sl-markdown-content pre.crt {
   margin: 1.3rem 0;
   padding: 0;
@@ -45,13 +47,13 @@ It still lands.
   border-radius: 0;
   overflow-x: auto;
   white-space: pre;
-  font-family: "VT323", ui-monospace, monospace;
-  font-size: min(1.4rem, 2.8vw);
+  font-family: "Web437 IBM VGA 8x16", ui-monospace, monospace;
+  font-size: min(1.12rem, 2.24vw);
   line-height: 1.3;
 }
 [data-theme="dark"] .sl-markdown-content pre.crt {
-  color: #25ac25;
-  text-shadow: 0 0 2px rgba(51, 255, 51, 0.2);
+  color: rgb(100, 172, 62);
+  text-shadow: 0 0 10px rgba(100, 172, 62, 0.3);
 }
 </style>
 
