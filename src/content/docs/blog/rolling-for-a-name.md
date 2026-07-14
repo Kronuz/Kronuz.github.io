@@ -77,7 +77,7 @@ Because the tree is just *concatenate* and *choose*, it can measure the size of 
 | --- | --- | --- |
 | `s` | one syllable | **115** |
 | `sV'i` | the RinkWorks demo | **118,910** |
-| `!<b<||v|V><||s|S|b>>` | a Xapiand node | **7,654,050** |
+| `!<b<\|\|v\|V><\|\|s\|S\|b>>` | a Xapiand node | **7,654,050** |
 
 Seven and a half million is not a number I picked. It is the tree counting itself: the product of the fragment list, the *empty-or-vowel* slot, and the *empty-or-syllable-or-fragment* slot, summed across the empty branches. It is also the answer to the only question that actually matters for node names, which is "how long until a collision is likely?" With 7.6 million names and the birthday bound, you are into even odds of two nodes rolling the same name at a few thousand nodes, and a real cluster is nowhere near that. The whimsy is free; the uniqueness is arithmetic.
 
