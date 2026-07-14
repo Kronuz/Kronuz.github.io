@@ -1,9 +1,10 @@
 ---
 title: "Redraw Only What Changed"
-subtitle: "Making DOSBox's scalers up to 9,500% faster."
-description: "A deep look at my 2005 DOSBox scaler patch: a previous-frame source cache, chunked dirty-region detection, and scalers that only re-run on the pixels that moved. With the real code, the numbers, and what happened to it."
-excerpt: "DOSBox's scalers redrew the entire screen every single frame, even when almost nothing had changed. So I taught them to notice. This is how the patch actually worked, a source-line cache and a chunked dirty map, and the up-to-9,500% it bought."
+subtitle: "A DOSBox scaler experiment that went much further than expected."
+description: "In 2005 I proposed teaching DOSBox's scalers to skip unchanged pixels. I remember being told it probably would not matter. The patch reached 96x in one benchmark and helped shape the change-detecting renderer that replaced it."
+excerpt: "DOSBox redrew the whole screen every frame, even when almost nothing moved. I remember being told that detecting changes at the scaler layer probably would not matter. So I measured it."
 date: 2026-06-08
+authors: kronuz
 draft: true
 featured: true
 series: "Opening Boxes"
@@ -16,175 +17,319 @@ tags:
 
 *Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This one opens the [DOSBox](https://www.dosbox.com) box.*
 
-In late 2005 I was twenty-seven, in love with old games, and annoyed at a number.
+Sometime in 2005, I brought an idea to the DOSBox developers.
 
-The number was how long [DOSBox](https://www.dosbox.com) took to draw a frame when you turned on one of the nice scalers. DOSBox is an emulator that runs old DOS games, and its **scalers** are the filters that blow up a tiny 320x240 game to fill a modern screen without it looking like a blanket. The best of them, **Hq2x**, is gorgeous. It is also expensive: for every output pixel it looks at a 3x3 neighborhood of source pixels and picks, from a big lookup table, how to blend them. Do that for a whole screen, sixty times a second, and you feel it.
+Most of the screen in an old game does not change from one frame to the next. A character moves. A door opens. A health bar ticks. The rest of the image just sits there.
 
-I measured it. On a Pentium 4 at 3 GHz, Hq2x was spending about **10,676** of my arbitrary units per ~5,000 frames. The plain `Normal` scaler took 126. Hq2x cost roughly eighty times more than just copying the picture.
+DOSBox had several scalers that could enlarge those tiny old game screens. Some were cheap. Others, especially Hq2x, did considerably more work to produce a cleaner image.
 
-Here is the thing that bothered me, the thing this whole post is about: **almost none of the screen changes from one frame to the next.** A character walks. A health bar ticks. The other 95% of the pixels are identical to the frame before. And DOSBox was lovingly re-running that expensive Hq2x kernel over every single one of them, every frame, to produce an output that was, for almost the entire screen, byte-for-byte what it had just produced.
+My question was simple: why run the scaler again over pixels whose input had not changed?
 
-So I taught the scalers to notice.
+I remember discussing the idea on `#dosbox` IRC before I wrote the patch. The logs appear to be lost, and this was more than twenty years ago, so I cannot quote the conversation or reliably tell you which developer I was talking to.
 
-## The old path
+What I remember is the sentiment: DOSBox's rendering plumbing was already very efficient, and adding change detection at the scaler layer was unlikely to make a meaningful difference.
 
-DOSBox's render pipeline was simple and wasteful. Every frame, the whole emulated framebuffer went through the scaler kernel and the whole result was handed to SDL (or OpenGL) to put on screen.
+The answer felt a little cocky, which was probably part of why it stuck with me. Maybe they were right. There was only one useful way to find out, so I measured it.
 
-```d2 alt="The original DOSBox render path: the whole frame is rescaled and uploaded every frame"
+## Remember the last frame
+
+Hq2x looked good for the same reason it was expensive. Instead of simply turning one source pixel into a larger square, it examined a 3x3 neighborhood and used the pattern around the pixel to decide how to blend the enlarged output.
+
+On my Pentium 4 at 3 GHz, Hq2x took about **10,480** of my timing units over roughly 5,000 frames. DOSBox's simple `Normal` scaler took **127.3**.
+
+Hq2x was doing around eighty times the work of the simple path.
+
+The waste became obvious once I stopped looking at scalers and started looking at frames. DOSBox processed the whole image every time, even when most of it was identical to the previous frame.
+
+My idea was to keep a copy of the previous source image, compare each new frame against it, and give the scaler a map of what had actually changed.
+
+```d2 alt="The patched rendering path compares against the previous frame, finds changed spans, scales those spans, and updates the changed area"
 direction: down
-emu: "Emulated VGA framebuffer"
-scaler: "Scaler kernel (whole frame, every frame)"
-out: "SDL / OpenGL (upload whole frame)"
-emu -> scaler: "every pixel"
-scaler -> out: "every pixel"
-```
 
-It does not matter that nothing moved. The cost is paid in full, every frame.
+emu: "New VGA frame"
+cache: "Previous-frame\nsource cache" {
+  style.stroke-dash: 3
+}
+keeper: "CacheKeeper\nfind changes" {
+  style.bold: true
+}
+bm: "BlockMap\nchanged spans"
+rect: "Rect\nchanged area"
+scaler: "Scaler kernel\nchanged spans only" {
+  style.bold: true
+}
+out: "SDL / OpenGL\npartial update"
 
-## The idea: a cache and a dirty map
-
-What I wanted was for the scaler to remember the previous frame's *input*, compare the new input against it, and only do work where the two differ. Two pieces make that happen.
-
-The first is a **source-line cache**: a copy of the previous frame's source pixels, kept per line. The second is, for each line, a small list of the spans that actually changed, which I called the **BlockMap**. From the BlockMap I also kept a bounding box of the whole changed area, a `Rect`, to hand to the display layer so it would only upload the part of the screen that moved.
-
-```d2 alt="The patched render path: a previous-frame cache feeds a chunked diff that produces a BlockMap of changed spans and a changed Rect; the scaler runs only on changed spans, and only the Rect is uploaded"
-direction: down
-emu: "Emulated VGA frame"
-cache: "Previous-frame source cache" { style.stroke-dash: 3 }
-keeper: "CacheKeeper (chunked diff)" { style.bold: true }
-bm: "BlockMap (changed spans)"
-rect: "Changed Rect (bounding box)"
-scaler: "Scaler kernel: changed spans only" { style.bold: true }
-out: "SDL / OpenGL: upload Rect only"
 emu -> keeper
 cache -> keeper: "compare"
 keeper -> bm
 keeper -> rect
-bm -> scaler: "run kernel here"
+bm -> scaler
 scaler -> out
-rect -> out: "upload here"
+rect -> out
 ```
 
-The expensive kernel and the expensive upload both shrink from "the whole screen" to "the parts that moved." On a typical game frame that is the difference between 100% of the work and maybe 5%.
+The source cache remembered the last frame. `BlockMap` stored changed spans as `[start, end]` pairs for each source line, while a `Rect` wrapped the changed area for the display backend. The expensive work could now shrink with the amount of movement on screen.
 
-## What the patch actually changed
+## `CacheKeeper`
 
-The patch (`dosbox-optscalers-20051213.diff`, version 11b, the [last release candidate](https://www.vogons.org/download/file.php?id=2413)) touches ten files, but the heart of it is in three: `include/dosbox.h`, `src/gui/render.cpp`, and `src/gui/render_templates.h` (the file the scaler kernels are generated from).
+On November 23, 2005, I submitted the first patch to the [official DOSBox tracker as patch #142, "Scalers performance boost"](https://sourceforge.net/p/dosbox/patches/142/).
 
-In `dosbox.h` I added the changed-region box:
+My description was blunt:
+
+> "What I did is basically modify the scalers so they update only the parts of the screen that really changed since the last time they were processed."
+
+I also posted it to [VOGONS](https://www.vogons.org/viewtopic.php?p=71665#p71665), then started changing it almost immediately.
+
+The heart of the patch was a function called `CacheKeeper`. I had marked the section with a comment I still smile at:
 
 ```c
-typedef struct Rect {
-    Bit32u left;
-    Bit32u top;
-    Bit32u right;
-    Bit32u bottom;
-} Rect;
+// Cache management stuff. Added by Kronuz:
 ```
 
-The real work is a function I wrote in the scaler template header and, in the patch, marked with a comment I still smile at: `// Cache management stuff. Added by Kronuz:`. It is called `CacheKeeper`, and it runs once per source scanline. Lightly trimmed, here is the core of it:
+The central loop, lightly trimmed, looked like this:
 
 ```c
-// Maintains and updates the Cache and the modifications BlockMap
-// for the current frame being drawn:
 static INLINE SRCTYPE* CacheKeeper(const SRCTYPE *src, SRCTYPE *cache) {
     if (Scaler_RebuildCache) {
-        BlockMap[0] = 0;             // number of changed spans, reset
+        BlockMap[0] = 0;
+
         Bitu *bm = BlockMap + 1;
-        Bitu base = 0, chunk = CACHE_CHUNKS;   // CACHE_CHUNKS == 20
+        Bitu base = 0, chunk = CACHE_CHUNKS;
 
         for (Bitu xx = 0; xx < Scaler_SrcWidth; ) {
-            // compare four source bytes at a time against the cached line
-            if (GCC_UNLIKELY(*((Bit32u*)&cache[xx]) != *((Bit32u*)&src[xx]))) {
-                if (GCC_UNLIKELY(!base)) {       // entering a changed span
+            if (GCC_UNLIKELY(
+                *((Bit32u*)&cache[xx]) != *((Bit32u*)&src[xx])
+            )) {
+                if (GCC_UNLIKELY(!base)) {
                     base = !base;
-                    bm[0] = xx;                  // remember where it started
+                    bm[0] = xx;
                     ++BlockMap[0];
                 }
-                xx += chunk;                     // skip ahead...
-                chunk <<= 1;                     // ...faster each step
+
+                xx += chunk;
+                chunk <<= 1;
             } else {
-                if (GCC_UNLIKELY(base)) {        // leaving a changed span
+                if (GCC_UNLIKELY(base)) {
                     base = !base;
-                    bm[1] = xx;                  // remember where it ended
-                    memcpy(&cache[bm[0]], &src[bm[0]], (bm[1]-bm[0])*SRCSIZE);
+                    bm[1] = xx;
+
+                    memcpy(
+                        &cache[bm[0]],
+                        &src[bm[0]],
+                        (bm[1] - bm[0]) * SRCSIZE
+                    );
+
                     bm += 2;
                     chunk = CACHE_CHUNKS;
                 }
+
                 xx += sizeof(Bit32u);
             }
         }
     }
+
     /* ... */
 }
 ```
 
-A few details that matter, because the speedup lives in them:
+The common case was that nothing changed, so the loop compared source and cached data four bytes at a time. Once it found movement, it used increasingly large jumps to cross the changed region, recorded the span in `BlockMap`, and copied only that span into the cache. The scaler ran its kernel only over those ranges.
 
-- **Four bytes at a time.** It compares the cached line and the new line as `Bit32u` words, not byte by byte. The common case (no change) is a fast pointer-chasing scan.
-- **Adaptive skipping.** When it finds a change, it does not crawl. It jumps ahead by `chunk` and *doubles* `chunk` each step (`chunk <<= 1`). Once you know you are inside something that moved, you can afford to find its far edge coarsely and back-fill; a span of changed pixels is found in a handful of jumps instead of one comparison per pixel. When the span ends, `chunk` resets to 20.
-- **The cache is only updated on the spans that changed.** That `memcpy` copies the new pixels into the cache exactly for the span we just closed, and nowhere else.
-- **The BlockMap is a run-length list.** `BlockMap[0]` is the count of changed spans on the line; the rest are `[start, end]` pairs. The scaler walks that list and runs its kernel over those spans only.
+The trick was not to make Hq2x cheaper. It was to stop calling it for pixels whose answer we already knew.
 
-There is a second, palette-aware version of the loop for 8-bit games, and it is the detail I am most quietly proud of. In a palette game the *indices* in the framebuffer can be identical between two frames while the **palette** underneath them changes, a fade, a flash, a cycling waterfall. Comparing indices alone would miss that, and you would get a frozen, wrong screen. So when the palette changed, the loop also marks a chunk dirty if any of its pixels' palette entries moved:
+## Pixels lie
+
+The first version of "unchanged" was wrong.
+
+Warcraft II helped prove it.
+
+Many old games use an 8-bit framebuffer. A pixel is not a final RGB color, but an index into a palette. The framebuffer can remain byte-for-byte identical while a palette change produces a fade, a flash, or a cycling water effect.
+
+My cache could look at two frames and confidently declare them identical while the entire screen had changed color.
+
+Version 4 fixed that. The palette-aware path checked both the source bytes and the palette entries referenced by them:
 
 ```c
 if (*((Bit32u*)&cache[xx]) != *((Bit32u*)&src[xx]) ||
-    Scaler_PaletteDiffs[cache[xx]]   || Scaler_PaletteDiffs[cache[xx+1]] ||
-    Scaler_PaletteDiffs[cache[xx+2]] || Scaler_PaletteDiffs[cache[xx+3]]) {
-    /* changed: open / extend a span */
+    Scaler_PaletteDiffs[cache[xx]]   ||
+    Scaler_PaletteDiffs[cache[xx+1]] ||
+    Scaler_PaletteDiffs[cache[xx+2]] ||
+    Scaler_PaletteDiffs[cache[xx+3]]) {
+    /* changed */
 }
 ```
 
-The neighborhood scalers needed one more thing. Hq2x looks at a 3x3 grid, so to scale line *N* correctly the kernel needs lines *N-1*, *N*, and *N+1*. I keep three cached lines (`Cache_p1`, `Cache_p2`, `Cache_p3`) and the kernel reads its nine neighbors (`CA` through `CI`) from them, so a chunk is only re-scaled when its 3x3 neighborhood actually moved, not just its own row.
+Same index, different color meant the pixel was dirty.
 
-## What it bought, and how to read the numbers
+Hq2x found another hole. Its answer depends on a 3x3 neighborhood, so an unchanged pixel may still need recalculation when a neighbor moves. The question was no longer whether a pixel changed, but whether anything that could affect its output had changed.
 
-The optimization is not really about scalers. It is about touching less of the screen: the copy, the scaling, and the upload to the GPU. The scalers are just where it shows up most violently, because their per-pixel kernel is the most expensive thing in the pipeline. The same change helps even the cheapest path: the plain `Normal` scaler, which is essentially a `memcpy`, **nearly doubled.**
+Palette changes, neighborhood dependencies, fullscreen transitions, double buffering, different output backends: each made "redraw only what changed" less simple than the sentence.
 
-Here are the version-4 numbers on platform games (units are ms per ~5,000 frames, lower is better), with the speedup written as a plain ratio so there is no ambiguity:
+## 96x
 
-| Scaler     | Before | After | Speedup | "Percent faster" |
-| ---------- | -----: | ----: | ------: | ---------------: |
-| Normal     |  127.3 |    67 |  1.9×   |  +90%   |
-| Normal2x   |    356 |    69 |  5.2×   |  +416%  |
-| TV2x       |  413.5 |    71 |  5.8×   |  +482%  |
-| AdvMame2x  |  825.5 |    72 | 11.5×   | +1,047% |
-| AdvMame3x  |   1665 |    77 | 21.6×   | +2,062% |
-| **Hq2x**   | **10,480** | **109** | **96×** | **+9,515%** |
+The version 4 numbers looked like this. These were low-action platform games, timed over roughly 5,000 frames. Lower is better.
 
-A word on that math, because it is genuinely easy to trip on (I did, at the time). The "percent faster" column is `(before − after) / after`, which is just `speedup − 1` written as a percentage: 1.9× is "+90% faster." That is correct, but do not read "+90%" as "90% less time." The time *reduction* is `(before − after) / before`, which for `Normal` is 47%. Same fact, two framings: the new `Normal` is **1.9× as fast**, equivalently it runs the frame in **~53% of the time**. The ratio (×) is the least confusing, so that is what I lead with now.
+| Scaler | Before | After | Speedup | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Normal | 127.3 | 67 | **1.90x** | **47.4%** |
+| Normal2x | 356 | 69 | **5.16x** | **80.6%** |
+| TV2x | 413.5 | 71 | **5.82x** | **82.8%** |
+| AdvMame2x | 825.5 | 72 | **11.47x** | **91.3%** |
+| AdvMame3x | 1,665 | 77 | **21.62x** | **95.4%** |
+| **Hq2x** | **10,480** | **109** | **96.15x** | **98.96%** |
 
-And there is the real insight, sitting in that very first row. The changed-region scan costs a roughly **fixed** amount per frame, no matter which scaler runs. So the payoff is proportional to how expensive the per-pixel work you get to *skip* is. For `Normal` (a copy) the scan overhead eats into the gain and you net about 2×. For `Hq2x` (a lookup over a 3x3 neighborhood, the priciest kernel) skipping the unchanged ~95% of the screen is the gap between 10,480 and 109, about **96×**. Cheapen the per-pixel work and this optimization matters less; make it more expensive and it matters enormously. The flashy 9,515% is real, but the quiet `+90%` on a plain copy is the one that tells you what is actually going on.
+The Hq2x result was a **96.15x speedup**, or a **98.96% reduction in scaler execution time**. The optimized path took just 1.04% of the time used by the original one.
 
-## Getting it right took eleven tries
+In 2005 I reported that as **9,515% faster** and helpfully added that "a 100% improvement is equivalent to twice the speed." The arithmetic was consistent with the formula I was using, but it was an unorthodox way to present a performance result. I would report the speedup ratio and execution-time reduction today.
 
-That clean "version 4" hides a grind. The [thread](https://www.vogons.org/viewtopic.php?t=10594) is a running changelog of me arguing with the problem:
+Also, 96x is quite enough.
 
-- **v2** "greatly improves the speed" (the cache lands).
-- **v3** fixes artifacts and improves speed.
-- **v4** fixes a Warcraft 2 corruption bug (a class of games that updated in ways my span detector mishandled).
-- **v6 (RC2)** added modified-chunks *"prediction"*, anticipating which blocks were about to change.
-- **v7 (RC3)** folded in gulikoza's "force full redraw" suggestion.
-- **v8 (RC4)** "updated region detection speed improvements", which took Hq2x from 109 down to **89**.
-- **v9–v11b** chased aspect correction, the fullscreen toggle, double buffering, an OpenGL partial-upload path, and TV scanline modes.
+The speedup column tells only half the story. Before the patch, the timings ranged from 127.3 for `Normal` to 10,480 for Hq2x, an 82x spread. After the patch, they ranged from 67 to 109.
 
-That last category, the OpenGL path, is where the `Rect` earned its keep: instead of re-uploading the whole texture, only the changed bounding box gets pushed to the GPU each frame.
+On these mostly static frames, I had almost flattened the cost of the scaler.
 
-By v11b I wrote, with the particular optimism of someone who has been staring at one file for three weeks: *"This is now truly hopefully the last release candidate."*
+Hq2x was still vastly more expensive when it actually ran. It simply spent most of its time not running.
 
-## What happened to it
+That is why `Normal` is the result I find more interesting now. It was already cheap, close to a copy, and the patch still made it **1.90x faster**. The change scan had a roughly fixed cost, so with `Normal` it consumed much of the gain. With Hq2x, every skipped pixel avoided a lookup-heavy neighborhood analysis.
 
-This is the part of the story I have learned not to round off.
+The same detector sat in front of both. As the scaler became more expensive, not calling it became more valuable, until the scaler's own complexity was almost irrelevant on a mostly static frame.
 
-The DOSBox regulars were generous. A core admin wrote into the project's official FAQ that, on the subject of speed, *"unless miracles happen (like Kronuz video patch), don't expect much."* People put my custom build, which I served from a machine in my house at `ftp://kronuz.no-ip.com` "only when I'm online," next to the official one.
+The numbers had answered the IRC conversation better than I ever could.
 
-And then the core team did the most flattering and most deflating thing at once. They liked the idea enough to put it into the next release, **DOSBox 0.65**, but they did not take my patch. They reimplemented the design in their own code. When the changelog came out, the scalers I had added were credited, *"Add more scalers (hq2x/hq3x/sai). (Kronuz),"* but the optimization this whole post is about, the redraw-only-what-changed engine, was in that same list reworded as *"EGA/VGA memory changes detection for faster rendering,"* with no name beside it. I am not in the project's thank-you file either.
+## Eleven versions
 
-I want to be fair: a clean reimplementation by the maintainers is often the right call for a project's long-term health, and the maintainer who did it, Harekiet, built something solid. But I will be honest that, at twenty-seven, watching the part I was proudest of get quietly absorbed and unsigned, it stung. It is a real part of why I drifted away from DOSBox.
+The clean explanation above is what you get after the bugs have names.
 
-It also taught me something I have never let go of since: I care, maybe more than is reasonable, about names staying attached to work. A credit at the bottom of a PostgreSQL manual page. A project I got to *name*. An author line on a Python proposal. If you have read [the longer story](/blog/the-boy-who-kept-opening-the-box/), you know where all of those go. I think they start here, with a scaler that learned to notice what changed, and a teenager who learned the same thing the hard way.
+The [VOGONS thread](https://www.vogons.org/viewtopic.php?t=10594) grew past two hundred posts. Version 4 fixed Warcraft II and palette changes. Version 7 included work with **gulikoza** to skip entire unchanged frames. Version 8 pushed Hq2x from 109 to **89** in one test. Later revisions chased fullscreen, double buffering, TV modes, and partial OpenGL uploads.
+
+People broke the patch on games and hardware I did not own, measured it, and folded it into CVS builds. A DOSBox FAQ answer about future speed improvements eventually said:
+
+> "unless miracles happen (like Kronuz video patch), don't expect much."
+
+Duke Nukem 3D was measured at nearly twice the performance. By then the scaler layer had made its case.
+
+## January 30
+
+For years, my memory of the ending was fuzzy.
+
+My patch did not go into DOSBox CVS. DOSBox later gained similar functionality through a different implementation, and my patch stopped being necessary.
+
+In 2026 I went back through the forum, the SourceForge ticket, and an [unofficial Git mirror of the DOSBox history](https://github.com/jwilk-mirrors/dosbox).
+
+On January 30, 2006, at 09:54 UTC, Sjoerd van den Berg, **Harekiet**, committed SVN revision 2442.
+
+The title was:
+
+> **Scaler rewrite for detecting changes**
+
+The commit message included:
+
+> **Only updaterect the changed parts in sdl**
+
+Four minutes later, revision 2444 landed with the same title. That was the large renderer implementation, with **1,415 additions and 810 deletions** across the scaler and rendering code.
+
+The mirror preserves the revisions as [`b24a1fb`](https://github.com/jwilk-mirrors/dosbox/commit/b24a1fb72f8fb51a6390f2392eab0887d2cf6df5) and [`7623888`](https://github.com/jwilk-mirrors/dosbox/commit/762388813c5c5cb2b7d5502bb84d6f7ad8c75b19).
+
+The new renderer had `scalerSourceCache`, `scalerChangeCache`, and `Scaler_ChangedLines`. It cached source data, detected changed blocks, avoided recalculating unchanged output, handled neighborhood effects, and passed changed-line information to SDL.
+
+This was not my patch. My code stored changed spans in a `BlockMap`; Harekiet used several caches and block-oriented change propagation as part of a much larger rendering rewrite. He wrote the code that shipped.
+
+Still, the central move was familiar: remember the previous source, find what changed before expensive scaler work, recalculate affected regions, and update only changed output.
+
+## What the record says
+
+The VOGONS thread records the reaction when the rewrite landed.
+
+One user tried to apply my patch and got **29 failed hunks**. He asked me to update what he called a "great" and "vital" patch.
+
+Then somebody relayed a message Qbix had posted in a beta-tester-only forum:
+
+> "the partial screenupdates is comparable to kronutz work. Although it should be even faster..."
+
+Yes, `kronutz`.
+
+Users tested the new CVS code. One reported:
+
+> "performance is very comparable to the Kronuz patch now."
+
+Another called it:
+
+> "the biggest improvement in CVS in a long time."
+
+My patch had become obsolete because DOSBox now did the job itself.
+
+There was one more piece of the record I had forgotten.
+
+On February 12, Qbix returned to [patch #142](https://sourceforge.net/p/dosbox/patches/142/) and wrote:
+
+> "Something like this is in the cvs."
+
+Then:
+
+> "Thanks for helping creating it."
+
+I had not read those words in twenty years, and they settled something for me.
+
+I no longer had to infer the connection from two pieces of code. The patch was in the official tracker, Qbix compared the new partial updates to my work, and then thanked me for helping create what was in CVS.
+
+The implementation was Harekiet's. My work had helped create what replaced it.
+
+## The unsigned line
+
+There is a small wrinkle in my own memory here.
+
+I remembered Hq2x as one of "my" DOSBox scalers. The DOSBox changelog does, in fact, credit me with:
+
+> "Add more scalers (hq2x/hq3x/sai). (Kronuz)."
+
+But that work came later. In May 2006, months after the performance patch and the January renderer rewrite, I posted another scaler patch adding Hq2x, Hq3x, and the SAI family to the then-current DOSBox code. There had also been an earlier Hq2x patch by another contributor, Moe, in 2004.
+
+So Hq2x was not my invention, and bringing those scalers into the release was not what led me to the 2005 optimization. Memory had compressed two pieces of my DOSBox work into one.
+
+The changelog still makes the contrast interesting.
+
+My scaler work has my nickname beside it:
+
+> "Add more scalers (hq2x/hq3x/sai). (Kronuz)."
+
+The change-detection work appears elsewhere:
+
+> "EGA/VGA memory changes detection for faster rendering."
+
+No name beside it.
+
+I cannot say Harekiet copied my code. I have looked at his implementation, and it is his. I also cannot say anyone deliberately removed my name. The old IRC logs are gone, and I do not know what conversations happened inside the project.
+
+I did not write the DOSBox renderer that shipped, and that is not the credit I am looking for.
+
+What I wish the visible release history had preserved is that the changed-region work followed an experiment I had proposed, built, measured, and developed in public. Two months later DOSBox rewrote its scaler architecture around detecting changes, and Qbix later thanked me for helping create what was in CVS.
+
+The project record preserved the connection, just in the basement: a closed SourceForge ticket, a 228-post forum thread, and a beta-tester quote copied into a public reply.
+
+The release changelog kept the result and lost the path to it.
+
+At twenty-seven, I did not have this tidy reconstruction. I only knew that I had spent weeks on something I was proud of, watched people use it, and then watched my patch become unnecessary almost overnight.
+
+That was exactly what I had wanted for DOSBox, and somehow it still hurt. Not long after, I drifted away.
+
+## Names on things
+
+I think something from that experience stayed with me.
+
+Years later, I cared about the credit at the bottom of a PostgreSQL manual page. I cared about getting to name a project. I cared about the author line on a Python proposal.
+
+If you have read [the longer story](/blog/the-boy-who-kept-opening-the-box/), you know where those go.
+
+For a long time I thought that instinct was vanity. Some of it probably is.
+
+But code has a peculiar way of eating its own history. A patch gets rewritten. A branch disappears. The clean implementation survives because that is the point of good engineering, while the failed attempts, the measurements, and the odd experiment that made someone say *maybe we should do this properly* scatter into old forums and dead IRC logs.
+
+Twenty years later, I am glad patch #142 was still there.
+
+The scaler learned to notice what changed.
+
+I am still learning to notice what gets lost.
 
 ---
 
-*Sources and artifacts: the original thread is [VOGONS t=10594](https://www.vogons.org/viewtopic.php?t=10594) (my [first post](https://www.vogons.org/viewtopic.php?p=71665#p71665), 2005-11-23); the actual patch I dissected here is [`dosbox-optscalers-20051213.diff`](https://www.vogons.org/download/file.php?id=2413). The reimplementation lives in DOSBox 0.65's changelog.*
+*Sources and artifacts: [DOSBox patch #142, "Scalers performance boost"](https://sourceforge.net/p/dosbox/patches/142/) was created on November 23, 2005 and preserves the patch revisions and Qbix's February 12, 2006 closing comment. The public engineering discussion is the VOGONS thread ["Graphics performance boost"](https://www.vogons.org/viewtopic.php?t=10594), beginning with [my first post](https://www.vogons.org/viewtopic.php?p=71665#p71665). The patch dissected here is [`dosbox-optscalers-20051213.diff`](https://www.vogons.org/download/file.php?id=2413), version 11b. The January 30 upstream work is preserved in the historical Git mirror as [`b24a1fb`](https://github.com/jwilk-mirrors/dosbox/commit/b24a1fb72f8fb51a6390f2392eab0887d2cf6df5), SVN r2442, and [`7623888`](https://github.com/jwilk-mirrors/dosbox/commit/762388813c5c5cb2b7d5502bb84d6f7ad8c75b19), SVN r2444. The DOSBox changelog credits my later scaler work, and the earlier [Hq2x patch #54](https://sourceforge.net/p/dosbox/patches/54/) is preserved in SourceForge.*

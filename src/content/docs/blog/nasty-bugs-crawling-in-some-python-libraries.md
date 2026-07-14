@@ -20,7 +20,7 @@ For many weeks, a codebase I worked on had a bug where a plain `requests.get()` 
 
 Here is the kind of exception we kept seeing:
 
-```
+```python
 Traceback (most recent call last):
   File "project/views.py", line 49, in get_url
     response = requests.get(url)
@@ -59,7 +59,7 @@ I had nearly given up when I remembered IRC still exists. On Freenode's `#python
 
 First, I moved the real `Queue` module aside, renaming `Queue.py` to `_Queue.py`:
 
-```
+```sh
 mv /usr/local/lib/python2.7/Queue.py /usr/local/lib/python2.7/_Queue.py
 ```
 
@@ -95,7 +95,7 @@ trap -> cul
 
 I started the system, used it for a minute, and the trap sprang:
 
-```
+```python
 Traceback (most recent call last):
   ...
   File "project/backends/balancer.py", line 34, in get_stamper

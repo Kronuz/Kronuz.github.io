@@ -66,8 +66,8 @@ If any of this made you curious about the actual texts, here is where they live.
 
 - **Phrack** is still online at [phrack.org](http://phrack.org/), issue by issue.
 - **2600: The Hacker Quarterly** is at [2600.com](https://www.2600.com/).
-- **Ralf Brown's Interrupt List**, the reference I lived in, is mirrored at [Ralf Brown's pages](https://www.cs.cmu.edu/~ralf/files.html).
 - The virus-writing zines, **40Hex** and **29A**, are historical artifacts now, archived for study (text, not the live payloads) at places like [textfiles.com](http://textfiles.com/magazines/) and the [vx-underground](https://vx-underground.org/) archives.
-- **Raregazz** and the rest of the Latin American scene survive in scattered e-zine archives.
+- **Raregazz** and the rest of the Latin American scene survive in scattered [e-zine archives](https://vault.0x705h.com/en/ezines).
+- **Ralf Brown's Interrupt List**, the reference I lived in, is mirrored at [Ralf Brown's pages](https://www.cs.cmu.edu/~ralf/files.html).
 
 *(I'd like to mirror the freely-redistributable text ones, Phrack and Raregazz, directly on this site behind a readable viewer. That viewer is the next thing I'm building, so for now these are links.)*
