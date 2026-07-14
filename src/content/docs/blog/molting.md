@@ -63,7 +63,7 @@ The prompt was the hard part, and I knew it would be.
 
 Those 528 lines didn't stand alone. They reached into prezto's plumbing: the editor module told the prompt which keymap was active, a git-info module fed it the repository state, an async helper kept the whole thing from blocking the shell on a slow `git` call. To lift the prompt out, I had to rebuild that floor underneath it.
 
-So I did, natively. Git status comes from [gitstatusd](https://github.com/romkatv/gitstatus) when it's there, which is fast, with a plain `git` fallback for when it isn't. The venv, the active keymap, the abbreviated path, all computed directly in the prompt instead of read out of a framework. It came out at 403 lines, leaner than the original, and leaning on nothing but zsh. (It's grown to about 850 since, as I kept adding segments and knobs; bigger than the prezto prompt now, but every line is mine.)
+So I did, natively. Git status comes from [gitstatusd](https://github.com/romkatv/gitstatus) when it's there, which is fast, with a plain `git` fallback for when it isn't. The venv, the active keymap, the abbreviated path, all computed directly in the prompt instead of read out of a framework. It came out at 403 lines, leaner than the original, and leaning on nothing but zsh. (It's since grown to about 850, all of it functionality I added in a later overhaul, not weight the framework had been sparing me; the port itself was lean.)
 
 The port was not clean. The best bug took an afternoon.
 
@@ -79,7 +79,7 @@ When it settled, the trade looked like this:
 |---|---|---|
 | zsh source | ~22,000 lines | ~1,200 lines |
 | files / modules | 42 modules | 14 files |
-| the prompt | 528 lines, in the framework | 851 lines, standalone |
+| the prompt | 528 lines, in the framework | 403 lines, standalone (~850 today) |
 | plugins | a module loader | 4 git submodules |
 
 About eighteen times less code, and the part I cared about came out standalone and free. I symlinked it onto my laptop and my dev VM, archived the old `.zprezto`, and for the first time in years my shell was something I'd read end to end.
