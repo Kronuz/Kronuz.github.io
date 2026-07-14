@@ -44,6 +44,17 @@ That is the whole language. It is enough to write the pattern Xapiand actually u
 !<b<||v|V><||s|S|b>>
 ```
 
+Feed that to the generator and it rolls the kind of names the cluster booted with:
+
+```cpp
+NameGen::Generator generator("!<b<||v|V><||s|S|b>>");
+generator.toString();  // "Manaugh"
+generator.toString();  // "Chorurn"
+generator.toString();  // "Cualei"
+generator.toString();  // "Claudetu"
+generator.toString();  // "Can"
+```
+
 Capitalize the whole thing (`!`), then: a name **fragment** (`b`), then a slot that is *empty, or a vowel, or a vowel combination* (`<||v|V>`), then a slot that is *empty, or a syllable, or a bigger syllable, or another fragment* (`<||s|S|b>`). Run it a dozen times and you get the roster from the top of this post. The empty alternatives are the trick that keeps the names varied in length: **Can** and **Rama** and **Lumi** fall out of the same pattern as **Claudetu** and **Nielsion**, because two of the three slots rolled empty.
 
 ## The pattern is compiled once, not parsed every time
