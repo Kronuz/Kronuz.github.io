@@ -3,8 +3,7 @@ title: "Molting"
 subtitle: "Down to the core"
 description: I ran prezto for years and tuned a 500-line prompt on top of it. This is how I left the framework for KronuZSH, a ~1,000-line zsh setup I own, what porting the prompt broke, and the small things a framework quietly does for you that you only notice once they stop.
 excerpt: I'd worn prezto for years, a 22,000-line framework I used a sliver of. So I lifted out the one part I loved, my prompt, wrote the few hundred lines around it I'd have wanted anyway, and left the rest. Then I spent days discovering what the framework had quietly been doing for me all along.
-date: 2026-06-16
-draft: true
+date: 2026-07-14
 tags:
   - tooling
   - shell
