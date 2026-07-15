@@ -2,7 +2,7 @@
 title: "One More Benchmark"
 subtitle: "A field guide to working with me, for humans and machines alike."
 description: "Why I ask for the number instead of the adjective, why I follow a task past the sign that says stop, and why the real wins live in the tenth 'wait, actually'. A field guide for whoever builds with me next, human or machine."
-excerpt: "You just made it work. Then the message arrives: 'wait, actually...'. If you have ever built anything with me, you know that message. This is the field guide: why I don't believe 'faster', why I follow the thread past the trapdoor, and why the win is never in the first draft."
+excerpt: "You just made it work. Then the huddle comes: 'wait, actually...'. If you have ever built anything with me, you know that message. This is the field guide: why I don't believe 'faster', why I follow the thread past the trapdoor, and why the win is never in the first draft."
 date: 2026-07-11
 authors: kronuz
 draft: true
@@ -11,11 +11,11 @@ tags:
   - engineering
 ---
 
-You just made it work. The tests are green, the thing does the thing, you lean back. Then the message arrives.
+You just made it work. The tests are all green, the thing does the thing, you lean back. Then the huddle comes:
 
 *Wait, actually...*
 
-If you have ever built something with me, you know that message. It is the tenth one today. It lands right after "great, that works", and it always opens a door you thought was closed: sometimes a better name, sometimes a whole second approach, sometimes just "did we measure that, or did we only decide it?"
+If you have ever built something with me, you know those words. It is the tenth one today. It lands right after "great, that works", and it always opens a door you thought was closed: sometimes a better name, sometimes a whole second approach, sometimes just "did we measure that, or did we only decide it?"
 
 I am that person. Let me explain, mostly so you can forgive me, and a little so you can survive me.
 
