@@ -1,7 +1,7 @@
 ---
 title: "Molting"
 subtitle: "Down to the core"
-description: I ran prezto for years and tuned a 500-line prompt on top of it. This is how I left the framework for KronuZSH, a ~1,200-line zsh setup I own, what porting the prompt broke, and the small things a framework quietly does for you that you only notice once they stop.
+description: I ran prezto for years and tuned a 500-line prompt on top of it. This is how I left the framework for KronuZSH, a ~1,000-line zsh setup I own, what porting the prompt broke, and the small things a framework quietly does for you that you only notice once they stop.
 excerpt: I'd worn prezto for years, a 22,000-line framework I used a sliver of. So I lifted out the one part I loved, my prompt, wrote the few hundred lines around it I'd have wanted anyway, and left the rest. Then I spent days discovering what the framework had quietly been doing for me all along.
 date: 2026-06-16
 draft: true
@@ -33,7 +33,7 @@ I called it [KronuZSH](https://github.com/Kronuz/KronuZSH), because naming a thi
 ```d2 alt="prezto loaded 42 modules through an init system to build the shell; KronuZSH sources ten short files directly and the prompt stands on its own."
 direction: down
 old: "prezto\n42 modules, ~22,000 lines\nan init system wiring them together" { shape: rectangle }
-new: "KronuZSH\n10 sourced files, ~1,200 lines\nthe prompt standing on its own" { shape: rectangle }
+new: "KronuZSH\n10 sourced files, ~1,000 lines\nthe prompt standing on its own" { shape: rectangle }
 old -> new: "kept the one room"
 ```
 
@@ -52,7 +52,7 @@ source "$KRONUZSH/lib/plugins.zsh"
 source "$KRONUZSH/integrations/init.zsh"   # optional external tools, each guarded
 source "$KRONUZSH/lib/prompt.zsh"
 prompt_kronuz_setup
-setopt PROMPT_SUBST                          # expand the prompt's deferred ${(e)...}
+setopt PROMPT_SUBST                        # expand the prompt's deferred ${(e)...}
 ```
 
 Ten files, in the order they load, each short enough to read in a sitting. No discovery, no registration, no async loader deciding what runs when. If something is wrong, it's in one of ten files, and I can open it. One of them, `integrations/init.zsh`, wires in the modern CLI tools I lean on (fzf, bat, zoxide, ripgrep, and friends) when they're installed and stays silent when they aren't.
@@ -77,12 +77,12 @@ When it settled, the trade looked like this:
 
 | | prezto | KronuZSH |
 |---|---|---|
-| zsh source | ~22,000 lines | ~1,200 lines |
+| zsh source | ~22,000 lines | ~1,000 lines |
 | files / modules | 42 modules | 14 files |
-| the prompt | 528 lines, in the framework | 403 lines, standalone (~850 today) |
+| the prompt | 528 lines, in the framework | 403 lines, standalone |
 | plugins | a module loader | 4 git submodules |
 
-About eighteen times less code, and the part I cared about came out standalone and free. I symlinked it onto my laptop and my dev VM, archived the old `.zprezto`, and for the first time in years my shell was something I'd read end to end.
+About twenty times less code, and the part I cared about came out standalone and free. I symlinked it onto my laptop and my dev VM, archived the old `.zprezto`, and for the first time in years my shell was something I'd read end to end.
 
 It Just Works. Mostly. Which brings me to the part I didn't see coming.
 
@@ -127,6 +127,6 @@ exec zsh
 
 ## Where it landed
 
-My dotfiles are about 1,200 lines I can hold in my head. The prompt is mine, the bindings are mine, the ten files load in an order I chose, and there's no fork drifting years behind anything. When something's off now, I open a file and fix it, instead of grepping a framework to find out what it had decided on my behalf.
+My dotfiles are about 1,000 lines I can hold in my head. The prompt is mine, the bindings are mine, the ten files load in an order I chose, and there's no fork drifting years behind anything. When something's off now, I open a file and fix it, instead of grepping a framework to find out what it had decided on my behalf.
 
 I rebuilt the floor I'd been standing on without looking. It turns out it wasn't much floor. But you have to pull it up to know that, and you have to miss a few boards before you learn what they were holding.
