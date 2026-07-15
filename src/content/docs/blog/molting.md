@@ -57,6 +57,8 @@ setopt PROMPT_SUBST                        # expand the prompt's deferred ${(e).
 
 Ten files, in the order they load, each short enough to read in a sitting. No discovery, no registration, no async loader deciding what runs when. If something is wrong, it's in one of ten files, and I can open it. One of them, `integrations/init.zsh`, wires in the modern CLI tools I lean on (fzf, bat, zoxide, ripgrep, and friends) when they're installed and stays silent when they aren't.
 
+![bat rendering lib/aliases.zsh in the Kronuz syntax theme, the same palette shared across bat, delta, eza, and the editor colorschemes.](/img/blog/kronuz-theme-highlight.png)
+
 ## Porting the prompt
 
 The prompt was the hard part, and I knew it would be.
@@ -64,6 +66,8 @@ The prompt was the hard part, and I knew it would be.
 Those 528 lines didn't stand alone. They reached into prezto's plumbing: the editor module told the prompt which keymap was active, a git-info module fed it the repository state, an async helper kept the whole thing from blocking the shell on a slow `git` call. To lift the prompt out, I had to rebuild that floor underneath it.
 
 So I did, natively. Git status comes from [gitstatusd](https://github.com/romkatv/gitstatus) when it's there, which is fast, with a plain `git` fallback for when it isn't. The venv, the active keymap, the abbreviated path, all computed directly in the prompt instead of read out of a framework. It came out at 403 lines, leaner than the original, and leaning on nothing but zsh. (It's since grown to about 850, all of it functionality I added in a later overhaul, not weight the framework had been sparing me; the port itself was lean.)
+
+![The KronuZSH prompt: the OS glyph, hostname, a clean git segment and a Python venv marker, then the time, the ~/Development/KronuZSH path, and the caret, over a color-coded directory listing.](/img/blog/kronuzsh-prompt.png)
 
 The port was not clean. The best bug took an afternoon.
 
