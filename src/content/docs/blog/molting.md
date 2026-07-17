@@ -1,23 +1,23 @@
 ---
 title: "Molting"
 subtitle: "Down to the core"
-description: I ran Prezto for years and tuned a 500-line prompt on top of it. This is how I left the framework for KronuZSH, a ~1,000-line zsh setup I own, what porting the prompt broke, and the small things a framework quietly does for you that you only notice once they stop.
-excerpt: I'd worn Prezto for years, a 22,000-line framework I used a sliver of. So I lifted out the one part I loved, my prompt, wrote the few hundred lines around it I'd have wanted anyway, and left the rest. Then I spent days discovering what the framework had quietly been doing for me all along.
+description: I ran Prezto for years and tuned a 500-line prompt on top of it. This is how I replaced the framework with KronuZSH, the ~1,000-line setup I now maintain myself, and what broke when I pulled my prompt out.
+excerpt: I used a sliver of Prezto's 22,000 lines, so I kept the part I cared about—my prompt—and wrote the few hundred lines of shell setup I wanted around it. Then I found out how many small conveniences the framework had been providing all along.
 date: 2026-07-14
 tags:
   - tooling
   - shell
 ---
 
-I'd worn the same shell setup for years without really looking at it.
+I'd used the same shell setup for years without really looking at it.
 
-It was [Prezto](https://github.com/sorin-ionescu/prezto), a framework for [zsh](https://www.zsh.org/), and at some point long ago I'd forked it, tuned it, and stopped thinking about it. The prompt was mine: a 528-line function I'd fussed over until it showed exactly what I wanted, the git state, the Python venv, an exit code when something broke, a tidy path. Everything else was just there, the way the floor is there. You don't inspect the floor.
+It was [Prezto](https://github.com/sorin-ionescu/prezto), a framework for [zsh](https://www.zsh.org/). At some point long ago I'd forked it, tuned it, and stopped thinking about it. The prompt was the part I'd made my own: it had started from another theme, picked up ideas and pieces from a few others, and grown into a 528-line function I'd fussed over until it showed exactly what I wanted—the git state, the Python venv, an exit code when something broke, a tidy path. I rarely thought about everything underneath it.
 
-The forced look came one evening when I went to update the fork and found it was seven years behind upstream. Seven years of drift, in code I mostly didn't run, to keep a prompt that didn't depend on any of it. So I opened the directory and actually counted what I'd been carrying.
+That changed one evening when I went to update the fork and found it was seven years behind upstream. I had seven years of drift in code I mostly didn't run, all to keep a prompt that barely depended on it. So I opened the directory and counted what I'd been carrying.
 
 ## The weight
 
-Prezto is 42 modules and about 22,000 lines of zsh. I loaded a handful of them. The module that mattered to me, the prompt, ships 17 themes; I used one, mine. The rest was an editor module, a completion module, a history module, a syntax-highlighting loader, an init system to wire them all together, and a long tail of integrations for tools I don't use and shells-within-shells I never start.
+Prezto is 42 modules and about 22,000 lines of zsh. I loaded a handful of them. The module that mattered to me, the prompt, ships 17 themes; I used the Kronuz theme I'd been maintaining. The rest was an editor module, a completion module, a history module, a syntax-highlighting loader, an init system to wire them all together, and a long tail of integrations for tools I don't use and shells-within-shells I never start.
 
 None of it was bad. It's careful, well-worn code. But it was a whole house built around the one room I lived in, and the house had drifted years out of date while I wasn't looking. Updating it meant reconciling all that drift for the privilege of keeping a 528-line prompt that, when I finally sat and read it, leaned on the framework for almost nothing I couldn't do myself.
 
@@ -25,14 +25,14 @@ So I asked the obvious question. What if I just kept the room?
 
 ## KronuZSH
 
-The plan was small and a little reckless: lift the prompt out of the framework, vendor the handful of plugins I actually load, write the twenty-odd lines of options and history and completion I'd want on any machine anyway, and source them directly. No init system. No modules. No fork to reconcile. Just files I read.
+The plan was simple: lift the prompt out of the framework, vendor the handful of plugins I actually load, write the options, history, and completion setup I'd want on any machine anyway, and source those files directly. No general module system and no fork to reconcile—just an explicit core load order and a tiny loader for optional tool integrations.
 
-I called it [KronuZSH](https://github.com/Kronuz/KronuZSH), because naming a thing is half of finishing it.
+I called it [KronuZSH](https://github.com/Kronuz/KronuZSH).
 
-```d2 alt="Prezto loaded 42 modules through an init system to build the shell; KronuZSH sources ten short files directly and the prompt stands on its own."
+```d2 alt="Prezto loaded 42 modules through a general init system to build the shell; KronuZSH sources its core files directly, uses a tiny loader for optional tool integrations, and the prompt stands on its own."
 direction: down
 old: "Prezto\n42 modules, ~22,000 lines\nan init system wiring them together" { shape: rectangle }
-new: "KronuZSH\n10 sourced files, ~1,000 lines\nthe prompt standing on its own" { shape: rectangle }
+new: "KronuZSH\n11 core files, ~1,000 lines\ndirect load order + tiny integration loader" { shape: rectangle }
 old -> new: "kept the one room"
 ```
 
@@ -47,6 +47,7 @@ source "$KRONUZSH/lib/colors.zsh"          # canonical $LS_COLORS, before comple
 source "$KRONUZSH/lib/completion.zsh"
 source "$KRONUZSH/lib/keybindings.zsh"
 source "$KRONUZSH/lib/aliases.zsh"
+source "$KRONUZSH/lib/functions.zsh"
 source "$KRONUZSH/lib/terminal.zsh"
 source "$KRONUZSH/lib/plugins.zsh"
 source "$KRONUZSH/integrations/init.zsh"   # optional external tools, each guarded
@@ -57,7 +58,7 @@ prompt_kronuz_setup
 setopt PROMPT_SUBST                        # expand the prompt's deferred ${(e)...}
 ```
 
-Ten files, in the order they load, each short enough to read in a sitting. No discovery, no registration, no async loader deciding what runs when. If something is wrong, it's in one of ten files, and I can open it. One of them, `integrations/init.zsh`, wires in the modern CLI tools I lean on (fzf, bat, zoxide, ripgrep, and friends) when they're installed and stays silent when they aren't.
+Eleven core files, in the order they load, each short enough to read in a sitting. There is no registration layer or async loader deciding what runs when. The one bit of discovery is deliberate: `integrations/init.zsh` finds each `integrations/<tool>/init.zsh` and sources it. Those small, guarded files wire in the modern CLI tools I lean on (fzf, bat, zoxide, ripgrep, and friends) when they're installed and stay silent when they aren't. If ordering ever matters, the loader is simple enough to replace with explicit `source` lines.
 
 ![bat rendering lib/aliases.zsh in the Kronuz syntax theme, the same palette shared across bat, delta, eza, and the editor colorschemes.](/img/blog/kronuz-theme-highlight.png)
 
@@ -65,7 +66,7 @@ Ten files, in the order they load, each short enough to read in a sitting. No di
 
 The prompt was the hard part, and I knew it would be.
 
-Those 528 lines didn't stand alone. They reached into Prezto's plumbing: the editor module told the prompt which keymap was active, a git-info module fed it the repository state, an async helper kept the whole thing from blocking the shell on a slow `git` call. To lift the prompt out, I had to rebuild that floor underneath it.
+Those 528 lines didn't stand alone. They reached into Prezto's plumbing: the editor module told the prompt which keymap was active, a git-info module fed it the repository state, and an async helper kept a slow `git` call from blocking the shell. Pulling out the prompt meant replacing each of those dependencies.
 
 So I did, natively. Git status comes from [gitstatusd](https://github.com/romkatv/gitstatus) when it's there, which is fast, with a plain `git` fallback for when it isn't. The venv, the active keymap, the abbreviated path, all computed directly in the prompt instead of read out of a framework. It came out at 403 lines, leaner than the original, and leaning on nothing but zsh. (It's since grown to about 850, all of it functionality I added in a later overhaul, not weight the framework had been sparing me; the port itself was lean.)
 
@@ -86,11 +87,11 @@ When it settled, the trade looked like this:
 | zsh source | ~22,000 lines | ~1,000 lines |
 | files / modules | 42 modules | 14 files |
 | the prompt | 528 lines, in the framework | 403 lines, standalone |
-| plugins | a module loader | 4 git submodules |
+| plugins | a module loader | 4 git submodules, sourced explicitly |
 
 About twenty times less code, and the part I cared about came out standalone and free. I symlinked it onto my laptop and my dev VM, archived the old `.zprezto`, and for the first time in years my shell was something I'd read end to end.
 
-It Just Works. Mostly. Which brings me to the part I didn't see coming.
+The result worked, but for the first few days it didn't feel quite right.
 
 ## The things you don't notice
 
@@ -98,7 +99,7 @@ For a few days after the switch, small things were subtly wrong, and I couldn't 
 
 I'd hit Ctrl-W to rub out the last bit of a path, the way I have for a decade, and the whole path would vanish instead of stopping at the last slash. I'd reach for Option+Left to jump back a word and the cursor wouldn't budge. The terminal tab, which had always shown whatever command was running, just sat there with the directory.
 
-None of these were things I had configured. I'd never written a line about Ctrl-W or tab titles in my life. They came in the box. Prezto's editor module set `WORDCHARS` so that `/` counted as a word boundary, which is the entire reason Ctrl-W stopped at slashes. It bound a fat set of escape sequences for Option and Ctrl arrows so word-jumping worked whatever the terminal happened to send. Its terminal module emitted the [escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code#OSC_(Operating_System_Command)) that name the tab. The framework had been doing all of it, silently, for years, and I'd mistaken it for how terminals simply are.
+I hadn't configured any of these things myself. I'd never written a line about Ctrl-W or tab titles. Prezto's editor module set `WORDCHARS` so that `/` counted as a word boundary, which is why Ctrl-W stopped at slashes. It bound several escape sequences for Option and Ctrl arrows, so word-jumping worked regardless of what the terminal sent. Its terminal module emitted the [escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code#OSC_(Operating_System_Command)) that name the tab. Prezto had handled all of it for years, and I'd mistaken that behavior for a terminal default.
 
 Restoring each one was a few lines:
 
@@ -117,7 +118,7 @@ function _title_precmd { print -Pn '\e]1;%~\a' }   # OSC 1 = tab title
 
 Small fixes, all of them. But I only knew to make them because I'd lived with the result for years and felt the absence the instant it was gone.
 
-That is what a framework actually costs you, and what leaving one teaches. The lines you read are the small part. The rest is a dozen quiet kindnesses below the waterline, the ones you never notice until you pull the framework out and reach for the floor and it isn't there.
+That was the useful lesson in leaving a framework. Its visible features are only part of what you depend on; the rest are small defaults you stop noticing after years of use. Removing Prezto made those defaults visible again, one missing key binding at a time.
 
 ## Try it
 
@@ -133,6 +134,6 @@ exec zsh
 
 ## Where it landed
 
-My dotfiles are about 1,000 lines I can hold in my head. The prompt is mine, the bindings are mine, the ten files load in an order I chose, and there's no fork drifting years behind anything. When something's off now, I open a file and fix it, instead of grepping a framework to find out what it had decided on my behalf.
+My dotfiles are about 1,000 lines I can hold in my head. I know where the prompt and bindings live, the files load in an order I chose, and there's no fork drifting years behind upstream. When something's off now, I open the relevant file instead of grepping a framework to find out where the behavior came from.
 
-I rebuilt the floor I'd been standing on without looking. It turns out it wasn't much floor. But you have to pull it up to know that, and you have to miss a few boards before you learn what they were holding.
+I ended up rebuilding less than I'd expected. The tricky part wasn't writing it; it was noticing everything I needed to replace.
