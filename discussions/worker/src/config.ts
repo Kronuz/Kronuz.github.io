@@ -30,7 +30,7 @@ export interface Env {
   REQUEST_MAX_BYTES?: string;
   SESSION_TTL?: string;
   // New-comment notifications (all optional; unset = disabled).
-  NOTIFY_KIND?: string; // slack | discord | telegram — picks the webhook payload shape
+  NOTIFY_KIND?: string; // optional slack | discord | telegram override for proxy/custom URLs
   NOTIFY_WEBHOOK?: string; // secret: webhook URL (or a Telegram bot sendMessage URL)
   NOTIFY_TELEGRAM_CHAT?: string; // telegram chat id (telegram only)
   NOTIFY_FEED_TOKEN?: string; // secret: gates GET /api/comments/feed

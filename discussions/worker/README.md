@@ -105,8 +105,9 @@ Leave it empty to hide the picker.
 
 By default a new comment just lands in D1 and nothing tells you. Two opt-in ways to know:
 
-- **Webhook ping** — set `NOTIFY_KIND` in `wrangler.toml` to `slack`, `discord`, or `telegram`,
-  and store the destination as the `NOTIFY_WEBHOOK` secret (`wrangler secret put NOTIFY_WEBHOOK`).
+- **Webhook ping** — store a standard Slack, Discord, or Telegram destination as the
+  `NOTIFY_WEBHOOK` secret (`wrangler secret put NOTIFY_WEBHOOK`); its provider is inferred from
+  the URL. `NOTIFY_KIND` is only needed as an override for proxy/custom webhook URLs.
   On each new comment the Worker POSTs a short, site-labeled *"New comment by X on <post>"*
   message with a deep link to that comment, fire-and-forget (via `waitUntil`, so it never delays
   the commenter). Discord mentions are disabled, and throttled or transient failures get one retry.

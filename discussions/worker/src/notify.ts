@@ -3,7 +3,8 @@
  * comment landed (otherwise the store just writes it to D1 and nothing says so).
  *
  * The channel is configurable via NOTIFY_KIND (slack | discord | telegram); the
- * destination is the NOTIFY_WEBHOOK secret, so nothing is sent unless it's set. Slack and
+ * standard provider is inferred from the NOTIFY_WEBHOOK secret, with NOTIFY_KIND as an
+ * optional override for proxy/custom URLs. Nothing is sent unless the webhook is set. Slack and
  * Discord take a plain JSON webhook; Telegram posts to a bot `sendMessage` URL and also
  * needs NOTIFY_TELEGRAM_CHAT. Best-effort: failures are logged, never surfaced to the
  * commenter, and the POST rides `waitUntil` so it doesn't delay the response.
@@ -15,6 +16,7 @@ import {
   notificationRetryDelay,
   notificationShouldRetry,
   notifyKind,
+  notifyKindFromUrl,
   type NotifyInput,
 } from "./notify-core.js";
 
@@ -59,9 +61,10 @@ async function deliver(url: string, kind: string, body: unknown): Promise<void> 
 export function notifyNewComment(env: Env, ctx: WaitUntil | undefined, input: NotifyInput): void {
   const url = env.NOTIFY_WEBHOOK || "";
   if (!url) return; // notifications disabled
-  const kind = notifyKind(env.NOTIFY_KIND);
+  const configuredKind = notifyKind(env.NOTIFY_KIND);
+  const kind = configuredKind || notifyKindFromUrl(url);
   if (!kind) {
-    if ((env.NOTIFY_KIND || "").trim()) console.warn(`notify: unsupported NOTIFY_KIND ${env.NOTIFY_KIND}`);
+    console.warn("notify: could not infer a provider from NOTIFY_WEBHOOK; set a valid NOTIFY_KIND override");
     return;
   }
   const body = notificationPayload(kind, { telegramChat: env.NOTIFY_TELEGRAM_CHAT }, notificationMessage(input));

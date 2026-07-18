@@ -31,11 +31,12 @@ OAUTH_SCOPE = "read:user"
 COOKIE_CROSS_SITE = "1"
 DISCUSSIONS_STRIP_SUFFIX = ""
 DISCUSSIONS_GIPHY_KEY = ""
-# New-comment notifications (optional). NOTIFY_KIND picks the webhook format
-# (slack | discord | telegram); the webhook URL and feed token are secrets:
+# New-comment notifications (optional). Standard Slack, Discord, and Telegram providers are
+# inferred from their URL. NOTIFY_KIND is only an override for proxy/custom webhook URLs.
+# The webhook URL and feed token are secrets:
 #   wrangler secret put NOTIFY_WEBHOOK       # Slack/Discord webhook, or a Telegram sendMessage URL
 #   wrangler secret put NOTIFY_FEED_TOKEN    # gates GET /api/comments/feed?token=...
-# Leave NOTIFY_KIND empty to disable the webhook (the Atom feed still works if the token is set).
+# Leave NOTIFY_WEBHOOK unset to disable webhook notifications.
 NOTIFY_KIND = ""
 NOTIFY_TELEGRAM_CHAT = ""
 MAX_BODY = "65536"

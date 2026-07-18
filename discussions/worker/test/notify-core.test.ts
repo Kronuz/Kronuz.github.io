@@ -7,6 +7,7 @@ import {
   notificationRetryDelay,
   notificationShouldRetry,
   notifyKind,
+  notifyKindFromUrl,
   type NotifyInput,
 } from "../src/notify-core.ts";
 
@@ -41,6 +42,14 @@ test("recognizes only configured providers", () => {
   assert.equal(notifyKind(" Discord "), "discord");
   assert.equal(notifyKind(""), null);
   assert.equal(notifyKind("discrod"), null);
+});
+
+test("infers standard providers from webhook URLs", () => {
+  assert.equal(notifyKindFromUrl("https://discord.com/api/webhooks/123/token"), "discord");
+  assert.equal(notifyKindFromUrl("https://hooks.slack.com/services/T/B/key"), "slack");
+  assert.equal(notifyKindFromUrl("https://api.telegram.org/bot123:token/sendMessage"), "telegram");
+  assert.equal(notifyKindFromUrl("https://example.com/webhook"), null);
+  assert.equal(notifyKindFromUrl("not a URL"), null);
 });
 
 test("builds a mention-safe Discord payload", () => {

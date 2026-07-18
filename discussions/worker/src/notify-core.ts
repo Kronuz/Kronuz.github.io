@@ -24,6 +24,21 @@ export function notifyKind(value: string | undefined): NotifyKind | null {
   return kind === "discord" || kind === "slack" || kind === "telegram" ? kind : null;
 }
 
+export function notifyKindFromUrl(value: string): NotifyKind | null {
+  try {
+    const url = new URL(value);
+    const path = url.pathname;
+    if ((url.hostname === "discord.com" || url.hostname === "discordapp.com") && path.startsWith("/api/webhooks/")) {
+      return "discord";
+    }
+    if (url.hostname === "hooks.slack.com" && path.startsWith("/services/")) return "slack";
+    if (url.hostname === "api.telegram.org" && /^\/bot[^/]+\/sendMessage\/?$/.test(path)) return "telegram";
+  } catch {
+    // Not a URL, so it cannot identify a standard webhook provider.
+  }
+  return null;
+}
+
 export function notificationRetryDelay(retryAfter: string | null): number {
   const seconds = Number(retryAfter || "");
   if (retryAfter && Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds * 1000, 5_000);

@@ -144,8 +144,8 @@ fi
 say "New-comment notifications (optional)"
 cat <<'TXT'
 Get pinged when a comment lands, and/or subscribe to a private Atom feed of recent comments.
-  - Webhook: paste a Slack, Discord, or Telegram URL. Its kind is detected from the URL
-    and stored in wrangler.toml; the URL itself becomes the NOTIFY_WEBHOOK secret.
+  - Webhook: paste a Slack, Discord, or Telegram URL. Its kind is inferred at runtime;
+    the URL itself becomes the NOTIFY_WEBHOOK secret.
     Telegram also needs NOTIFY_TELEGRAM_CHAT in [vars] and a bot sendMessage URL.
   - Atom feed: set the NOTIFY_FEED_TOKEN secret, then point your RSS reader at
     <Worker URL>/api/comments/feed?token=<token>.
@@ -160,23 +160,18 @@ if [ -n "$NWH" ]; then
     case "$current_kind" in
       slack|discord|telegram)
         notify_kind=$current_kind
-        warn "Could not identify the webhook provider from its URL; keeping NOTIFY_KIND = \"$notify_kind\"."
+        warn "Could not identify the provider from its URL; using the configured NOTIFY_KIND = \"$notify_kind\" override."
         ;;
       *)
-        printf 'Could not identify that URL. Webhook kind (slack | discord | telegram): '
-        read -r notify_kind
-        case "$notify_kind" in
-          slack|discord|telegram) ;;
-          *) warn "Unsupported webhook kind; skipping NOTIFY_WEBHOOK."; NWH="" ;;
-        esac
+        warn "Could not identify that URL; set a NOTIFY_KIND override for proxy/custom URLs. Skipping NOTIFY_WEBHOOK."
+        NWH=""
         ;;
     esac
   fi
 fi
 if [ -n "$NWH" ]; then
-  sedi "s/NOTIFY_KIND = \"[^\"]*\"/NOTIFY_KIND = \"$notify_kind\"/" wrangler.toml
   printf '%s' "$NWH" | $WRANGLER secret put NOTIFY_WEBHOOK \
-    && say "NOTIFY_WEBHOOK set; detected NOTIFY_KIND = \"$notify_kind\"." \
+    && say "NOTIFY_WEBHOOK set; provider = \"$notify_kind\"." \
     || warn "Could not set NOTIFY_WEBHOOK."
 else
   warn "Skipped the webhook (no NOTIFY_WEBHOOK)."
