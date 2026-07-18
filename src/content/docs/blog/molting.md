@@ -54,8 +54,6 @@ source "$KRONUZSH/integrations/init.zsh"   # optional external tools, each guard
 source "$KRONUZSH/lib/prompt.zsh"
 
 prompt_kronuz_setup
-
-setopt PROMPT_SUBST                        # expand the prompt's deferred ${(e)...}
 ```
 
 Eleven core files, in the order they load, each short enough to read in a sitting. There is no registration layer or async loader deciding what runs when. The one bit of discovery is deliberate: `integrations/init.zsh` finds each `integrations/<tool>/init.zsh` and sources it. Those small, guarded files wire in the modern CLI tools I lean on (fzf, bat, zoxide, ripgrep, and friends) when they're installed and stay silent when they aren't. If ordering ever matters, the loader is simple enough to replace with explicit `source` lines.
