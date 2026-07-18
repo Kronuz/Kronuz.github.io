@@ -18,6 +18,14 @@ die()  { printf '\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 # portable in-place sed (BSD/macOS + GNU)
 sedi() { sed -i.bak "$@" && rm -f "${@: -1}.bak" 2>/dev/null || true; }
 
+notify_kind_from_url() {
+  case "$1" in
+    https://discord.com/api/webhooks/*|https://discordapp.com/api/webhooks/*) printf 'discord' ;;
+    https://hooks.slack.com/services/*) printf 'slack' ;;
+    https://api.telegram.org/bot*/sendMessage*) printf 'telegram' ;;
+  esac
+}
+
 # --- 0. preflight ------------------------------------------------------------
 command -v npx >/dev/null || die "node/npx not found."
 $WRANGLER whoami >/dev/null 2>&1 || die "Not logged in. Run: npx wrangler login"
@@ -136,23 +144,46 @@ fi
 say "New-comment notifications (optional)"
 cat <<'TXT'
 Get pinged when a comment lands, and/or subscribe to a private Atom feed of recent comments.
-  - Webhook: set NOTIFY_KIND in wrangler.toml (slack | discord | telegram) and store the
-    webhook URL as the NOTIFY_WEBHOOK secret (for telegram, also set NOTIFY_TELEGRAM_CHAT
-    in [vars], and use the bot sendMessage URL).
+  - Webhook: paste a Slack, Discord, or Telegram URL. Its kind is detected from the URL
+    and stored in wrangler.toml; the URL itself becomes the NOTIFY_WEBHOOK secret.
+    Telegram also needs NOTIFY_TELEGRAM_CHAT in [vars] and a bot sendMessage URL.
   - Atom feed: set the NOTIFY_FEED_TOKEN secret, then point your RSS reader at
     <Worker URL>/api/comments/feed?token=<token>.
 TXT
 printf 'Webhook URL for new-comment pings (blank to skip): '
-read -r NWH
+read -rs NWH
+printf '\n'
 if [ -n "$NWH" ]; then
+  notify_kind=$(notify_kind_from_url "$NWH")
+  current_kind=$(grep -oE 'NOTIFY_KIND = "[^"]*"' wrangler.toml | sed 's/.*"\([^"]*\)"/\1/')
+  if [ -z "$notify_kind" ]; then
+    case "$current_kind" in
+      slack|discord|telegram)
+        notify_kind=$current_kind
+        warn "Could not identify the webhook provider from its URL; keeping NOTIFY_KIND = \"$notify_kind\"."
+        ;;
+      *)
+        printf 'Could not identify that URL. Webhook kind (slack | discord | telegram): '
+        read -r notify_kind
+        case "$notify_kind" in
+          slack|discord|telegram) ;;
+          *) warn "Unsupported webhook kind; skipping NOTIFY_WEBHOOK."; NWH="" ;;
+        esac
+        ;;
+    esac
+  fi
+fi
+if [ -n "$NWH" ]; then
+  sedi "s/NOTIFY_KIND = \"[^\"]*\"/NOTIFY_KIND = \"$notify_kind\"/" wrangler.toml
   printf '%s' "$NWH" | $WRANGLER secret put NOTIFY_WEBHOOK \
-    && say "NOTIFY_WEBHOOK set (channel = NOTIFY_KIND in wrangler.toml)." \
+    && say "NOTIFY_WEBHOOK set; detected NOTIFY_KIND = \"$notify_kind\"." \
     || warn "Could not set NOTIFY_WEBHOOK."
 else
   warn "Skipped the webhook (no NOTIFY_WEBHOOK)."
 fi
 printf 'Atom feed token (blank to skip; enables /api/comments/feed): '
-read -r NFT
+read -rs NFT
+printf '\n'
 if [ -n "$NFT" ]; then
   printf '%s' "$NFT" | $WRANGLER secret put NOTIFY_FEED_TOKEN \
     && say "NOTIFY_FEED_TOKEN set. Feed: ${url:-<Worker URL>}/api/comments/feed?token=..." \
