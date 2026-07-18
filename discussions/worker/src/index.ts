@@ -366,6 +366,7 @@ app.post("/api/comments", async (c) => {
     postTitle: body.title ?? null,
     postTerm: body.term ?? null,
     postUrl: body.url ?? null,
+    siteName: c.get("tenants").get(tenantId)?.repo || tenantId,
     siteUrl: c.get("tenants").get(tenantId)?.origin || c.get("cfg").siteUrl || c.get("cfg").publicBaseUrl,
     body: body.body,
     isReply: Boolean(body.reply_to_id),

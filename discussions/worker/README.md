@@ -107,8 +107,9 @@ By default a new comment just lands in D1 and nothing tells you. Two opt-in ways
 
 - **Webhook ping** — set `NOTIFY_KIND` in `wrangler.toml` to `slack`, `discord`, or `telegram`,
   and store the destination as the `NOTIFY_WEBHOOK` secret (`wrangler secret put NOTIFY_WEBHOOK`).
-  On each new comment the Worker POSTs a short *"New comment by X on <post>"* message with a
-  deep link to that comment, fire-and-forget (via `waitUntil`, so it never delays the commenter).
+  On each new comment the Worker POSTs a short, site-labeled *"New comment by X on <post>"*
+  message with a deep link to that comment, fire-and-forget (via `waitUntil`, so it never delays
+  the commenter). Discord mentions are disabled, and throttled or transient failures get one retry.
   For Telegram, use the bot `https://api.telegram.org/bot<token>/sendMessage` URL and also set
   `NOTIFY_TELEGRAM_CHAT` in `[vars]`. Unset `NOTIFY_WEBHOOK` = disabled.
 - **Private Atom feed** — set the `NOTIFY_FEED_TOKEN` secret, then subscribe your RSS reader to

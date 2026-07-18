@@ -17,6 +17,7 @@ const input: NotifyInput = {
   postTitle: "House Rules",
   postTerm: "house-rules",
   postUrl: "https://kronuz.github.io/blog/house-rules/",
+  siteName: "Kronuz/Kronuz.github.io",
   siteUrl: "https://kronuz.github.io",
   body: "A comment",
   isReply: false,
@@ -32,7 +33,7 @@ test("builds the same stable comment permalink used by the feed", () => {
 
 test("uses the term and site URL fallbacks and identifies replies", () => {
   const text = notificationMessage({ ...input, postTitle: null, postUrl: null, isReply: true });
-  assert.match(text, /^💬 New reply by German on “house-rules”/);
+  assert.match(text, /^💬 \[Kronuz\/Kronuz\.github\.io\] New reply by German on “house-rules”/);
   assert.match(text, /https:\/\/kronuz\.github\.io#c_123$/);
 });
 

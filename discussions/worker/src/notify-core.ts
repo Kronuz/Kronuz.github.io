@@ -9,6 +9,7 @@ export interface NotifyInput {
   postTitle: string | null;
   postTerm: string | null;
   postUrl: string | null;
+  siteName: string;
   siteUrl: string;
   body: string;
   isReply: boolean;
@@ -49,7 +50,8 @@ export function notificationMessage(input: NotifyInput): string {
   const who = input.author || input.authorLogin || "someone";
   const post = input.postTitle || input.postTerm;
   const where = post ? `\u201c${post}\u201d` : "your blog";
-  const lines = [`\ud83d\udcac New ${what} by ${who} on ${where}`, excerpt(input.body)];
+  const site = input.siteName ? `[${input.siteName}] ` : "";
+  const lines = [`\ud83d\udcac ${site}New ${what} by ${who} on ${where}`, excerpt(input.body)];
   const permalink = commentPermalink(input.postUrl, input.siteUrl, input.commentId);
   if (permalink) lines.push(permalink);
   return lines.filter(Boolean).join("\n");
