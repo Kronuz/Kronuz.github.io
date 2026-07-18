@@ -341,8 +341,9 @@ app.post("/api/comments", async (c) => {
   }>();
   const viewer = await currentViewer(c);
   limit(c, rl.post, viewer);
+  const tenantId = requestTenant(c);
   const created = await c.get("store").addComment({
-    tenantId: requestTenant(c),
+    tenantId,
     term: body.term ?? null,
     title: body.title ?? null,
     subtitle: body.subtitle ?? null,
@@ -363,7 +364,9 @@ app.post("/api/comments", async (c) => {
     author: viewer?.name || viewer?.login || "someone",
     authorLogin: viewer?.login || "",
     postTitle: body.title ?? null,
+    postTerm: body.term ?? null,
     postUrl: body.url ?? null,
+    siteUrl: c.get("tenants").get(tenantId)?.origin || c.get("cfg").siteUrl || c.get("cfg").publicBaseUrl,
     body: body.body,
     isReply: Boolean(body.reply_to_id),
   });

@@ -6,6 +6,7 @@
  */
 import type { Cfg } from "./config.js";
 import type { RecentComment } from "./db.js";
+import { commentPermalink } from "./notify-core.js";
 
 function xmlEscape(s: string): string {
   return (s || "")
@@ -47,7 +48,7 @@ export function atomFeed(cfg: Cfg, rows: RecentComment[]): string {
         const kind = r.parent_id ? "reply" : "comment";
         // Deep-link straight to the comment on its post: the widget sets each comment's
         // DOM id and scroll-highlights `#<comment-id>` (the same URL its "Copy link" makes).
-        const permalink = r.post_url ? `${r.post_url}#${r.id}` : `${site}#${r.id}`;
+        const permalink = commentPermalink(r.post_url, site, r.id) as string;
         return entry([
           `    <title>${xmlEscape(`${who} \u2014 ${kind} on ${postName}`)}</title>`,
           `    <link href="${xmlEscape(permalink)}"/>`,

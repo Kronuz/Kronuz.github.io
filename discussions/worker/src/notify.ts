@@ -9,57 +9,29 @@
  * commenter, and the POST rides `waitUntil` so it doesn't delay the response.
  */
 import type { Env } from "./config.js";
+import {
+  notificationMessage,
+  notificationPayload,
+  notifyKind,
+  type NotifyInput,
+} from "./notify-core.js";
+
+export type { NotifyInput } from "./notify-core.js";
 
 /** The bit of the Worker ExecutionContext we use (kept structural to avoid a type import). */
 interface WaitUntil {
   waitUntil(p: Promise<unknown>): void;
 }
 
-export interface NotifyInput {
-  commentId: string;
-  author: string;
-  authorLogin: string;
-  postTitle: string | null;
-  postUrl: string | null;
-  body: string;
-  isReply: boolean;
-}
-
-function excerpt(s: string, n = 240): string {
-  const one = (s || "").replace(/\s+/g, " ").trim();
-  return one.length > n ? one.slice(0, n - 1) + "\u2026" : one;
-}
-
-function message(input: NotifyInput): string {
-  const what = input.isReply ? "reply" : "comment";
-  const who = input.author || input.authorLogin || "someone";
-  const where = input.postTitle ? `\u201c${input.postTitle}\u201d` : "your blog";
-  const lines = [`\ud83d\udcac New ${what} by ${who} on ${where}`, excerpt(input.body)];
-  if (input.postUrl) lines.push(`${input.postUrl}#${input.commentId}`);
-  return lines.filter(Boolean).join("\n");
-}
-
-/** Build the webhook body for the configured channel, or null when it can't/shouldn't send. */
-function payload(kind: string, env: Env, text: string): unknown | null {
-  switch (kind) {
-    case "discord":
-      return { content: text };
-    case "telegram": {
-      const chat = env.NOTIFY_TELEGRAM_CHAT || "";
-      if (!chat) return null;
-      return { chat_id: chat, text, disable_web_page_preview: false };
-    }
-    case "slack":
-    default:
-      return { text };
-  }
-}
-
 export function notifyNewComment(env: Env, ctx: WaitUntil | undefined, input: NotifyInput): void {
   const url = env.NOTIFY_WEBHOOK || "";
   if (!url) return; // notifications disabled
-  const kind = (env.NOTIFY_KIND || "slack").toLowerCase();
-  const body = payload(kind, env, message(input));
+  const kind = notifyKind(env.NOTIFY_KIND);
+  if (!kind) {
+    if ((env.NOTIFY_KIND || "").trim()) console.warn(`notify: unsupported NOTIFY_KIND ${env.NOTIFY_KIND}`);
+    return;
+  }
+  const body = notificationPayload(kind, { telegramChat: env.NOTIFY_TELEGRAM_CHAT }, notificationMessage(input));
   if (!body) return;
   const task = fetch(url, {
     method: "POST",
