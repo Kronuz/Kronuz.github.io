@@ -35,6 +35,7 @@ type App = Hono<{ Bindings: Env; Variables: Vars }>;
 const app: App = new Hono<{ Bindings: Env; Variables: Vars }>();
 
 const enc = new TextEncoder();
+const COMMENT_TEST_TERM = "__comments-e2e__";
 
 // --- rate limits (per-isolate best-effort; see ratelimit.ts) -----------------
 const rl = {
@@ -340,6 +341,9 @@ app.post("/api/comments", async (c) => {
     reply_to_id?: string;
   }>();
   const viewer = await currentViewer(c);
+  if (body.term === COMMENT_TEST_TERM && !viewer?.is_admin) {
+    throw new HttpError(403, "administrators only on the comment test thread");
+  }
   limit(c, rl.post, viewer);
   const tenantId = requestTenant(c);
   const created = await c.get("store").addComment({

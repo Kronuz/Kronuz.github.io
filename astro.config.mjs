@@ -67,10 +67,10 @@ export default defineConfig({
 		],
 	},
 	integrations: [
-		// Our own @astrojs/sitemap (Starlight would otherwise inject one with no
-		// filter). The filter drops the private /all/ dashboard from the sitemap;
-		// the page is also noindex + pagefind:false + unlinked.
-		sitemap({ filter: (page) => !/\/all\/?$/.test(page) }),
+	// Our own @astrojs/sitemap (Starlight would otherwise inject one with no
+	// filter). The filter drops the private /all/ dashboards and the comments E2E
+	// fixture; those pages are also noindex + pagefind:false + unlinked.
+	sitemap({ filter: (page) => !/\/all\/?$/.test(page) && !/\/_testing\/?$/.test(page) }),
 		starlight({
 			title: SITE_TITLE,
 			description: SITE_DESCRIPTION,

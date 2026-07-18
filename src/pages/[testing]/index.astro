@@ -1,0 +1,50 @@
+---
+/**
+ * /_testing/ is a permanent end-to-end fixture for the self-hosted comments stack.
+ * A static parameter produces the underscore-prefixed public URL because Astro treats
+ * underscore-prefixed source directories as private and does not emit them directly.
+ * The page is unlisted, excluded from the sitemap and Pagefind, and noindex. The Worker
+ * restricts writes to this term to tenant administrators.
+ */
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import Discussions from "../../components/Discussions.astro";
+import { DISCUSSIONS_BACKEND, DISCUSSIONS_GIPHY_KEY, DISCUSSIONS_STRIP_SUFFIX } from "../../consts";
+
+export function getStaticPaths() {
+	return [{ params: { testing: "_testing" } }];
+}
+
+const backend = import.meta.env.PUBLIC_DISCUSSIONS_BACKEND || DISCUSSIONS_BACKEND;
+const head = [{ tag: "meta", attrs: { name: "robots", content: "noindex, nofollow" } }];
+---
+
+<StarlightPage
+	frontmatter={{
+		title: "Comment Test",
+		description: "End-to-end test page for the blog comment system.",
+		tableOfContents: false,
+		pagefind: false,
+		head,
+	}}
+>
+	<p>
+		This unlisted page exercises the production comment widget, sign-in, storage,
+		notifications, replies, reactions, editing, deletion, and comment permalinks. Its
+		thread is permanent test data and only site administrators can write to it.
+	</p>
+	{
+		backend ? (
+			<Discussions
+				term="__comments-e2e__"
+				title="Comment Test"
+				subtitle="End-to-end comment fixture"
+				url={Astro.url.href}
+				backend={backend}
+				stripSuffix={DISCUSSIONS_STRIP_SUFFIX}
+				giphyKey={DISCUSSIONS_GIPHY_KEY}
+			/>
+		) : (
+			<p>The self-hosted discussions backend is not configured.</p>
+		)
+	}
+</StarlightPage>
