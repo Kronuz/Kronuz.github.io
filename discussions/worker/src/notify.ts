@@ -16,6 +16,7 @@ interface WaitUntil {
 }
 
 export interface NotifyInput {
+  commentId: string;
   author: string;
   authorLogin: string;
   postTitle: string | null;
@@ -34,7 +35,7 @@ function message(input: NotifyInput): string {
   const who = input.author || input.authorLogin || "someone";
   const where = input.postTitle ? `\u201c${input.postTitle}\u201d` : "your blog";
   const lines = [`\ud83d\udcac New ${what} by ${who} on ${where}`, excerpt(input.body)];
-  if (input.postUrl) lines.push(input.postUrl);
+  if (input.postUrl) lines.push(`${input.postUrl}#${input.commentId}`);
   return lines.filter(Boolean).join("\n");
 }
 

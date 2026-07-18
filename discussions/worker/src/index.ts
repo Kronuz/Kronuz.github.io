@@ -359,6 +359,7 @@ app.post("/api/comments", async (c) => {
     ctx = undefined;
   }
   notifyNewComment(c.env, ctx, {
+    commentId: created.id,
     author: viewer?.name || viewer?.login || "someone",
     authorLogin: viewer?.login || "",
     postTitle: body.title ?? null,
