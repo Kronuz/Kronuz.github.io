@@ -48,7 +48,7 @@ export function notificationMessage(input: NotifyInput): string {
 export function notificationPayload(kind: NotifyKind, env: NotifyPayloadEnv, text: string): unknown | null {
   switch (kind) {
     case "discord":
-      return { content: text };
+      return { content: text, allowed_mentions: { parse: [] } };
     case "telegram":
       if (!env.telegramChat) return null;
       return { chat_id: env.telegramChat, text, disable_web_page_preview: false };

@@ -40,8 +40,11 @@ test("recognizes only configured providers", () => {
   assert.equal(notifyKind("discrod"), null);
 });
 
-test("builds a Discord payload", () => {
-  assert.deepEqual(notificationPayload("discord", {}, "hello"), { content: "hello" });
+test("builds a mention-safe Discord payload", () => {
+  assert.deepEqual(notificationPayload("discord", {}, "@everyone hello"), {
+    content: "@everyone hello",
+    allowed_mentions: { parse: [] },
+  });
 });
 
 test("builds Slack and Telegram payloads", () => {
