@@ -13,7 +13,7 @@ tags:
   - zsh
 ---
 
-I'd used the same shell setup for years without really looking at it.
+There is a particular kind of comfort in a tool that is small enough to understand end to end. I'd used the same shell setup for years without really understanding it.
 
 It was [Prezto](https://github.com/sorin-ionescu/prezto), a framework for [zsh](https://www.zsh.org/). At some point long ago I'd forked it, tuned it, and stopped thinking about it. The prompt was the part I'd made my own: it had started from another theme, picked up ideas and pieces from a few others, and grown into a 528-line function I'd fussed over until it showed exactly what I wanted—the git state, the Python venv, an exit code when something broke, a tidy path. I rarely thought about everything underneath it.
 
@@ -145,3 +145,5 @@ exec zsh
 My dotfiles are about 1,500 lines I can hold in my head. I know where the prompt and bindings live, the files load in an order I chose, and there's no fork drifting years behind upstream. When something's off now, I open the relevant file instead of grepping a framework to find out where the behavior came from.
 
 I ended up rebuilding less than I'd expected. The tricky part wasn't writing it; it was noticing everything I needed to replace.
+
+That is the bargain in making a tool your own. You give up the comfortable defaults somebody else maintained, including the ones you never knew were there. In return, the machinery becomes small enough to understand, repair, and carry with you. A little more responsibility, in exchange for a tool that feels like home.

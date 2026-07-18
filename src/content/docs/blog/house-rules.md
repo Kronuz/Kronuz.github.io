@@ -23,6 +23,8 @@ But the truce chafed, in two places. The first was the frame. giscus renders ins
 
 The second was ownership. "Kept for you" is a polite way of saying "not yours." Every reply, every reaction, every correction a reader takes the time to write sits in someone else's database, under someone else's rules, one policy change away from a shape I did not choose. I did not want a room leased across the street. I wanted a front porch, bolted to my own house.
 
+I had made this trade once already with [my shell](/blog/molting/): keep the part I cared about, replace the machinery around it, and accept that every quiet convenience became mine to understand. Comments were the same bargain, only this time I wanted to own the place where other people left their words.
+
 ## What it is
 
 A comment box at the bottom of every post. You sign in with GitHub, and it learns exactly one thing: who you are, a name and an avatar, no repo access, nothing else. Then you can write in Markdown, reply, react with the usual emoji, and drop a GIF when words fail you. It looks like it grew there, because it did: real page, not a frame cut into one. It follows the light and dark toggle, and highlights code in a comment the same way the posts do. Behind the friendly box, every comment, reply, reaction, and quiet moderator action lives in my own database, on my own terms. House rules.
