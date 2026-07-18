@@ -4,6 +4,7 @@ subtitle: "The Hacker Manifesto, and the kid it found."
 description: "The Conscience of a Hacker, written by The Mentor in 1986, reproduced here with attribution, and why this barely-500-word essay still defines the crime of curiosity for me."
 excerpt: "I found it as a kid in the dial-up underground, and I've reread it more times than I can count. The Mentor's 1986 manifesto: the essay that put words to the one question I never stopped asking, how does this actually work?"
 date: 2026-07-13
+featured: true
 authors: kronuz
 tags:
   - culture
@@ -53,7 +54,7 @@ It still lands.
 }
 [data-theme="dark"] .sl-markdown-content pre.crt {
   color: rgb(100, 172, 62);
-  text-shadow: 0 0 10px rgba(100, 172, 62, 0.3);
+  text-shadow: 0 0 .2rem rgba(100, 172, 62, 0.3);
 }
 </style>
 
