@@ -1,7 +1,7 @@
 ---
 title: "Molting"
 subtitle: "Down to the core"
-description: I ran Prezto for years and tuned a 500-line prompt on top of it. This is how I replaced the framework with KronuZSH, the ~1,000-line setup I now maintain myself, and what broke when I pulled my prompt out.
+description: I ran Prezto for years and tuned a 500-line prompt on top of it. This is how I replaced the framework with KronuZSH, the ~1,500-line setup I now maintain myself, and what broke when I pulled my prompt out.
 excerpt: I used a sliver of Prezto's 22,000 lines, so I kept the part I cared about—my prompt—and wrote the few hundred lines of shell setup I wanted around it. Then I found out how many small conveniences the framework had been providing all along.
 date: 2026-07-14
 tags:
@@ -32,7 +32,7 @@ I called it [KronuZSH](https://github.com/Kronuz/KronuZSH).
 ```d2 alt="Prezto loaded 42 modules through a general init system to build the shell; KronuZSH sources its core files directly, uses a tiny loader for optional tool integrations, and the prompt stands on its own."
 direction: down
 old: "Prezto\n42 modules, ~22,000 lines\nan init system wiring them together" { shape: rectangle }
-new: "KronuZSH\n11 core files, ~1,000 lines\ndirect load order + tiny integration loader" { shape: rectangle }
+new: "KronuZSH\n11 core files, ~1,500 lines\ndirect load order + tiny integration loader" { shape: rectangle }
 old -> new: "kept the one room"
 ```
 
@@ -68,9 +68,15 @@ The prompt was the hard part, and I knew it would be.
 
 Those 528 lines didn't stand alone. They reached into Prezto's plumbing: the editor module told the prompt which keymap was active, a git-info module fed it the repository state, and an async helper kept a slow `git` call from blocking the shell. Pulling out the prompt meant replacing each of those dependencies.
 
-So I did, natively. Git status comes from [gitstatusd](https://github.com/romkatv/gitstatus) when it's there, which is fast, with a plain `git` fallback for when it isn't. The venv, the active keymap, the abbreviated path, all computed directly in the prompt instead of read out of a framework. It came out at 403 lines, leaner than the original, and leaning on nothing but zsh. (It's since grown to about 850, all of it functionality I added in a later overhaul, not weight the framework had been sparing me; the port itself was lean.)
+So I did, natively. Git status comes from [gitstatusd](https://github.com/romkatv/gitstatus) when it's there, which is fast, with a plain `git` fallback for when it isn't. The venv, the active keymap, the abbreviated path, all computed directly in the prompt instead of read out of a framework. It came out at 403 lines, leaner than the original, and leaning on nothing but zsh. (It's since grown to about 900, all of it functionality I added in a later overhaul, not weight the framework had been sparing me; the port itself was lean.)
 
-![The KronuZSH prompt: the OS glyph, hostname, a clean git segment and a Python venv marker, then the time, the ~/Development/KronuZSH path, and the caret, over a color-coded directory listing.](/img/blog/kronuzsh-prompt.png)
+![The KronuZSH prompt: the OS glyph, hostname, a clean git segment and a Python venv marker, then the time, working directory, and caret, over a color-coded directory listing.](/img/blog/kronuzsh-prompt.png)
+
+The prompt now also collapses old prompts to a quiet `path ❯ command` line. A failure
+or slow command shows its exit code or duration immediately above the next live prompt;
+when I run the next command, that visual status disappears with the full prompt. In
+iTerm2 the command mark keeps the historical exit status and running time, so the
+information remains available without filling scrollback with another line per command.
 
 The port was not clean. The best bug took an afternoon.
 
@@ -134,6 +140,6 @@ exec zsh
 
 ## Where it landed
 
-My dotfiles are about 1,000 lines I can hold in my head. I know where the prompt and bindings live, the files load in an order I chose, and there's no fork drifting years behind upstream. When something's off now, I open the relevant file instead of grepping a framework to find out where the behavior came from.
+My dotfiles are about 1,500 lines I can hold in my head. I know where the prompt and bindings live, the files load in an order I chose, and there's no fork drifting years behind upstream. When something's off now, I open the relevant file instead of grepping a framework to find out where the behavior came from.
 
 I ended up rebuilding less than I'd expected. The tricky part wasn't writing it; it was noticing everything I needed to replace.
