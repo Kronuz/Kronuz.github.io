@@ -4,6 +4,8 @@ import {
   commentPermalink,
   notificationMessage,
   notificationPayload,
+  notificationRetryDelay,
+  notificationShouldRetry,
   notifyKind,
   type NotifyInput,
 } from "../src/notify-core.ts";
@@ -55,4 +57,13 @@ test("builds Slack and Telegram payloads", () => {
     disable_web_page_preview: false,
   });
   assert.equal(notificationPayload("telegram", {}, "hello"), null);
+});
+
+test("retries only throttled and transient failures with a bounded delay", () => {
+  assert.equal(notificationShouldRetry(429), true);
+  assert.equal(notificationShouldRetry(503), true);
+  assert.equal(notificationShouldRetry(400), false);
+  assert.equal(notificationRetryDelay("2"), 2_000);
+  assert.equal(notificationRetryDelay("60"), 5_000);
+  assert.equal(notificationRetryDelay(null), 250);
 });

@@ -12,6 +12,8 @@ import type { Env } from "./config.js";
 import {
   notificationMessage,
   notificationPayload,
+  notificationRetryDelay,
+  notificationShouldRetry,
   notifyKind,
   type NotifyInput,
 } from "./notify-core.js";
@@ -21,6 +23,37 @@ export type { NotifyInput } from "./notify-core.js";
 /** The bit of the Worker ExecutionContext we use (kept structural to avoid a type import). */
 interface WaitUntil {
   waitUntil(p: Promise<unknown>): void;
+}
+
+async function post(url: string, body: unknown): Promise<Response> {
+  return fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+async function deliver(url: string, kind: string, body: unknown): Promise<void> {
+  let first: Response | undefined;
+  try {
+    first = await post(url, body);
+    if (first.ok) return;
+    if (!notificationShouldRetry(first.status)) {
+      console.warn(`notify(${kind}) failed:`, first.status);
+      return;
+    }
+  } catch {
+    // A network failure is transient enough to merit the same single bounded retry.
+  }
+
+  const retryAfter = first?.headers.get("retry-after") ?? null;
+  await new Promise((resolve) => setTimeout(resolve, notificationRetryDelay(retryAfter)));
+  try {
+    const second = await post(url, body);
+    if (!second.ok) console.warn(`notify(${kind}) failed after retry:`, second.status);
+  } catch (e: unknown) {
+    console.warn(`notify(${kind}) error after retry:`, String(e));
+  }
 }
 
 export function notifyNewComment(env: Env, ctx: WaitUntil | undefined, input: NotifyInput): void {
@@ -33,15 +66,7 @@ export function notifyNewComment(env: Env, ctx: WaitUntil | undefined, input: No
   }
   const body = notificationPayload(kind, { telegramChat: env.NOTIFY_TELEGRAM_CHAT }, notificationMessage(input));
   if (!body) return;
-  const task = fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  })
-    .then((r) => {
-      if (!r.ok) console.warn(`notify(${kind}) failed:`, r.status);
-    })
-    .catch((e: unknown) => console.warn(`notify(${kind}) error:`, String(e)));
+  const task = deliver(url, kind, body);
   if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(task);
   else void task;
 }

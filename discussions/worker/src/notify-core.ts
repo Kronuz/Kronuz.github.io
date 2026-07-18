@@ -23,6 +23,16 @@ export function notifyKind(value: string | undefined): NotifyKind | null {
   return kind === "discord" || kind === "slack" || kind === "telegram" ? kind : null;
 }
 
+export function notificationRetryDelay(retryAfter: string | null): number {
+  const seconds = Number(retryAfter || "");
+  if (retryAfter && Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds * 1000, 5_000);
+  return 250;
+}
+
+export function notificationShouldRetry(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
 export function commentPermalink(postUrl: string | null, siteUrl: string, commentId: string): string | null {
   const base = postUrl || siteUrl;
   if (!base) return null;
