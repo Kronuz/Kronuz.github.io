@@ -3,7 +3,7 @@ title: "One More Benchmark"
 subtitle: "A field guide to working with me, for humans and machines alike."
 description: "Why I ask for the number instead of the adjective, why I follow a task past the sign that says stop, and why the real wins live in the tenth 'wait, actually'. A field guide for whoever builds with me next, human or machine."
 excerpt: "You just made it work. Then the huddle comes: 'wait, actually...'. If you have ever built anything with me, you know that message. This is the field guide: why I don't believe 'faster', why I follow the thread past the trapdoor, and why the win is never in the first draft."
-date: 2026-07-11
+date: 2026-07-18
 authors: kronuz
 draft: true
 tags:

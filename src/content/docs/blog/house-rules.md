@@ -3,12 +3,10 @@ title: "House Rules"
 subtitle: "Self-hosted comments, built to be mine."
 description: "The boss fight in 'Goodbye, Dr. Jekyll' was comments, and giscus won the truce. Then I went back down and built my own: a self-hosted comment system that lives on the edge, signs you in with GitHub, renders Markdown in the same colors as the rest of the site, and belongs entirely to me. What it is, how it works, and why building the one thing a static site 'can't have' was the most fun I've had all year."
 excerpt: "Goodbye, Dr. Jekyll ended with giscus winning the comments boss fight. It turns out the boss got back up. This is the comment system I built to replace it: self-hosted, on the edge, mine down to the boards, and a blast to build."
-date: 2026-07-12
+date: 2026-07-17
 authors: kronuz
 series: "Home Made"
-seriesOrder: 2
-draft: true
-upcoming: true
+seriesOrder: 3
 tags:
   - meta
   - cloudflare

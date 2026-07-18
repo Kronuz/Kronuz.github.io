@@ -4,9 +4,13 @@ subtitle: "Down to the core"
 description: I ran Prezto for years and tuned a 500-line prompt on top of it. This is how I replaced the framework with KronuZSH, the ~1,500-line setup I now maintain myself, and what broke when I pulled my prompt out.
 excerpt: I used a sliver of Prezto's 22,000 lines, so I kept the part I cared about—my prompt—and wrote the few hundred lines of shell setup I wanted around it. Then I found out how many small conveniences the framework had been providing all along.
 date: 2026-07-14
+authors: kronuz
+series: "Home Made"
+seriesOrder: 2
 tags:
   - tooling
   - shell
+  - zsh
 ---
 
 I'd used the same shell setup for years without really looking at it.
