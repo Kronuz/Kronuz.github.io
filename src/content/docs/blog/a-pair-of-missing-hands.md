@@ -3,12 +3,13 @@ title: "A Pair of Missing Hands"
 subtitle: "No eyes, no hands"
 description: I had a durable terminal onto the box I live on, and it felt like home because every inch of it was built for a person. That is exactly what locked everyone else out, the deploy scripts, the scheduled jobs, the AI agents I pair with, none of which have eyes to read a prompt or fingers to hit Enter. This is the need a control plane exists to fill, and what it would mean to give a human-shaped world handles that something without hands can hold.
 excerpt: An agent I was pairing with needed to restart a service on a remote box. It knew the command and the host, and it just sat there, because the only way in was a terminal built for eyes and fingers it doesn't have. The whole human-shaped world is like that. The work isn't a smarter agent. It's a pair of hands.
-date: 2026-06-13
+date: 2026-09-04
 draft: true
 series: "Driving Eternal"
-seriesOrder: 1
+seriesOrder: 2
 tags:
   - driving-eternal
+  - eternal-terminal
   - ai
   - tooling
   - automation
@@ -44,7 +45,7 @@ The exit code is its own quiet heartbreak. Run a command over [`ssh`](https://ww
 
 My favorite of the lot is the smallest. Someone's automated file copy kept breaking, and the culprit turned out to be a friendly `echo` in the remote `.bashrc`, a line of greeting meant for a person. The machine on the other end couldn't tell the greeting from the data. The [accepted answer](https://stackoverflow.com/questions/12440287/scp-doesnt-work-when-echo-in-bashrc) draws the only lesson there is, and it happens to be the whole thesis of this story: "make separate accounts for humans and for machines (scripts), or just stop tattling via `.bashrc`."
 
-That's the wall, and it's been there thirty years. We even keep a shelf of tools that exist only because one corner of it, the dropped connection, hurt us enough to fix: [`mosh`](https://mosh.org), [`autossh`](https://linux.die.net/man/1/autossh), and Eternal Terminal itself, all built so a session can survive "network outages and IP roaming." We fixed the part that hurt the humans. The part that locks out everything *without* hands, we mostly just learned to live around.
+That's the wall, and it's been there thirty years. We even keep a shelf of tools that exist only because one corner of it, the dropped connection, hurt us enough to fix: [`Mosh`](https://mosh.org), [`autossh`](https://linux.die.net/man/1/autossh), and [Eternal Terminal](https://eternalterminal.dev/) itself, all built so a session can survive "network outages and IP roaming." We fixed the part that hurt the humans. The part that locks out everything *without* hands, we mostly just learned to live around.
 
 ## A pair of hands
 

@@ -3,13 +3,14 @@ title: "ET Phone Home"
 subtitle: "A native control plane for Eternal Terminal"
 description: "I gave a machine a handle on a remote box by wrapping Eternal Terminal in a pseudo-terminal and scraping the screen. Every clever thing that wrapper did was a workaround for one fact: et only speaks 'human terminal.' So I stopped scraping and taught et to speak machine, a native control plane called etctl. It is ~1.9x faster to cold-start, ~6.9x faster per call, deletes whole categories of the old hacks, and is built to merge: client-side only, no server or protocol changes."
 excerpt: "My first handle on a remote terminal worked by scraping a screen meant for human eyes. Every clever thing it did was a workaround for one fact: et only speaks 'human terminal.' So I built the control plane into et itself. etctl is faster on every axis I measured, deletes whole categories of the old hacks, moves files through the same session, and is built to be easy to merge upstream. The honest report, with numbers."
-date: 2026-06-14
+date: 2026-09-18
 draft: true
 featured: true
 series: "Driving Eternal"
-seriesOrder: 2
+seriesOrder: 3
 tags:
   - driving-eternal
+  - eternal-terminal
   - tooling
   - automation
   - ai
@@ -20,7 +21,7 @@ tags:
 
 In the last part, an agent sat in front of a terminal it could not drive, and I went looking for a handle a machine could hold. This part is the handle.
 
-The first version was a Python wrapper I called etch. It ran [Eternal Terminal](https://eternalterminal.dev/) inside a pseudo-terminal, kept a warm session, and scraped the rendered screen to hand a script back clean output and a real exit code where before there was a wall of color codes and tea leaves. I was proud of it.
+The first prototype I wrote was a Python wrapper I called [`etch.py`](snippet:etch.py). It ran [Eternal Terminal](https://eternalterminal.dev/) inside a pseudo-terminal, kept a warm session, and scraped the rendered screen to hand a script back clean output and a real exit code where before there was a wall of color codes and tea leaves. I was proud of it.
 
 Then I lived with it, and I kept seeing it for what it was. Every clever thing etch did was a workaround for a single fact: `et` only speaks one language, the rendered screen, the one meant for human eyes. etch stood outside that screen with its nose against the glass, reading.
 
