@@ -1,10 +1,9 @@
 ---
 title: "The Boy Who Opened Boxes"
-subtitle: "A life measured in machines, from a borrowed Commodore 64 to the Python language."
+subtitle: "A life following software, systems, and other rabbit holes."
 description: "From a borrowed Commodore 64 in 1980s Mexico City to a feature in the Python language itself: the full arc of one restless kid who could never leave a box unopened."
 excerpt: "I have spent my whole life opening boxes I was not supposed to open. This is the story of all of them, from a borrowed Commodore 64 to a feature in the Python language, and the same restless kid behind each one."
-date: 2026-06-07
-draft: true
+date: 2026-06-10
 featured: true
 authors: kronuz
 tags:
