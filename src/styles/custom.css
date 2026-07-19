@@ -97,7 +97,7 @@
 
 @media (min-width: 50rem) {
 	.hero-cards {
-		grid-template-columns: 1fr 1fr; /* desktop: balanced 2x2 */
+		grid-template-columns: 1fr 1fr 1fr; /* desktop: equal thirds */
 		gap: 1rem;
 	}
 }
