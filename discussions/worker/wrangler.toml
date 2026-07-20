@@ -13,32 +13,9 @@ database_name = "discussions"
 database_id = "4e2b8a6d-1b8b-4172-aad9-5ea9b905eabe"
 migrations_dir = "migrations"
 
-# Non-secret vars. Secrets (SESSION_SECRET, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET) are set
-# with `wrangler secret put NAME` (deploy.sh does this), or in .dev.vars for local dev.
-# PUBLIC_BASE_URL must be this Worker's public URL (it's the OAuth redirect base); deploy.sh
-# sets it after the first deploy. COOKIE_CROSS_SITE=1 makes the session cookie
-# SameSite=None; Secure, required because the blog and this Worker are different sites;
-# .dev.vars overrides it to 0 for same-site localhost dev.
+# Blog-specific configuration lives in encrypted D1 tenant documents. These are the only
+# non-secret, deployment-wide settings. SESSION_SECRET, CONFIG_MASTER_KEY, and
+# SERVICE_ADMIN_TOKEN are Worker secrets.
 [vars]
-REPO = "Kronuz/Kronuz.github.io"
-SITE_URL = "https://kronuz.github.io"
-REPO_URL = "https://github.com/Kronuz/Kronuz.github.io"
-ALLOWED_ORIGINS = "https://kronuz.github.io"
-ADMIN_LOGINS = "Kronuz"
-DEFAULT_TENANT_ID = "default"
 PUBLIC_BASE_URL = "https://discussions.kronuz.workers.dev"
-OAUTH_SCOPE = "read:user"
-COOKIE_CROSS_SITE = "1"
-DISCUSSIONS_STRIP_SUFFIX = ""
-DISCUSSIONS_GIPHY_KEY = ""
-# New-comment notifications (optional). Standard Slack, Discord, and Telegram providers are
-# inferred from their URL. NOTIFY_KIND is only an override for proxy/custom webhook URLs.
-# The webhook URL and feed token are secrets:
-#   wrangler secret put NOTIFY_WEBHOOK       # Slack/Discord webhook, or a Telegram sendMessage URL
-#   wrangler secret put NOTIFY_FEED_TOKEN    # gates GET /api/comments/feed?token=...
-# Leave NOTIFY_WEBHOOK unset to disable webhook notifications.
-NOTIFY_KIND = ""
-NOTIFY_TELEGRAM_CHAT = ""
-MAX_BODY = "65536"
 REQUEST_MAX_BYTES = "1048576"
-SESSION_TTL = "604800"

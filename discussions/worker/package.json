@@ -10,8 +10,7 @@
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "migrate:local": "wrangler d1 migrations apply discussions --local",
-    "migrate:remote": "wrangler d1 migrations apply discussions --remote",
-    "seed:local": "wrangler d1 execute discussions --local --file=./seed.sql"
+    "migrate:remote": "wrangler d1 migrations apply discussions --remote"
   },
   "dependencies": {
     "@shikijs/rehype": "^1.24.0",

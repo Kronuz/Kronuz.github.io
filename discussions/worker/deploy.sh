@@ -1,204 +1,74 @@
 #!/usr/bin/env bash
-#
-# Guided deploy of the discussions Worker to Cloudflare (D1 + secrets + OAuth + deploy).
-#
-# Safe to re-run: each step checks whether it's already done. Requires `wrangler login`
-# to have been run once (an authenticated Cloudflare account).
-#
-#   ./deploy.sh
-#
+# Create/migrate/deploy the multi-tenant Worker. Tenant configuration is submitted
+# separately with PUT /:tenant/config after deployment.
 set -uo pipefail
 cd "$(dirname "$0")"
 
 WRANGLER="npx wrangler"
 say()  { printf '\n\033[1;32m==> %s\033[0m\n' "$*"; }
-warn() { printf '\033[1;33m%s\033[0m\n' "$*"; }
 die()  { printf '\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
-
-# portable in-place sed (BSD/macOS + GNU)
 sedi() { sed -i.bak "$@" && rm -f "${@: -1}.bak" 2>/dev/null || true; }
+random_secret() { openssl rand -hex 32; }
 
-notify_kind_from_url() {
-  case "$1" in
-    https://discord.com/api/webhooks/*|https://discordapp.com/api/webhooks/*) printf 'discord' ;;
-    https://hooks.slack.com/services/*) printf 'slack' ;;
-    https://api.telegram.org/bot*/sendMessage*) printf 'telegram' ;;
-  esac
-}
-
-# --- 0. preflight ------------------------------------------------------------
-command -v npx >/dev/null || die "node/npx not found."
-$WRANGLER whoami >/dev/null 2>&1 || die "Not logged in. Run: npx wrangler login"
-say "Authenticated with Cloudflare as: $($WRANGLER whoami 2>/dev/null | grep -oE '[^ ]+@[^ ]+' | head -1 || echo '(account ok)')"
-
-# --- 1. D1 database ----------------------------------------------------------
-if grep -q 'database_id = "local-dev-placeholder"' wrangler.toml; then
-  say "Creating D1 database 'discussions'"
-  out=$($WRANGLER d1 create discussions) || die "d1 create failed"
-  echo "$out"
-  id=$(printf '%s' "$out" | grep -oiE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
-  [ -n "$id" ] || die "Could not parse database_id from the output above; paste it into wrangler.toml by hand."
-  sedi "s/database_id = \"local-dev-placeholder\"/database_id = \"$id\"/" wrangler.toml
-  say "Set database_id = $id in wrangler.toml"
-else
-  say "D1 database already configured (skipping create)"
+# Optional local source of the deployment-wide secrets. This file is gitignored. Empty
+# values mean "preserve the remote secret if it exists, otherwise generate one".
+if [ -f secrets.sh ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . ./secrets.sh
+  set +a
 fi
 
-# --- 2. migrations (remote) --------------------------------------------------
-say "Applying migrations to the remote D1 database"
+command -v npx >/dev/null || die "node/npx not found"
+command -v openssl >/dev/null || die "openssl not found"
+$WRANGLER whoami >/dev/null 2>&1 || die "Run: npx wrangler login"
+
+if grep -q 'database_id = "local-dev-placeholder"' wrangler.toml; then
+  say "Creating D1 database"
+  out=$($WRANGLER d1 create discussions) || die "d1 create failed"
+  printf '%s\n' "$out"
+  id=$(printf '%s' "$out" | grep -oiE '[0-9a-f]{8}-[0-9a-f-]{27,}' | head -1)
+  [ -n "$id" ] || die "Could not parse the D1 database ID"
+  sedi "s/database_id = \"local-dev-placeholder\"/database_id = \"$id\"/" wrangler.toml
+fi
+
+say "Applying D1 migrations"
 $WRANGLER d1 migrations apply discussions --remote || die "migrations failed"
 
-# --- 3. session secret -------------------------------------------------------
-if $WRANGLER secret list 2>/dev/null | grep -q "SESSION_SECRET"; then
-  say "SESSION_SECRET already set (skipping)"
-else
-  say "Generating and storing SESSION_SECRET"
-  if command -v openssl >/dev/null; then secret=$(openssl rand -hex 32); else secret=$(head -c 32 /dev/urandom | xxd -p | tr -d '\n'); fi
-  printf '%s' "$secret" | $WRANGLER secret put SESSION_SECRET || die "failed to set SESSION_SECRET"
-fi
-
-# --- 4. first deploy (to learn the Worker's URL) -----------------------------
-say "Deploying (first pass, to obtain the Worker URL)"
-if ! dout=$($WRANGLER deploy 2>&1); then
-  echo "$dout"
-  if printf '%s' "$dout" | grep -qiE "workers\.dev subdomain|register a workers\.dev|/workers/onboarding"; then
-    cat <<'TXT'
-
-Your Cloudflare account has no workers.dev subdomain yet (required before the first deploy).
-Register one (the onboarding link Cloudflare prints often 404s — navigate manually instead):
-  1. Open https://dash.cloudflare.com and pick your account.
-  2. In the sidebar open "Workers & Pages" (newer dashboards label it "Compute").
-  3. On first visit it prompts to choose a subdomain, e.g. "kronuz" -> *.kronuz.workers.dev.
-Then re-run ./deploy.sh — it resumes (the earlier steps are idempotent).
-TXT
-    exit 1
-  fi
-  die "First deploy failed (see the output above)."
-fi
-echo "$dout"
-url=$(printf '%s' "$dout" | grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' | head -1)
-[ -n "$url" ] || warn "Could not auto-detect the Worker URL from the deploy output above."
-
-# --- 5. set PUBLIC_BASE_URL (fill the placeholder, or fix a stale workers.dev URL) ----
-cur=$(grep -oE 'PUBLIC_BASE_URL = "[^"]*"' wrangler.toml | sed 's/.*"\(.*\)"/\1/')
-if printf '%s' "$cur" | grep -q 'CHANGE-ME'; then
-  if [ -n "$url" ]; then
-    sedi "s#PUBLIC_BASE_URL = \".*\"#PUBLIC_BASE_URL = \"$url\"#" wrangler.toml
-    say "Set PUBLIC_BASE_URL = $url in wrangler.toml"
+for name in SESSION_SECRET CONFIG_MASTER_KEY SERVICE_ADMIN_TOKEN; do
+  if $WRANGLER secret list 2>/dev/null | grep -q "\"name\": \"$name\""; then
+    say "$name already exists"
   else
-    warn "Edit wrangler.toml and set PUBLIC_BASE_URL to your Worker (or custom domain) URL, then re-run."
+    say "Creating $name"
+    value=${!name:-}
+    generated=0
+    if [ -z "$value" ]; then
+      value=$(random_secret)
+      generated=1
+    fi
+    printf '%s' "$value" | $WRANGLER secret put "$name" || die "failed to set $name"
+    if { [ "$name" = CONFIG_MASTER_KEY ] || [ "$name" = SERVICE_ADMIN_TOKEN ]; } && [ "$generated" -eq 1 ]; then
+      printf '\nSave this %s now; it will not be shown again:\n%s\n' "$name" "$value"
+    fi
   fi
-elif [ -n "$url" ] && printf '%s' "$cur" | grep -q '\.workers\.dev' && [ "$cur" != "$url" ]; then
-  # A stale *.workers.dev URL (e.g. after changing the account subdomain) — self-correct.
-  sedi "s#PUBLIC_BASE_URL = \".*\"#PUBLIC_BASE_URL = \"$url\"#" wrangler.toml
-  warn "PUBLIC_BASE_URL was $cur but the Worker is at $url — updated it."
-  warn "Remember to update the GitHub OAuth App callback URL to $url/auth/callback."
-else
-  say "PUBLIC_BASE_URL = ${cur:-<unset>} (respecting it; a custom domain?)"
-  url="${cur:-$url}"
-fi
+done
 
-# --- 6. GitHub OAuth App -----------------------------------------------------
-say "GitHub OAuth App"
-cat <<TXT
-Create (or reuse) a GitHub OAuth App: https://github.com/settings/developers -> "New OAuth App"
-  Application name:            Kronuz blog comments   (anything)
-  Homepage URL:               https://kronuz.github.io
-  Authorization callback URL: ${url:-<your Worker URL>}/auth/callback
-Then generate a client secret and have the Client ID + secret ready.
-TXT
-
-if $WRANGLER secret list 2>/dev/null | grep -q "OAUTH_CLIENT_ID"; then
-  say "OAUTH_CLIENT_ID already set. Re-enter to update it, or leave blank to keep."
-fi
-printf 'OAuth Client ID (blank to skip OAuth setup this run): '
-read -r CID
-if [ -n "$CID" ]; then
-  printf '%s' "$CID" | $WRANGLER secret put OAUTH_CLIENT_ID || die "failed to set OAUTH_CLIENT_ID"
-  say "Now paste the OAuth Client secret when prompted (input hidden):"
-  $WRANGLER secret put OAUTH_CLIENT_SECRET || die "failed to set OAUTH_CLIENT_SECRET"
-else
-  warn "Skipped OAuth secrets. Sign-in stays disabled until OAUTH_CLIENT_ID + OAUTH_CLIENT_SECRET are set."
-fi
-
-# --- 6b. GIF picker (optional): the composer's GIPHY picker ------------------
-say "GIF picker (optional)"
-cat <<'TXT'
-A public GIPHY API key enables the comment composer's GIF picker. The key is served to
-browsers via /api/config, so use one you're comfortable exposing on a public site.
-TXT
-def_tenant=$(grep -oE 'DEFAULT_TENANT_ID = "[^"]*"' wrangler.toml | sed 's/.*"\(.*\)"/\1/'); def_tenant=${def_tenant:-default}
-printf 'GIPHY API key (blank to skip; leaves any existing key unchanged): '
-read -r GKEY
-if [ -n "$GKEY" ]; then
-  gkey_esc=$(printf '%s' "$GKEY" | sed "s/'/''/g")
-  $WRANGLER d1 execute discussions --remote \
-    --command "UPDATE tenants SET giphy_key='$gkey_esc' WHERE id='$def_tenant'" \
-    && say "GIF picker enabled for tenant '$def_tenant'." \
-    || warn "Could not set giphy_key (set it later with a d1 execute UPDATE)."
-else
-  warn "Skipped the GIF picker (existing giphy_key, if any, left unchanged)."
-fi
-
-# --- 6c. New-comment notifications (optional) -------------------------------
-say "New-comment notifications (optional)"
-cat <<'TXT'
-Get pinged when a comment lands, and/or subscribe to a private Atom feed of recent comments.
-  - Webhook: paste a Slack, Discord, or Telegram URL. Its kind is inferred at runtime;
-    the URL itself becomes the NOTIFY_WEBHOOK secret.
-    Telegram also needs NOTIFY_TELEGRAM_CHAT in [vars] and a bot sendMessage URL.
-  - Atom feed: set the NOTIFY_FEED_TOKEN secret, then point your RSS reader at
-    <Worker URL>/api/comments/feed?token=<token>.
-TXT
-printf 'Webhook URL for new-comment pings (blank to skip): '
-read -rs NWH
-printf '\n'
-if [ -n "$NWH" ]; then
-  notify_kind=$(notify_kind_from_url "$NWH")
-  current_kind=$(grep -oE 'NOTIFY_KIND = "[^"]*"' wrangler.toml | sed 's/.*"\([^"]*\)"/\1/')
-  if [ -z "$notify_kind" ]; then
-    case "$current_kind" in
-      slack|discord|telegram)
-        notify_kind=$current_kind
-        warn "Could not identify the provider from its URL; using the configured NOTIFY_KIND = \"$notify_kind\" override."
-        ;;
-      *)
-        warn "Could not identify that URL; set a NOTIFY_KIND override for proxy/custom URLs. Skipping NOTIFY_WEBHOOK."
-        NWH=""
-        ;;
-    esac
-  fi
-fi
-if [ -n "$NWH" ]; then
-  printf '%s' "$NWH" | $WRANGLER secret put NOTIFY_WEBHOOK \
-    && say "NOTIFY_WEBHOOK set; provider = \"$notify_kind\"." \
-    || warn "Could not set NOTIFY_WEBHOOK."
-else
-  warn "Skipped the webhook (no NOTIFY_WEBHOOK)."
-fi
-printf 'Atom feed token (blank to skip; enables /api/comments/feed): '
-read -rs NFT
-printf '\n'
-if [ -n "$NFT" ]; then
-  printf '%s' "$NFT" | $WRANGLER secret put NOTIFY_FEED_TOKEN \
-    && say "NOTIFY_FEED_TOKEN set. Feed: ${url:-<Worker URL>}/api/comments/feed?token=..." \
-    || warn "Could not set NOTIFY_FEED_TOKEN."
-else
-  warn "Skipped the comments Atom feed (no NOTIFY_FEED_TOKEN)."
-fi
-
-# --- 7. final deploy (applies PUBLIC_BASE_URL + any new secrets) --------------
-say "Deploying (final)"
+say "Deploying Worker"
 $WRANGLER deploy || die "deploy failed"
 
-# --- 8. wire the blog --------------------------------------------------------
-say "Done. Backend is live at: ${url:-<your Worker URL>}"
+base=$(grep -oE 'PUBLIC_BASE_URL = "[^"]*"' wrangler.toml | sed 's/.*"\(.*\)"/\1/')
 cat <<TXT
 
-Last step, in the blog (this repo):
-  set  DISCUSSIONS_BACKEND = '${url:-<your Worker URL>}'  in  src/consts.ts
-  then rebuild + deploy the site (GitHub Pages).
+Deploy complete.
 
-That flips blog posts from giscus to this self-hosted widget. Verify:
-  curl ${url:-<your Worker URL>}/api/health
+Create or replace a tenant by copying tenant-config.example.json, filling every value,
+then sending the complete document:
+
+  curl -X PUT '$base/kronuz/config' \\
+    -H 'Authorization: Bearer <SERVICE_ADMIN_TOKEN>' \\
+    -H 'Content-Type: application/json' \\
+    --data-binary @tenant-config.json
+
+OAuth callback for that tenant:
+  $base/kronuz/auth/callback
 TXT

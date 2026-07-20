@@ -17,7 +17,7 @@ import type { D1Database } from "@cloudflare/workers-types";
 const now = (): number => Date.now() / 1000;
 
 const COMMENT_COLS =
-  "id, term, parent_id, author_login, author_name, author_avatar, author_url, " +
+  "id, term, parent_id, author_login, author_subject, author_name, author_avatar, author_url, " +
   "body_md, body_html, created_at, updated_at, is_minimized, min_reason, hidden_at, tenant_id";
 
 export interface CommentRow {
@@ -25,6 +25,7 @@ export interface CommentRow {
   term: string;
   parent_id: string | null;
   author_login: string;
+  author_subject: string;
   author_name: string | null;
   author_avatar: string | null;
   author_url: string | null;
@@ -40,13 +41,11 @@ export interface CommentRow {
 
 export interface TenantRow {
   id: string;
-  origin: string | null;
-  repo: string | null;
-  repo_url: string | null;
-  strip_suffix: string;
-  giphy_key: string;
-  created_at?: number;
-  admins?: string[];
+  active: boolean;
+  config_ciphertext: string;
+  config_nonce: string;
+  created_at: number;
+  updated_at: number | null;
 }
 
 export interface DiscussionRow {
@@ -83,6 +82,7 @@ function toCommentRow(r: Record<string, unknown>): CommentRow {
     term: r.term as string,
     parent_id: (r.parent_id as string | null) ?? null,
     author_login: r.author_login as string,
+    author_subject: (r.author_subject as string) || "",
     author_name: (r.author_name as string | null) ?? null,
     author_avatar: (r.author_avatar as string | null) ?? null,
     author_url: (r.author_url as string | null) ?? null,
@@ -101,147 +101,31 @@ export class Database {
   constructor(private db: D1Database) {}
 
   // --- tenants ---------------------------------------------------------------
-  async tenantSeedDefault(
-    tenantId: string,
-    origin: string,
-    repo: string,
-    repoUrl: string,
-    admins: string[],
-  ): Promise<void> {
-    const stmts = [
-      this.db
-        .prepare("INSERT OR IGNORE INTO tenants(id, origin, repo, repo_url, created_at) VALUES(?,?,?,?,?)")
-        .bind(tenantId, origin, repo, repoUrl, now()),
-      ...admins.map((login) =>
-        this.db.prepare("INSERT OR IGNORE INTO tenant_admins(tenant_id, login) VALUES(?,?)").bind(tenantId, login),
-      ),
-    ];
-    await this.db.batch(stmts);
-  }
-
-  async tenantLoadAll(): Promise<{ tenants: TenantRow[]; admins: Record<string, Set<string>> }> {
-    const t = await this.db
-      .prepare("SELECT id, origin, repo, repo_url, strip_suffix, giphy_key FROM tenants")
-      .all<Record<string, unknown>>();
-    const tenants: TenantRow[] = (t.results || []).map((r) => ({
-      id: r.id as string,
-      origin: (r.origin as string | null) ?? null,
-      repo: (r.repo as string | null) ?? null,
-      repo_url: (r.repo_url as string | null) ?? null,
-      strip_suffix: (r.strip_suffix as string) ?? "",
-      giphy_key: (r.giphy_key as string) ?? "",
-    }));
-    const a = await this.db.prepare("SELECT tenant_id, login FROM tenant_admins").all<Record<string, unknown>>();
-    const admins: Record<string, Set<string>> = {};
-    for (const r of a.results || []) {
-      const tid = r.tenant_id as string;
-      (admins[tid] ??= new Set()).add(r.login as string);
-    }
-    return { tenants, admins };
-  }
-
   async tenantGet(tenantId: string): Promise<TenantRow | null> {
     const r = await this.db
-      .prepare(
-        "SELECT id, origin, repo, repo_url, created_at, strip_suffix, giphy_key FROM tenants WHERE id=?",
-      )
+      .prepare("SELECT id, active, config_ciphertext, config_nonce, created_at, updated_at FROM tenants WHERE id=?")
       .bind(tenantId)
       .first<Record<string, unknown>>();
     if (!r) return null;
     return {
       id: r.id as string,
-      origin: (r.origin as string | null) ?? null,
-      repo: (r.repo as string | null) ?? null,
-      repo_url: (r.repo_url as string | null) ?? null,
-      created_at: r.created_at as number,
-      strip_suffix: (r.strip_suffix as string) ?? "",
-      giphy_key: (r.giphy_key as string) ?? "",
+      active: Boolean(r.active),
+      config_ciphertext: String(r.config_ciphertext || ""),
+      config_nonce: String(r.config_nonce || ""),
+      created_at: Number(r.created_at),
+      updated_at: r.updated_at == null ? null : Number(r.updated_at),
     };
   }
 
-  async tenantAdmins(tenantId: string): Promise<string[]> {
-    const a = await this.db
-      .prepare("SELECT login FROM tenant_admins WHERE tenant_id=?")
-      .bind(tenantId)
-      .all<Record<string, unknown>>();
-    return (a.results || []).map((r) => r.login as string);
-  }
-
-  async tenantCreate(
-    tenantId: string,
-    origin: string,
-    repo = "",
-    repoUrl = "",
-    admins: string[] = [],
-    stripSuffix = "",
-    giphyKey = "",
-  ): Promise<void> {
-    const stmts = [
-      this.db
-        .prepare(
-          "INSERT INTO tenants(id, origin, repo, repo_url, created_at, strip_suffix, giphy_key) " +
-            "VALUES(?,?,?,?,?,?,?) " +
-            "ON CONFLICT(id) DO UPDATE SET origin=excluded.origin, repo=excluded.repo, " +
-            "repo_url=excluded.repo_url, strip_suffix=excluded.strip_suffix, giphy_key=excluded.giphy_key",
-        )
-        .bind(tenantId, origin, repo, repoUrl, now(), stripSuffix, giphyKey),
-      ...admins.map((login) =>
-        this.db.prepare("INSERT OR IGNORE INTO tenant_admins(tenant_id, login) VALUES(?,?)").bind(tenantId, login),
-      ),
-    ];
-    await this.db.batch(stmts);
-  }
-
-  async tenantDelete(tenantId: string, purge = false): Promise<void> {
-    const stmts = [
-      this.db.prepare("DELETE FROM tenant_admins WHERE tenant_id=?").bind(tenantId),
-      this.db.prepare("DELETE FROM tenants WHERE id=?").bind(tenantId),
-    ];
-    if (purge) {
-      stmts.push(
-        this.db.prepare("DELETE FROM reactions WHERE tenant_id=?").bind(tenantId),
-        this.db.prepare("DELETE FROM comments WHERE tenant_id=?").bind(tenantId),
-        this.db.prepare("DELETE FROM discussions WHERE tenant_id=?").bind(tenantId),
-      );
-    }
-    await this.db.batch(stmts);
-  }
-
-  async tenantAdminAdd(tenantId: string, login: string): Promise<void> {
-    await this.db
-      .prepare("INSERT OR IGNORE INTO tenant_admins(tenant_id, login) VALUES(?,?)")
-      .bind(tenantId, login)
-      .run();
-  }
-
-  async tenantAdminRemove(tenantId: string, login: string): Promise<void> {
-    await this.db
-      .prepare("DELETE FROM tenant_admins WHERE tenant_id=? AND login=?")
-      .bind(tenantId, login)
-      .run();
-  }
-
-  async tenantList(): Promise<TenantRow[]> {
-    const t = await this.db
-      .prepare(
-        "SELECT id, origin, repo, repo_url, created_at, strip_suffix, giphy_key FROM tenants ORDER BY created_at",
-      )
-      .all<Record<string, unknown>>();
-    const tenants: TenantRow[] = (t.results || []).map((r) => ({
-      id: r.id as string,
-      origin: (r.origin as string | null) ?? null,
-      repo: (r.repo as string | null) ?? null,
-      repo_url: (r.repo_url as string | null) ?? null,
-      created_at: r.created_at as number,
-      strip_suffix: (r.strip_suffix as string) ?? "",
-      giphy_key: (r.giphy_key as string) ?? "",
-      admins: [],
-    }));
-    const a = await this.db.prepare("SELECT tenant_id, login FROM tenant_admins").all<Record<string, unknown>>();
-    const byT: Record<string, string[]> = {};
-    for (const r of a.results || []) (byT[r.tenant_id as string] ??= []).push(r.login as string);
-    for (const t2 of tenants) t2.admins = (byT[t2.id] || []).sort();
-    return tenants;
+  async tenantPut(tenantId: string, active: boolean, ciphertext: string, nonce: string): Promise<boolean> {
+    const existed = Boolean(await this.tenantGet(tenantId));
+    await this.db.prepare(
+      "INSERT INTO tenants(id, origin, repo, repo_url, created_at, active, config_ciphertext, config_nonce, updated_at) " +
+      "VALUES(?, '', '', '', ?, ?, ?, ?, ?) " +
+      "ON CONFLICT(id) DO UPDATE SET active=excluded.active, config_ciphertext=excluded.config_ciphertext, " +
+      "config_nonce=excluded.config_nonce, updated_at=excluded.updated_at",
+    ).bind(tenantId, now(), active ? 1 : 0, ciphertext, nonce, now()).run();
+    return !existed;
   }
 
   // --- discussions -----------------------------------------------------------
@@ -278,12 +162,13 @@ export class Database {
   // --- comments --------------------------------------------------------------
   async commentInsert(c: CommentRow): Promise<void> {
     await this.db
-      .prepare(`INSERT INTO comments(${COMMENT_COLS}) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+      .prepare(`INSERT INTO comments(${COMMENT_COLS}) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
       .bind(
         c.id,
         c.term,
         c.parent_id,
         c.author_login,
+        c.author_subject,
         c.author_name,
         c.author_avatar,
         c.author_url,

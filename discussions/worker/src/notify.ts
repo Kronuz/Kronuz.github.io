@@ -2,14 +2,14 @@
  * New-comment notifications: a fire-and-forget webhook ping so the blog owner learns a
  * comment landed (otherwise the store just writes it to D1 and nothing says so).
  *
- * The channel is configurable via NOTIFY_KIND (slack | discord | telegram); the
- * standard provider is inferred from the NOTIFY_WEBHOOK secret, with NOTIFY_KIND as an
- * optional override for proxy/custom URLs. Nothing is sent unless the webhook is set. Slack and
+ * The channel is configured by each tenant (slack | discord | telegram); the standard
+ * provider can be inferred from its webhook URL, with `kind` as an optional override.
+ * Nothing is sent unless the webhook is set. Slack and
  * Discord take a plain JSON webhook; Telegram posts to a bot `sendMessage` URL and also
- * needs NOTIFY_TELEGRAM_CHAT. Best-effort: failures are logged, never surfaced to the
+ * needs `telegramChat`. Best-effort: failures are logged, never surfaced to the
  * commenter, and the POST rides `waitUntil` so it doesn't delay the response.
  */
-import type { Env } from "./config.js";
+import type { TenantConfig } from "./tenant-config.js";
 import {
   notificationMessage,
   notificationPayload,
@@ -58,16 +58,16 @@ async function deliver(url: string, kind: string, body: unknown): Promise<void> 
   }
 }
 
-export function notifyNewComment(env: Env, ctx: WaitUntil | undefined, input: NotifyInput): void {
-  const url = env.NOTIFY_WEBHOOK || "";
+export function notifyNewComment(config: TenantConfig["notifications"], ctx: WaitUntil | undefined, input: NotifyInput): void {
+  const url = config.webhookUrl || "";
   if (!url) return; // notifications disabled
-  const configuredKind = notifyKind(env.NOTIFY_KIND);
+  const configuredKind = notifyKind(config.kind);
   const kind = configuredKind || notifyKindFromUrl(url);
   if (!kind) {
-    console.warn("notify: could not infer a provider from NOTIFY_WEBHOOK; set a valid NOTIFY_KIND override");
+    console.warn("notify: could not infer a provider from the tenant webhook; set a valid kind override");
     return;
   }
-  const body = notificationPayload(kind, { telegramChat: env.NOTIFY_TELEGRAM_CHAT }, notificationMessage(input));
+  const body = notificationPayload(kind, { telegramChat: config.telegramChat }, notificationMessage(input));
   if (!body) return;
   const task = deliver(url, kind, body);
   if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(task);

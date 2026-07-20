@@ -31,7 +31,7 @@ export const GISCUS = {
 // backend is configured and otherwise falls back to giscus, so setting DISCUSSIONS_BACKEND
 // to the deployed backend URL is the whole swap. The PUBLIC_DISCUSSIONS_BACKEND build env
 // var overrides this for local dev. Empty = giscus stays active.
-export const DISCUSSIONS_BACKEND = 'https://discussions.kronuz.workers.dev';
+export const DISCUSSIONS_BACKEND = 'https://discussions.kronuz.workers.dev/kronuz';
 // Login suffix dropped when displaying handles (cosmetic; e.g. "_sso"). Empty = as-is.
 export const DISCUSSIONS_STRIP_SUFFIX = '';
 // Public GIPHY key; when set, the composer shows a client-side GIF picker. Empty = no GIF button.

@@ -1,12 +1,11 @@
 /**
  * A private Atom feed of the most recent comments across a tenant, so the blog owner can
- * subscribe in any RSS reader and see new comments without email or a webhook. Gated by
- * the NOTIFY_FEED_TOKEN secret (a `?token=` query), since comment bodies are not otherwise
- * a public read here.
+ * subscribe in any RSS reader and see new comments without email or a webhook. The
+ * tenant's configured feed token gates the URL.
  */
-import type { Cfg } from "./config.js";
 import type { RecentComment } from "./db.js";
 import { commentPermalink } from "./notify-core.js";
+import type { TenantConfig } from "./tenant-config.js";
 
 function xmlEscape(s: string): string {
   return (s || "")
@@ -34,10 +33,9 @@ function entry(parts: string[]): string {
   return ["  <entry>", ...parts, "  </entry>"].join("\n");
 }
 
-export function atomFeed(cfg: Cfg, rows: RecentComment[]): string {
-  const site = cfg.siteUrl || cfg.publicBaseUrl;
-  const feedId = (cfg.publicBaseUrl || site) + "/api/comments/feed";
-  const author = cfg.repo || site || "Comments";
+export function atomFeed(config: TenantConfig, feedId: string, rows: RecentComment[]): string {
+  const site = config.site.url;
+  const author = config.site.repo || site || "Comments";
   const updated = rows.length ? iso(rows[0].created_at) : EMPTY_TS;
   // A brand-new backend has no comments, and many readers refuse to subscribe to a feed
   // with zero entries — so emit one stable placeholder until a real comment arrives.
@@ -74,7 +72,7 @@ export function atomFeed(cfg: Cfg, rows: RecentComment[]): string {
   return [
     '<?xml version="1.0" encoding="utf-8"?>',
     '<feed xmlns="http://www.w3.org/2005/Atom">',
-    `  <title>${xmlEscape(`Comments \u2014 ${cfg.repo || site}`)}</title>`,
+    `  <title>${xmlEscape(`Comments \u2014 ${config.site.repo || site}`)}</title>`,
     `  <id>${xmlEscape(feedId)}</id>`,
     `  <updated>${updated}</updated>`,
     `  <icon>${xmlEscape(site.replace(/\/+$/, "") + "/favicon.ico")}</icon>`,

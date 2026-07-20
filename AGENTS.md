@@ -140,7 +140,7 @@ Do not add the `Co-authored-by: Copilot` trailer to commits.
 
 ## Navigation, chrome & snippets
 
-The page chrome is shared byte-for-byte with the internal mirror (see "Two-blog sync"); the
+The page chrome is shared byte-for-byte with the internal mirror (see "Cross-repo sync"); the
 durable rules:
 
 - **One authoritative menu** in `src/lib/sidebar.mjs` (About · Projects · Blog), re-set on every
@@ -159,7 +159,7 @@ durable rules:
 - **Hero icon-first:** `attrs.class: kz-icon-first` on a hero action renders its icon before the
   text (the Projects and About actions use it).
 
-## Two-blog sync
+## Cross-repo sync
 
 This repo and the **internal** mirror (`~/Development/KronuzBlog/gmendezb-pages`, branch `main`,
 served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared components,
@@ -170,9 +170,14 @@ served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared 
 After editing a shared file, copy it to the other repo and rebuild both. **Legitimately
 different:** content (posts, `about.md`, `index.mdx`, `projects.md`), `sidebar.mjs` (this side adds
 Projects), `content.config.ts`, `astro.config.mjs`, `consts.ts`, `SiteTitle.astro`, `Footer.astro`,
-`ReplHero.astro`, and the comment system — this (public) side uses `Giscus.astro`; the internal
-side appends a self-hosted comments widget (`Discussions.astro`, a SQLite-backed store wired in
-via `MarkdownContent.astro`).
+`ReplHero.astro`, and the surrounding `MarkdownContent.astro` layout.
+
+The comments frontend has a three-repo sync contract. `discussions/widget/` and
+`src/components/Discussions.astro` must be byte-identical here, in
+`~/code/KronuzBlog/gmendezb-pages`, and in `~/code/Kronuz/Xapiand/docs`. The public and
+internal blogs mount it with different tenant base URLs on the shared Cloudflare Worker.
+Xapiand carries the component and widget for reuse but does not currently mount comments.
+The Worker and D1 backend live only in this repository under `discussions/worker/`.
 
 ## Deferred ideas
 

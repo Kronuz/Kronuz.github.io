@@ -1,8 +1,8 @@
 # Discussions — a self-hosted comments widget (a giscus alternative)
 
 A framework-free comment widget (`widget/`) plus a small Cloudflare Worker backend
-(`worker/`, Hono + Cloudflare D1) for blog comments backed by GitHub. Sign-in is GitHub
-OAuth for identity only; Markdown is rendered and syntax-highlighted server-side with Shiki
+(`worker/`, Hono + Cloudflare D1) for public blog comments. Each tenant configures its own
+OAuth provider for identity; Markdown is rendered and syntax-highlighted server-side with Shiki
 using the blog's own themes, so comment code matches the article code blocks.
 
 ## Layout
@@ -10,7 +10,7 @@ using the blog's own themes, so comment code matches the article code blocks.
 ```
 widget/     framework-free widget (JS/CSS) — the UI; auto-mounts every .gc[data-term]
 worker/     Cloudflare Worker backend (Hono + D1): OAuth, comments, replies,
-            reactions, moderation, Markdown rendering; multi-tenant, keyed by origin
+            reactions, moderation, Markdown rendering; multi-tenant, keyed by URL path
 ```
 
 The widget is backend-agnostic: it reads and writes through whatever `data-backend` URL it
@@ -22,6 +22,6 @@ cookies are blocked), with the session cookie as a fallback.
 See `worker/README.md` for the backend (features, D1 schema, configuration, deploy) and
 `widget/README.md` for embedding the widget and its data-attributes.
 
-> **Note.** This started as a FastAPI/Python backend; it was ported to the Cloudflare
-> Worker in `worker/`, which is now the only backend here. The internal "Thinking Out Loud"
-> blog still runs the Python variant behind its own SSO.
+The backend URL includes the tenant, for example
+`https://discussions.kronuz.workers.dev/kronuz`. See `worker/README.md` for the
+complete configuration and deployment contract.

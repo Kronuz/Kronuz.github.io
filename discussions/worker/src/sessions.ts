@@ -10,6 +10,8 @@
  * in the cookie. Signing (not encryption) is therefore enough.
  */
 export interface Identity {
+  tenantId: string;
+  subject: string;
   login: string;
   name: string;
   avatarUrl: string;

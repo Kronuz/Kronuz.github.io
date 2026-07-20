@@ -1,45 +1,44 @@
-/**
- * GitHub client: the OAuth token exchange and the /user identity lookup.
- *
- * A port of the identity-only parts of discussions/backend/discussions/gh.py. The Python
- * module also carried a GraphQL transport for the github store; that store isn't part of
- * this Worker, so only sign-in remains. httpx becomes the Workers-native `fetch`.
- */
-import { type Cfg, HttpError } from "./config.js";
+import { HttpError } from "./config.js";
+import type { TenantConfig } from "./tenant-config.js";
 
-const UA = "blog-comments";
-
-export interface GitHubUser {
+export interface OAuthUser {
+  subject: string;
   login: string;
-  avatar_url: string;
-  name?: string | null;
-  html_url?: string | null;
+  avatarUrl: string;
+  name: string;
+  profileUrl: string;
 }
 
-/** Exchange an OAuth code for (access_token, granted_scope). */
-export async function exchangeCode(cfg: Cfg, code: string): Promise<{ token: string; scope: string }> {
-  const resp = await fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json", "User-Agent": UA },
-    body: new URLSearchParams({
-      client_id: cfg.oauthClientId,
-      client_secret: cfg.oauthClientSecret,
-      code,
-      redirect_uri: cfg.publicBaseUrl + "/auth/callback",
-    }),
-  });
-  const data = (await resp.json()) as { access_token?: string; scope?: string };
-  if (!data.access_token) {
-    throw new HttpError(502, "oauth exchange failed: " + JSON.stringify(data));
+function field(data: unknown, path: string): unknown {
+  return path.split(".").reduce<unknown>((value, key) => value && typeof value === "object" ? (value as Record<string, unknown>)[key] : undefined, data);
+}
+
+export async function exchangeCode(oauth: TenantConfig["oauth"], code: string, redirectUri: string): Promise<string> {
+  const params = new URLSearchParams({ code, redirect_uri: redirectUri });
+  const headers: Record<string, string> = { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "blog-comments" };
+  if (oauth.clientAuthMethod === "client_secret_basic") {
+    headers.Authorization = "Basic " + btoa(`${oauth.clientId}:${oauth.clientSecret}`);
+  } else {
+    params.set("client_id", oauth.clientId);
+    params.set("client_secret", oauth.clientSecret);
   }
-  return { token: data.access_token, scope: data.scope || "" };
+  const response = await fetch(oauth.tokenUrl, { method: "POST", headers, body: params });
+  const data: Record<string, unknown> = await response.json<Record<string, unknown>>().catch(() => ({}));
+  const token = data.access_token;
+  if (!response.ok || typeof token !== "string" || !token) throw new HttpError(502, "OAuth token exchange failed");
+  return token;
 }
 
-/** Fetch the signed-in user's public identity with their token. */
-export async function user(token: string): Promise<GitHubUser> {
-  const resp = await fetch("https://api.github.com/user", {
-    headers: { Authorization: "bearer " + token, Accept: "application/vnd.github+json", "User-Agent": UA },
-  });
-  if (!resp.ok) throw new HttpError(502, "GitHub identity lookup failed");
-  return (await resp.json()) as GitHubUser;
+export async function user(oauth: TenantConfig["oauth"], token: string): Promise<OAuthUser> {
+  const response = await fetch(oauth.userUrl, { headers: { Authorization: `Bearer ${token}`, Accept: "application/json", "User-Agent": "blog-comments" } });
+  if (!response.ok) throw new HttpError(502, "OAuth identity lookup failed");
+  const data = await response.json<unknown>();
+  const subject = field(data, oauth.fields.subject);
+  const login = field(data, oauth.fields.login);
+  if ((typeof subject !== "string" && typeof subject !== "number") || typeof login !== "string") throw new HttpError(502, "OAuth identity response is missing required fields");
+  const optional = (path: string): string => {
+    const value = field(data, path);
+    return typeof value === "string" ? value : "";
+  };
+  return { subject: String(subject), login, name: optional(oauth.fields.name) || login, avatarUrl: optional(oauth.fields.avatar), profileUrl: optional(oauth.fields.profileUrl) };
 }

@@ -7,13 +7,13 @@
  * are keyed by `term` (the post slug) within a tenant. Authorization is ours: a comment's
  * author may edit/delete it; a moderator of the comment's tenant may delete/hide any.
  */
-import type { Cfg } from "./config.js";
 import { HttpError } from "./config.js";
 import type { CommentRow, Database, ReactionGroup } from "./db.js";
 import * as md from "./md.js";
-import type { TenantRegistry } from "./tenants.js";
+import type { TenantContext } from "./tenants.js";
 
 export interface Viewer {
+  subject: string;
   login: string;
   name: string;
   avatarUrl: string;
@@ -110,13 +110,13 @@ function toDict(
 export class SelfHostedStore {
   constructor(
     private db: Database,
-    private tenants: TenantRegistry,
-    private cfg: Cfg,
+    private tenants: TenantContext,
+    private maxBody: number,
   ) {}
 
   /** A moderator of the comment's OWN tenant may hide/delete it (per-tenant). */
   private canModerate(row: CommentRow, viewer: Viewer): boolean {
-    return this.tenants.isAdmin(row.tenant_id, viewer.login);
+    return this.tenants.isAdmin(row.tenant_id, viewer.subject, viewer.login);
   }
 
   async getDiscussion(opts: {
@@ -180,7 +180,7 @@ export class SelfHostedStore {
     let replyToId = opts.replyToId;
     if (!term) throw new HttpError(400, "term required");
     if (!(body || "").trim()) throw new HttpError(400, "empty comment");
-    if (body.length > this.cfg.maxBody) throw new HttpError(413, "comment too long");
+    if (body.length > this.maxBody) throw new HttpError(413, "comment too long");
     if (replyToId) {
       const parent = await this.db.commentGet(replyToId);
       if (!parent || parent.term !== term || parent.tenant_id !== tenantId) {
@@ -200,6 +200,7 @@ export class SelfHostedStore {
       term,
       parent_id: replyToId,
       author_login: viewer.login,
+      author_subject: viewer.subject,
       author_name: viewer.name ?? null,
       author_avatar: viewer.avatarUrl ?? null,
       author_url: viewer.url ?? null,
@@ -220,10 +221,10 @@ export class SelfHostedStore {
     const viewer = requireViewer(opts.viewer);
     const { commentId, body } = opts;
     if (!(body || "").trim()) throw new HttpError(400, "empty comment");
-    if (body.length > this.cfg.maxBody) throw new HttpError(413, "comment too long");
+    if (body.length > this.maxBody) throw new HttpError(413, "comment too long");
     const row = await this.db.commentGet(commentId);
-    if (!row) throw new HttpError(404, "comment not found");
-    if (!(row.author_login === viewer.login || this.canModerate(row, viewer))) {
+    if (!row || row.tenant_id !== viewer.tenant_id) throw new HttpError(404, "comment not found");
+    if (!((row.author_subject ? row.author_subject === viewer.subject : row.author_login === viewer.login) || this.canModerate(row, viewer))) {
       throw new HttpError(403, "not allowed to edit this comment");
     }
     const html = await md.render(body);
@@ -238,8 +239,8 @@ export class SelfHostedStore {
   async deleteComment(opts: { commentId: string; viewer: Viewer | null }): Promise<unknown> {
     const viewer = requireViewer(opts.viewer);
     const row = await this.db.commentGet(opts.commentId);
-    if (!row) throw new HttpError(404, "comment not found");
-    if (!(row.author_login === viewer.login || this.canModerate(row, viewer))) {
+    if (!row || row.tenant_id !== viewer.tenant_id) throw new HttpError(404, "comment not found");
+    if (!((row.author_subject ? row.author_subject === viewer.subject : row.author_login === viewer.login) || this.canModerate(row, viewer))) {
       throw new HttpError(403, "not allowed to delete this comment");
     }
     const deletedIds = await this.db.commentDelete(opts.commentId);
@@ -255,7 +256,7 @@ export class SelfHostedStore {
   }): Promise<ApiComment> {
     const viewer = requireViewer(opts.viewer);
     const row = await this.db.commentGet(opts.commentId);
-    if (!row) throw new HttpError(404, "comment not found");
+    if (!row || row.tenant_id !== viewer.tenant_id) throw new HttpError(404, "comment not found");
     if (!this.canModerate(row, viewer)) throw new HttpError(403, "moderators only");
     let norm: string | null = null;
     if (opts.hide) {
@@ -279,7 +280,7 @@ export class SelfHostedStore {
     const viewer = requireViewer(opts.viewer);
     const content = checkReaction(opts.content);
     const row = await this.db.commentGet(opts.commentId);
-    if (!row) throw new HttpError(404, "comment not found");
+    if (!row || row.tenant_id !== viewer.tenant_id) throw new HttpError(404, "comment not found");
     if (row.is_minimized) throw new HttpError(403, "cannot react to a hidden comment");
     await this.db.reactToggle(opts.commentId, viewer.login, content, opts.on, row.tenant_id);
     const groups = (await this.db.reactionsFor([opts.commentId], viewer.login))[opts.commentId] || [];
@@ -289,7 +290,7 @@ export class SelfHostedStore {
   async preview(opts: { text: string; viewer: Viewer | null }): Promise<string> {
     requireViewer(opts.viewer);
     const text = opts.text || "";
-    if (text.length > this.cfg.maxBody) throw new HttpError(413, "comment too long");
+    if (text.length > this.maxBody) throw new HttpError(413, "comment too long");
     if (!text.trim()) return "";
     return md.render(text);
   }
