@@ -23,22 +23,29 @@ I wanted the prompt to be useful while I was typing and quiet after I pressed En
 
 Here is the intended before and after. This is one session, first with every full prompt preserved, then with previous prompts collapsed. The last prompt stays full because it is still live:
 
-```ansi
-[0;38:2:1:149:129:94m# before[0m
-[0;32m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m
-[0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38;5;94mcd[0m [0;4m~/code/KronuZSH[0m
-[0;32m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38;5;231;1mmain[0m [0;90m⇅[0m [0;38;5;231morigin/main[0;90m [0;90m([0;38;5;83m✔[0;90m)[0m
-[0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38;5;94mfalse[0m
-[0;31m⏎ 1[0m
-[0;31m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38;5;231;1mmain[0m [0;90m⇅[0m [0;38;5;231morigin/main[0;90m [0;90m([0;38;5;83m✔[0;90m)[0m
-[0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
+```ansi title="before"
+[0;90m[7:13:00][0m [0;38:2:1:0:175:255m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38:2:1:204:120:51mcd[0m [0;4m~/code/KronuZSH[0m[0m
+[0;32m●[0m [0;38:2:1:255:255:255;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:2:1:255:255:255;1mmain[0m [0;90m⇅[0m [0;38:2:1:255:255:255morigin/main[0;90m ([0;38:2:1:95:255:95m✔[0;90m)[0m[0m
+[0;90m[7:13:00][0m [0;38:2:1:0:175:255m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38:2:1:204:120:51mfalse[0m[0m
+[0;31m⏎ 1[0m[0m
+[0;31m●[0m [0;38:2:1:255:255:255;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:2:1:255:255:255;1mmain[0m [0;90m⇅[0m [0;38:2:1:255:255:255morigin/main[0;90m ([0;38:2:1:95:255:95m✔[0;90m)[0m[0m
+[0;90m[7:13:00][0m [0;38:2:1:0:175:255m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38:2:1:204:120:51mtrue[0m[0m
+[0;32m●[0m [0;38:2:1:255:255:255;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:2:1:255:255:255;1mmain[0m [0;90m⇅[0m [0;38:2:1:255:255:255morigin/main[0;90m ([0;38:2:1:95:255:95m✔[0;90m)[0m[0m
+[0;90m[7:13:00][0m [0;38:2:1:0:175:255m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38:2:1:204:120:51mecho[0m [0;38:2:1:165:194:97m"Hello world"[0m[0m
+Hello world[0m
+[0;32m●[0m [0;38:2:1:255:255:255;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:2:1:255:255:255;1mmain[0m [0;90m⇅[0m [0;38:2:1:255:255:255morigin/main[0;90m ([0;38:2:1:95:255:95m✔[0;90m)[0m[0m
+[0;90m[7:13:00][0m [0;38:2:1:0:175:255m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
+```
 
-[0;38:2:1:149:129:94m# after[0m
-[38;5;31m~[0m [0;38;5;249;1m❯[0m [0;38;5;130mcd[0m [0;4m~/code/KronuZSH[0m
-[38;5;31m~/code/KronuZSH[0m [0;38;5;249;1m❯[0m [0;38;5;130mfalse[0m
-[0;31m⏎ 1[0m
-[0;31m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38;5;231;1mmain[0m [0;90m⇅[0m [0;38;5;231morigin/main[0;90m [0;90m([0;38;5;83m✔[0;90m)[0m
-[0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
+```ansi title="after"
+[0;38:2:1:0:122:178m~[0m [0;38:2:1:178:178:178;1m❯[0m [0;38:2:1:142:84:35mcd[0m [0;4m~/code/KronuZSH[0m[0m
+[0;38:2:1:0:122:178m~/code/KronuZSH[0m [0;38:2:1:178:178:178;1m❯[0m [0;38:2:1:142:84:35mfalse[0m[0m
+[2;31m⏎ 1[0m[0m
+[0;38:2:1:0:122:178m~/code/KronuZSH[0m [0;38:2:1:178:178:178;1m❯[0m [0;38:2:1:142:84:35mtrue[0m[0m
+[0;38:2:1:0:122:178m~/code/KronuZSH[0m [0;38:2:1:178:178:178;1m❯[0m [0;38:2:1:142:84:35mecho[0m [0;38:2:1:115:135:67m"Hello world"[0m[0m
+Hello world[0m
+[0;32m●[0m [0;38:2:1:255:255:255;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:2:1:255:255:255;1mmain[0m [0;90m⇅[0m [0;38:2:1:255:255:255morigin/main[0;90m ([0;38:2:1:95:255:95m✔[0;90m)[0m[0m
+[0;90m[7:13:00][0m [0;38:2:1:0:175:255m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 
 The collapse worked, and the difference was immediate. Scrollback became a command log instead of a stack of status dashboards. Then the plain command text started bothering me. If the live editor knew that `cd` was a command and `lib` was a path, the historical line should keep those syntax colors, only dimmer. I budgeted ten minutes.
@@ -113,24 +120,24 @@ iTerm keeps an [invisible record of each command](https://iterm2.com/documentati
 
 Suppose I run a command that prints one line and fails. I captured this from the real prompt in an interactive pty, with iTerm detection enabled. Keeping the visible text and the four `OSC 133` boundaries, in their exact relative positions, it is:
 
-```ansi
-[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38;5;249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38;5;137msh[0m -c '[0;38;5;94mprintf[0m [0;38;5;65m"nope\n"[0m; [0;38;5;94mexit[0m 1'[0m[2m\n[0m
-  [1;33m\e]133;C;\r\a[0mnope[2m\n[0m
-  [1;31m\e]133;D;1\a[0m[31m⏎ 1[0m[2m\n[0m
-  [32m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m
-  [0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
+```ansi title="iTerm2"
+[31m▶[0m [1;35m\e]133;A\a[0m[0;38:2:1:0:122:178m~[0m [0;38:2:1:178:178:178;1m❯[0m [1;36m\e]133;B\a[0m[0;38:2:1:162:133:74msh[0m -c '[0;38:2:1:142:84:35mprintf[0m [0;38:2:1:115:135:67m"nope\n"[0m; [0;38:2:1:142:84:35mexit[0m 1'[0m[2m\n[0m
+  [1;33m\e]133;C;\r\a[0mnope[0m[2m\n[0m
+  [1;31m\e]133;D;1\a[0;31m⏎ 1[0m[0m[2m\n[0m
+  [0;31m●[0m [0;38:2:1:255:255:255;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m[0m[2m\n[0m
+  [0;90m[7:13:00][0m [0;38:2:1:0:175:255m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 
 The full prompt at the bottom is unmarked. If I type a second command there and press Enter, `reset-prompt` erases those live lines and replaces them with the next collapsed history line. This time the command succeeds. Keeping the first command above it, the cumulative history is:
 
-```ansi
-[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38;5;249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38;5;137msh[0m -c '[0;38;5;94mprintf[0m [0;38;5;65m"nope\n"[0m; [0;38;5;94mexit[0m 1'[0m[2m\n[0m
-  [1;33m\e]133;C;\r\a[0mnope[2m\n[0m
-  [1;31m\e]133;D;1\a[0m[2;31m⏎ 1[0m[2m\n[0m
-[34m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38;5;249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38;5;94mprintf[0m [0;38;5;65m"okay\n"[0m[2m\n[0m
-  [1;33m\e]133;C;\r\a[0mokay[2m\n[0m
-  [1;31m\e]133;D;0\a[0m[32m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m[2m\n[0m
-  [0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
+```ansi title="iTerm2"
+[31m▶[0m [1;35m\e]133;A\a[0m[0;38:2:1:0:122:178m~[0m [0;38:2:1:178:178:178;1m❯[0m [1;36m\e]133;B\a[0m[0;38:2:1:162:133:74msh[0m -c '[0;38:2:1:142:84:35mprintf[0m [0;38:2:1:115:135:67m"nope\n"[0m; [0;38:2:1:142:84:35mexit[0m 1'[0m[2m\n[0m
+  [1;33m\e]133;C;\r\a[0mnope[0m[2m\n[0m
+  [1;31m\e]133;D;1\a[2;31m⏎ 1[0m[0m[2m\n[0m
+[34m▶[0m [1;35m\e]133;A\a[0m[0;38:2:1:0:122:178m~[0m [0;38:2:1:178:178:178;1m❯[0m [1;36m\e]133;B\a[0m[0;38:2:1:142:84:35mprintf[0m [0;38:2:1:115:135:67m"okay\n"[0m[0m[2m\n[0m
+  [1;33m\e]133;C;\r\a[0mokay[0m[2m\n[0m
+  [1;31m\e]133;D;1\a[0;32m●[0m [0;38:2:1:255:255:255;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m[0m[2m\n[0m
+  [0;90m[7:13:00][0m [0;38:2:1:0:175:255m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 
 The backslash forms are visible stand-ins for bytes that normally print nothing: `\e` is ESC, `\a` is BEL, `\r` is carriage return, and each dim `\n` marks an actual newline. Magenta is `A`, cyan is `B`, yellow is `C`, and red is `D`. The terminal receives the control bytes, not the backslash notation.
