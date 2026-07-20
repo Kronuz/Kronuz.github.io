@@ -1,8 +1,8 @@
 ---
 title: "Ask the Terminal"
-subtitle: "Dropping the framework and rebuilding my zsh prompt, one escape code at a time."
-description: I tore my zsh prompt off its framework and rebuilt it by hand. The hardest part was making old commands fade, which taught me that "green" is not a color your terminal agrees with until you ask it.
-excerpt: I had been running someone else's prompt for years, forking a five-process pipeline on every Enter and writing to a debug file I had forgotten in /tmp. So I tore it off the framework and rebuilt it by hand. The fun part was learning that my terminal's green is not the green I thought.
+subtitle: "What your terminal actually means by green"
+description: I wanted old commands to keep their syntax colors, only dimmer. That led through zsh highlighting internals, terminal palette queries, and one recursive hook that screamed.
+excerpt: Making an old command fade looked like a ten-minute prompt tweak. Then I learned that "green" has no RGB value until the terminal tells you what it chose.
 series: "Opening Boxes"
 seriesOrder: 9
 date: 2026-06-18
@@ -13,53 +13,9 @@ tags:
   - terminal
 ---
 
-*Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). The others are boxes from my past. This one I built last, [kronuzsh](https://github.com/Kronuz/kronuzsh), my own zsh setup, and it has a smaller box inside it: what your terminal actually means by "green."*
+I had already [pulled my prompt out of Prezto and built a small zsh setup around it](/blog/molting/). That story was about leaving a framework: what I kept, what broke, and which quiet conveniences I had to rebuild. This one starts afterward, with a ten-minute improvement that took three evenings.
 
-You press Enter a few hundred times a day. Each time, for years, my prompt was forking a five-process pipeline to find my own IP address, and appending a line to a debug file I had left in `/tmp` and forgotten. I never noticed. The prompt looked fine. That is the thing about a prompt: you read it constantly and you never actually look at it.
-
-It was not really my prompt, either. It was a theme that shipped with [prezto](https://github.com/sorin-ionescu/prezto), the zsh framework I had run for years. I had tuned its colors until it felt like mine, but the machinery underneath belonged to the framework: an async worker, a module loader, a dozen files cooperating to draw two lines of text. When I finally opened it up, I found the IP lookup that ran on every render,
-
-```sh
-ifconfig | grep 'inet ' | grep -v '127.0.0.1' | head -1 | awk '{print $2}'
-```
-
-five processes spawned every time the prompt drew, just to print a number that changes maybe once a week. And below it, a stray `echo >> /tmp/prompt_kronuz` that some past version of me had used to debug something and never removed. It had been writing to that file on every prompt, on every machine, for years.
-
-So over a few evenings I did the unreasonable thing and tore the whole prompt off the framework.
-
-## Owning the two lines
-
-The plan was simple and a little arrogant: keep only the part that was actually mine, the look, and replace every framework dependency under it with a small native piece. No `pmodload`, no `vcs_info`, no async worker. Just zsh, and code I could read in one sitting.
-
-The framework had been doing five jobs for me. Here is what replaced each one.
-
-| prezto module | replaced by |
-| --- | --- |
-| `git-info` + an async worker | [gitstatus](https://github.com/romkatv/gitstatus) (`gitstatusd`), with a direct-`git` fallback |
-| `python-info` (the venv) | a six-line segment reading `$VIRTUAL_ENV` |
-| `editor-info` (vi/emacs keymap) | a couple of `zle` hooks |
-| `prompt-pwd` | `${(%):-%~}`, one parameter expansion |
-| `spectrum` (the color palette) | a palette defined inline, in the file |
-
-The async worker was the one I expected to miss. A git prompt has to run `git status` in a repo, and in a big repo that is slow enough to stutter every keystroke, which is the whole reason prezto spawns a background worker to do it. I did not rebuild the worker. I handed the job to [`gitstatusd`](https://github.com/romkatv/gitstatus), Roman Perepelitsa's daemon that keeps a warm cache and answers in microseconds, and wrote a lean direct-`git` fallback for when the daemon is not there (no tty, not installed, a locked-down box). The prompt always shows git, fast when the daemon is up, correct when it is not.
-
-What came out the other side was one file, about 700 lines, that I own end to end. That sounds like more code than a framework module. It is. It is also the entire prompt, with nothing underneath it I have not read.
-
-## The unglamorous half
-
-Owning the whole thing means owning the parts nobody screenshots.
-
-A prompt should not break when it lands somewhere strange. So the glyphs come in two full sets: the polished [Nerd Font](https://www.nerdfonts.com/) icons by default, and a plain-Unicode fallback that renders in any font, chosen with one switch. On a `dumb` terminal (Emacs `M-x shell`, some CI logs) it drops to plain glyphs automatically, because a Private-Use-Area icon there is just tofu. And the whole color layer collapses to nothing under [`NO_COLOR`](https://no-color.org/) or a dumb terminal: the full layout still renders, with zero escape codes. I check that every prompt, so flipping `NO_COLOR` takes effect on the next line, not the next shell.
-
-The colors themselves got the modern treatment too. The 16 base ANSI slots stay as `%F{0..15}` so they follow your terminal theme, but the 240 others are now exact 24-bit hex, downsampled by `zsh/nearcolor` on terminals that cannot do truecolor. One palette, every tier, from a truecolor iTerm down to an eight-color tty.
-
-None of that is exciting. All of it is the difference between a prompt that is mine and a prompt that is mine *only on my machine*.
-
-## The part I thought would be easy
-
-Now the fun began, which is to say the part where a one-line idea ate three evenings.
-
-I added a **transient prompt**. When you press Enter, the full two-line prompt for the command you just ran collapses to a single faded caret, so your scrollback is a clean column instead of a wall of repeated prompts:
+I wanted a **transient prompt**. When you press Enter, the full two-line prompt for the command you just ran collapses to a single faded caret, so your scrollback is a clean column instead of a wall of repeated prompts:
 
 ```ansi
 [2m# before: every past command keeps its whole two-line prompt[0m
@@ -100,11 +56,13 @@ I had no framework to ask. There was no `python-info` to hand me the truth. Ther
 
 It turns out you can. There is an escape sequence, `OSC 4`, that means "tell me what color number N really is." You write the question to the terminal and it writes the answer back:
 
-```text
-# ask: "what is your color 2 (green), really?"
-send →  \e]4;2;?\e\\
-recv ←  \e]4;2;rgb:8a8a/e2e2/3434\e\\     # 0x8a 0xe2 0x34  →  #8ae234
+```ansi
+[2m# ask: "what is your color 2 (green), really?"[0m
+[36msend →[0m  [1;33m\e]4;2;?\e\\[0m
+[35mrecv ←[0m  [1;32m\e]4;2;rgb:8a8a/e2e2/3434\e\\[0m     [2m# 0x8a 0xe2 0x34  →  #8ae234[0m
 ```
+
+The `\e` is the printable spelling of the ESC byte. The terminal receives the byte, not those two characters.
 
 There it was. `#8ae234`, straight from iTerm, no guessing. So at startup the prompt now asks the terminal for all sixteen of its ANSI colors, once, and caches the answers. When it dims `fg=green`, it darkens *that* green. Halved, `#8ae234` becomes `#45711a`: same hue, genuinely darker, the faded-history look I wanted three evenings earlier. If a terminal does not answer, it falls back to the xterm table and life goes on.
 
@@ -136,22 +94,105 @@ The fix was to stop fighting over the widget. Instead of hooking `zle-line-finis
 
 I tested it the only way that is honest for a prompt, which is in a real terminal pressing real Enters: a pty running the full plugin stack, eight commands, each forced to fail so the exit-code path ran too. Zero recursion errors, empty stderr. The screaming stopped.
 
+## The marks stayed behind
+
+The prompt looked right to me, but iTerm2 disagreed.
+
+iTerm keeps an [invisible record of each command](https://iterm2.com/documentation-shell-integration.html). A terminal normally sees only a stream of bytes. It does not know that one line is a prompt, the next few characters are something I typed, and everything after Enter came from a program. Shell integration teaches it that grammar by slipping four non-printing `OSC 133` markers into the stream: `A`, `B`, `C`, and `D`.
+
+Suppose I run a command that prints one line and fails. I captured this from the real prompt in an interactive pty, with iTerm detection enabled. Keeping the visible text and the four `OSC 133` boundaries, in their exact relative positions, it is:
+
+```ansi
+[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33msh -c 'printf "nope\n"; exit 1'[0m[2m\n[0m
+[1;33m\e]133;C;\r\a[0mnope[2m\n[0m
+[1;31m\e]133;D;1\a[0m[31m⏎ 1[0m[2m\n[0m
+[32m●[0m kronuz at Germans-MacBook-Pro.local[2m\n[0m
+[16:14:29] [38;5;39m~/code/KronuZSH ❯❯❯[0m
+```
+
+The full prompt at the bottom is unmarked. If I type a second command there and press Enter, `reset-prompt` erases those live lines and replaces them with the next collapsed history line. This time the command succeeds. Keeping the first command above it, the cumulative history is:
+
+```ansi
+[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33msh -c 'printf "nope\n"; exit 1'[0m[2m\n[0m
+[1;33m\e]133;C;\r\a[0mnope[2m\n[0m
+[1;31m\e]133;D;1\a[0m[34m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33mprintf "okay\n"[0m[2m\n[0m
+[1;33m\e]133;C;\r\a[0mokay[2m\n[0m
+[1;31m\e]133;D;0\a[0m[32m●[0m kronuz at Germans-MacBook-Pro.local[2m\n[0m
+[16:14:31] [38;5;39m~/code/KronuZSH ❯❯❯[0m
+```
+
+The backslash forms are visible stand-ins for bytes that normally print nothing: `\e` is ESC, `\a` is BEL, `\r` is carriage return, and each dim `\n` marks an actual newline. Magenta is `A`, cyan is `B`, yellow is `C`, and red is `D`. The terminal receives the control bytes, not the backslash notation.
+
+The triangles are different. They are not bytes in the stream; they stand for iTerm's mark indicator in the left margin. An `A` creates a blue mark beside that prompt. When the matching `D` reports a nonzero status, iTerm turns it red. That leaves the failed first command with a red triangle and the successful second command with a blue one. With **Show mark indicators** disabled, the same metadata is retained but the triangles are hidden.
+
+The four sequences are boundaries:
+
+- `\e]133;A\a` says, "the prompt starts here." iTerm puts its gutter mark on that row, and Command-Shift-Up or Command-Shift-Down can jump to it.
+- `\e]133;B\a` says, "the prompt is finished; what follows is the editable command." That separates my two-line prompt from the text I typed.
+- `\e]133;C;\r\a` says, "Enter was pressed; output starts now." The bytes between `C` and `D` belong to the command, which is why iTerm can select only `nope` instead of copying the prompt and command with it.
+- `\e]133;D;1\a` says, "the command is done, and its exit status was 1." iTerm can turn the mark red, calculate how long the command ran from `C` to `D`, and attach both facts to that command. A successful command ends with `\e]133;D;0\a`.
+
+The ordinary lifecycle is pleasantly linear: prompt from `A` to `B`, command from `B` to the newline before `C`, output from `C` to `D`, then another `A` starts the next prompt. The captured transient path is different in one important way: the full prompt after `D` has no `A` or `B`. It is temporary. Its markers are emitted only when Enter collapses it into the next permanent history line.
+
+In the non-transient prompt, `A` and `B` are part of `PROMPT` itself:
+
+```zsh
+_kronuz_osc_a=$'%{\e]133;A\a%}'
+_kronuz_osc_b=$'%{\e]133;B\a%}'
+
+PROMPT="\${_prompt_kronuz_status_live}\${_kronuz_osc_d}\${_kronuz_osc_a}$kronuz[err] $kronuz[info]$kronuz[context]$kronuz[etctl]$kronuz[git]$kronuz[venv]$kronuz[jobs]$kronuz[nl]$kronuz[time] $kronuz[pwd] $kronuz[prompt] \${_kronuz_osc_b}"
+```
+
+The `%{` and `%}` tell zsh that the bytes inside occupy zero columns. Without those guards, zsh counts the invisible sequences as visible text and gets cursor movement and line wrapping wrong. `C` cannot live in `PROMPT` because it happens only after I press Enter, so the `preexec` hook writes it directly. The matching `precmd` hook writes `D` after the command returns, while `$?` still holds the real exit status:
+
+```zsh
+# preexec: the command is about to run
+print -n '\e]133;C;\r\a'
+
+# precmd: it returned; $ret is the captured $?
+print -n "\e]133;D;${ret}\a"
+```
+
+A transient prompt is not linear. In my first attempt, iTerm had already seen `A` and `B` around the full prompt by the time I pressed Enter. Then my widget called `reset-prompt`, erased that prompt, and redrew a shorter one in its place. The pixels moved. The markers did not. iTerm still thought the command belonged to the two-line prompt that no longer existed, so its gutter mark landed on the wrong row and its idea of the command's output drifted away from what was on screen.
+
+My first fix was the obvious one: after the redraw, emit a fresh `A` and `B` around the collapsed prompt. That moved the mark to the right place, but left the first pair alive too. One command now had two beginnings. Jumping through history stopped on ghost prompts, and output selection acquired pieces of the prompt I had meant to erase.
+
+The real fix was to stop marking the live prompt at all when transience is enabled. It is only a preview. On Enter, the widget resolves and dims the collapsed `path ❯`, builds a temporary prompt with fresh `A` and `B` boundaries, redraws it, and only then lets zsh accept the command:
+
+```zsh
+osc_a=$'%{\e]133;A\a%}'
+osc_b=$'%{\e]133;B\a%}'
+PROMPT="${osc_a}${tp}${osc_b}"
+zle .reset-prompt
+zle .accept-line
+```
+
+`C` and the eventual `D;<status>` now attach to the line that actually survives in scrollback. With transience disabled, the normal prompt gets the markers instead. Same four letters, two different paths through them.
+
+iTerm had one more small demand. The shared terminal protocol accepts `OSC 133;C`, but iTerm's own zsh integration emits `OSC 133;C;` followed by a carriage return. That trailing `;\r` matters to its screen-scraping command capture. So KronuZSH sends iTerm the exact form it expects and keeps the parameter-free form for other terminals. It also announces shell integration once with `OSC 1337`, then reports the current host and directory on each prompt. I did not source iTerm's integration script because it would wrap the prompt and emit a second set of the same marks I was already struggling to place.
+
+There was still a second set of marks, just not from the integration script. I was also sending the standard current-directory sequence on every `precmd`:
+
+```zsh
+print -Pn '\e]7;file://%M%d\a'
+```
+
+I treated `OSC 7` as harmless metadata. In iTerm it is not. I cloned iTerm2 and followed the handler: `setWorkingDirectoryFromURLString` calls `setPathFromURL`, which updates the directory and then calls `setPromptStartLine`. That last call creates a prompt mark. The [source even warns about adjacent marks](https://github.com/gnachman/iTerm2/blob/9272e49d03728e4f56dc18c93a7d2f20bcb3aa73/sources/VT100Screen/VT100ScreenMutableState.m#L3316-L3321) when a shell sends `OSC 7` alongside shell integration.
+
+That explained the triangles none of my `A`, `B`, `C`, and `D` rearrangements could remove. One blue triangle came from `OSC 133;A`. The other came from a directory update I had not known was also a mark. The fix was not another ordering trick. iTerm already receives the same directory through its mark-free `OSC 1337;CurrentDir`, so KronuZSH stopped sending `OSC 7` to iTerm and kept it for other terminals:
+
+```zsh
+if (( _kronuz_is_iterm )); then
+  print -Pn "\e]1337;RemoteHost=${USER}@%M\a\e]1337;CurrentDir=%d\a"
+else
+  print -Pn '\e]7;file://%M%d\a'
+fi
+```
+
+The test was no longer "does the caret fade?" It was: run `sh -c 'printf "nope\\n"; exit 1'`, confirm the collapsed command gets one red triangle, confirm `⏎ 1` gets none, inspect the mark for status and running time, then select the command's output and make sure neither prompt came with it. The terminal integration was finally working when the invisible structure agreed with the visible one.
+
 ## Where it landed
 
-What I have now is two lines of text with nothing under them I did not write.
+The finished feature is small: old prompts collapse, old commands keep their syntax colors at half brightness, and terminals that will not report a palette fall back to the xterm values. The prompt still drops all color under [`NO_COLOR`](https://no-color.org/) or on a dumb terminal. The implementation lives in [KronuZSH](https://github.com/Kronuz/KronuZSH), alongside the pty test that runs the real plugin stack and makes sure the recursion stays dead.
 
-- **One file, ~700 lines.** Down from a theme plus a framework plus an async worker plus a module loader.
-- **Five prezto pieces** replaced by native zsh and one daemon.
-- **A five-process fork per render, gone** (cached, with a 10-second TTL), and that `/tmp` debug line gone with the framework it rode in on.
-- **One palette** that renders truecolor on iTerm, 256-color on an older terminal, and zero-escape plaintext on a dumb one or under `NO_COLOR`.
-- **30 commits over three evenings**, and a [manual](https://github.com/Kronuz/kronuzsh) so future-me remembers which knob does what.
-
-It is public, if you want to take it apart: [`kronuzsh`](https://github.com/Kronuz/kronuzsh). I lean on real giants for the hard parts, `gitstatusd` for the git and the Nerd Fonts project for the glyphs, and I am glad I do. Owning the prompt never meant writing everything. It meant knowing what every line does, and having somewhere to stand when one of them lies to me.
-
-## The company it keeps
-
-A prompt does not live alone on the line. A few zsh plugins do the interactive work around it, and they are the other half of why the shell feels good. fast-syntax-highlighting colors a command as you type it, so a misspelled command name turns red before you press Enter. [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) ghosts the rest of a line in grey from your history, so yesterday's command is one right-arrow away. [zsh-history-substring-search](https://github.com/zsh-users/zsh-history-substring-search) lets you type a fragment, press Up, and walk only the history that matches. None of them are mine. All of them are load-bearing.
-
-Under that sits a quieter layer worth stealing: the integrations. Each wires a modern command-line tool into the shell, but only when you actually have it. A check for the binary guards every one, so the same config runs on my laptop, a fresh VM, or a locked-down box with none of them, and lights up the moment one shows up. Install a few and the day gets nicer: [eza](https://github.com/eza-community/eza) for `ls` (icons, colors, a git column), [bat](https://github.com/sharkdp/bat) for `cat` (syntax and a diff gutter), [fd](https://github.com/sharkdp/fd) for `find`, [ripgrep](https://github.com/BurntSushi/ripgrep) for `grep`, [delta](https://github.com/dandavison/delta) for git diffs, [zoxide](https://github.com/ajeetdsouza/zoxide) for a `cd` that learns where you go, and [fzf](https://github.com/junegunn/fzf) for a fuzzy `Ctrl-R` through your history. The full list is in the repo; install whichever you like and the shell finds them.
-
-This was the same instinct as [the rest of this series](/blog/css-that-computes/): take a thing someone else built, open it up until you understand every line, and rebuild it as your own. A prompt is a small box. But I look at it a few hundred times a day, and now when it fades a command to grey-green, it is fading the right green, because I stopped guessing and asked.
+The framework migration taught me to own the machinery. This smaller box taught me something more useful: ownership does not mean guessing what the machinery does. Sometimes the machine knows the answer, and the shortest route is to ask it.
