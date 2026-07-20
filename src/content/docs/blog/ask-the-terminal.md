@@ -104,22 +104,22 @@ Suppose I run a command that prints one line and fails. I captured this from the
 
 ```ansi
 [31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33msh -c 'printf "nope\n"; exit 1'[0m[2m\n[0m
-[1;33m\e]133;C;\r\a[0mnope[2m\n[0m
-[1;31m\e]133;D;1\a[0m[31m⏎ 1[0m[2m\n[0m
-[32m●[0m kronuz at Germans-MacBook-Pro.local[2m\n[0m
-[16:14:29] [38;5;39m~/code/KronuZSH ❯❯❯[0m
+  [1;33m\e]133;C;\r\a[0mnope[2m\n[0m
+  [1;31m\e]133;D;1\a[0m[31m⏎ 1[0m[2m\n[0m
+  [32m●[0m kronuz at Germans-MacBook-Pro.local[2m\n[0m
+  [16:14:29] [38;5;39m~/code/KronuZSH ❯❯❯[0m
 ```
 
 The full prompt at the bottom is unmarked. If I type a second command there and press Enter, `reset-prompt` erases those live lines and replaces them with the next collapsed history line. This time the command succeeds. Keeping the first command above it, the cumulative history is:
 
 ```ansi
 [31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33msh -c 'printf "nope\n"; exit 1'[0m[2m\n[0m
-[1;33m\e]133;C;\r\a[0mnope[2m\n[0m
-[1;31m\e]133;D;1\a[0m[2;31m⏎ 1[0m[2m\n[0m
+  [1;33m\e]133;C;\r\a[0mnope[2m\n[0m
+  [1;31m\e]133;D;1\a[0m[2;31m⏎ 1[0m[2m\n[0m
 [34m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33mprintf "okay\n"[0m[2m\n[0m
-[1;33m\e]133;C;\r\a[0mokay[2m\n[0m
-[1;31m\e]133;D;0\a[0m[32m●[0m kronuz at Germans-MacBook-Pro.local[2m\n[0m
-[16:14:31] [38;5;39m~/code/KronuZSH ❯❯❯[0m
+  [1;33m\e]133;C;\r\a[0mokay[2m\n[0m
+  [1;31m\e]133;D;0\a[0m[32m●[0m kronuz at Germans-MacBook-Pro.local[2m\n[0m
+  [16:14:31] [38;5;39m~/code/KronuZSH ❯❯❯[0m
 ```
 
 The backslash forms are visible stand-ins for bytes that normally print nothing: `\e` is ESC, `\a` is BEL, `\r` is carriage return, and each dim `\n` marks an actual newline. Magenta is `A`, cyan is `B`, yellow is `C`, and red is `D`. The terminal receives the control bytes, not the backslash notation.
