@@ -3,14 +3,13 @@
 // metadata, body, tags, prev/next) and, on individual blog posts only, adds the
 // article-series UI (the sidebar stepper lives in the TableOfContents override; here:
 // a mobile-only series chip, the prev/next pagers, and an end-of-article divider) plus
-// giscus comments. Gated on `entry.data.date` (blog posts have it; the splash and
+// discussions. Gated on `entry.data.date` (blog posts have it; the splash and
 // About/Projects pages don't), so none of it appears on non-blog pages.
 //
 // Setting `components.MarkdownContent` makes starlight-blog log a one-line build WARN
 // ("you already have a MarkdownContent override") and skip its own registration.
 // That's expected: we re-import its override below, so the blog frame still renders.
 import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
-import Giscus from './Giscus.astro';
 import Discussions from './Discussions.astro';
 import SnippetScript from './SnippetScript.astro';
 import { resolveSeries, resolveChronological } from '../lib/series.mjs';
@@ -39,9 +38,7 @@ const seriesNext = series?.next ?? null;
 const chrono = isBlogPost ? await resolveChronological(term) : null;
 const chronoPrev = chrono?.prev ?? null;
 const chronoNext = chrono?.next ?? null;
-// Comments: the public blog uses giscus for now. The Discussions engine is staged --
-// when DISCUSSIONS_BACKEND (or the PUBLIC_DISCUSSIONS_BACKEND env override) is set, blog
-// posts render the self-hosted <Discussions> widget instead; empty keeps giscus active.
+// Comments use the tenant base URL from consts or the local-development override.
 const title = entry?.data?.title;
 const subtitle = entry?.data?.subtitle;
 const url = Astro.url?.href;
@@ -151,9 +148,7 @@ const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 
 		)
 	}
 	{isBlogPost && <div class="post-divider" role="presentation" />}
-	{isBlogPost && (inlineComments
-		? <Discussions term={term} title={title} subtitle={subtitle} url={url} backend={backend} stripSuffix={DISCUSSIONS_STRIP_SUFFIX} giphyKey={DISCUSSIONS_GIPHY_KEY} />
-		: <Giscus />)}
+	{isBlogPost && inlineComments && <Discussions term={term} title={title} subtitle={subtitle} url={url} backend={backend} stripSuffix={DISCUSSIONS_STRIP_SUFFIX} giphyKey={DISCUSSIONS_GIPHY_KEY} />}
 	{
 		(chronoPrev || chronoNext) && (
 			<div class="post-pagers post-pagers-chrono">

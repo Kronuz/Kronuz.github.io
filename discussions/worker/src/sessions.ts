@@ -1,12 +1,10 @@
 /**
  * Stateless session store: the cookie value *is* the session, HMAC-signed with WebCrypto.
  *
- * A port of CookieSessionStore from discussions/backend/discussions/sessions.py, and the
- * deliberate choice for this Worker (see the migration notes): there is no server state,
+ * There is no server state,
  * so it works across edge isolates and scale-to-zero with no `sessions` table and no
- * sweeper. The Python version warned "encrypt the token before using in anger" because it
- * stored the reader's GitHub token; the self-hosted store never uses that token after
- * login (it authorizes by verified login), so we store *identity only* and no secret rides
+ * sweeper. The Worker never stores the reader's OAuth token after login. It keeps only
+ * verified identity, so no provider secret rides
  * in the cookie. Signing (not encryption) is therefore enough.
  */
 export interface Identity {

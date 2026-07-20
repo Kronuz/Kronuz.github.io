@@ -4,9 +4,8 @@
 //   npm run publish -- <slug> [--dry-run] [--no-push]
 //
 // Drops `draft: true`, stamps `date:` to today, commits, and pushes. GitHub
-// Actions (.github/workflows/deploy.yml) then builds and deploys automatically —
-// there is no manual deploy step. Comments (giscus) need no per-post setup; the
-// giscus bot creates the Discussion thread on the first comment (pathname map).
+// Actions (.github/workflows/deploy.yml) then builds and deploys automatically.
+// There is no manual deploy or per-post comments setup.
 
 import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";

@@ -11,26 +11,11 @@ export const SITE_DESCRIPTION =
 export const BLOG_POST_COUNT = 5; // posts per /blog/ index page (starlight-blog `postCount`)
 export const RECENT_POST_COUNT = 20; // posts in the sidebar "Recent posts" group
 
-// Repository backing this blog. Used by the giscus comments + footer links.
+// Repository backing this blog. Used by footer and source links.
 export const REPO_URL = 'https://github.com/Kronuz/Kronuz.github.io';
 
-// giscus comments (works because this is a PUBLIC repo). Fill these from
-// https://giscus.app after: (1) the repo is public, (2) Discussions is enabled,
-// (3) the giscus app is installed, (4) you pick a category. The comments widget
-// only renders once `categoryId` is set, so local builds stay clean until then.
-export const GISCUS = {
-	repo: 'Kronuz/Kronuz.github.io',
-	repoId: 'MDEwOlJlcG9zaXRvcnkzMzY3MjcyMQ==',
-	category: 'Announcements',
-	categoryId: 'DIC_kwDOAgHOEc4C-uYu',
-};
-
-// Discussions engine (self-hosted, a giscus alternative; see discussions/). Staged so
-// the public blog's engine matches the internal blog and the Xapiand docs. For now the
-// public blog USES giscus (above); MarkdownContent renders <Discussions> only when a
-// backend is configured and otherwise falls back to giscus, so setting DISCUSSIONS_BACKEND
-// to the deployed backend URL is the whole swap. The PUBLIC_DISCUSSIONS_BACKEND build env
-// var overrides this for local dev. Empty = giscus stays active.
+// Multi-tenant discussions Worker. PUBLIC_DISCUSSIONS_BACKEND overrides this for local
+// development when testing against another Worker instance.
 export const DISCUSSIONS_BACKEND = 'https://discussions.kronuz.workers.dev/kronuz';
 // Login suffix dropped when displaying handles (cosmetic; e.g. "_sso"). Empty = as-is.
 export const DISCUSSIONS_STRIP_SUFFIX = '';

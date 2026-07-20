@@ -1,16 +1,10 @@
 /**
  * D1Database driver — the Cloudflare D1 backing store for the self-hosted comments.
  *
- * A port of discussions/backend/discussions/db/{base,sqlite}.py. D1 *is* SQLite, so the
- * schema (migrations/0001_init.sql) and queries carry over almost verbatim; the aiosqlite
- * connection + cursor calls become D1's prepared-statement API
+ * D1 uses SQLite semantics. Queries go through its prepared-statement API
  * (`.prepare(sql).bind(...).all()/.first()/.run()`, `.batch([...])` for atomic groups).
- *
- * Differences from the Python driver, all because this is a fresh deployment:
- *   - no runtime PRAGMA/ALTER migrations (the schema ships final in migrations/),
- *   - no `sessions` methods (sessions are stateless cookies; see sessions.ts).
- *
- * Time columns are epoch seconds (matching the Python backend's time.time()).
+ * The schema ships through migrations, and sessions are stateless cookies.
+ * Time columns are epoch seconds.
  */
 import type { D1Database } from "@cloudflare/workers-types";
 

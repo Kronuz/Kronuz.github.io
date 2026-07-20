@@ -1,14 +1,10 @@
 /**
  * Local Markdown -> sanitized, syntax-highlighted HTML, the self-hosted store's renderer.
  *
- * A port of discussions/backend/discussions/md.py. That used cmark-gfm (GitHub's own C
- * renderer) + Pygments, neither of which runs on a Worker. Here we use the unified
- * remark/rehype pipeline, which targets the same GitHub Flavored Markdown spec cmark-gfm
- * implements, so output is GitHub-compatible (tables, strikethrough, task lists, autolinks,
- * footnotes) without being byte-identical.
+ * The unified remark/rehype pipeline targets GitHub Flavored Markdown, so output supports
+ * tables, strikethrough, task lists, autolinks, and footnotes.
  *
- * XSS safety: cmark's no-UNSAFE mode gave us sanitization for free. Here rehype-sanitize
- * does it explicitly, and its default schema *is* GitHub's own allow-list, so raw HTML is
+ * XSS safety: rehype-sanitize uses GitHub's allow-list, so raw HTML is
  * dropped and dangerous URL schemes (javascript:, data:, ...) are neutralized.
  *
  * Syntax highlighting: done here with **Shiki**, reusing the blog's own Kronuz themes

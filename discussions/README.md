@@ -1,4 +1,4 @@
-# Discussions — a self-hosted comments widget (a giscus alternative)
+# Discussions
 
 A framework-free comment widget (`widget/`) plus a small Cloudflare Worker backend
 (`worker/`, Hono + Cloudflare D1) for public blog comments. Each tenant configures its own

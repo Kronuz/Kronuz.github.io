@@ -6,8 +6,8 @@ My personal blog and project notes — Python, C++, and systems at scale.
 
 Built with [Astro](https://astro.build) + [Starlight](https://starlight.astro.build) +
 [starlight-blog](https://github.com/HiDeoo/starlight-blog), with a custom *Kronuz* code
-theme, build-time [D2](https://d2lang.com) diagrams, and [giscus](https://giscus.app)
-comments. It deploys itself: push to the default branch and GitHub Actions builds and
+theme, build-time [D2](https://d2lang.com) diagrams, and a multi-tenant comments Worker.
+It deploys itself: push to the default branch and GitHub Actions builds and
 publishes to GitHub Pages.
 
 ## Local development
@@ -47,12 +47,12 @@ frames each by language: a **terminal window** for the shell languages (`sh`, `b
 else. Override per block with `frame="terminal"`, `frame="code"`, or `frame="none"`, and
 set the title with `title="..."`. An `ansi` block renders raw terminal output in real colors.
 
-## Comments (giscus)
+## Comments
 
-Comments are [giscus](https://giscus.app), backed by GitHub Discussions on this repo. To
-turn them on: enable **Discussions**, install the **giscus app**, then paste the
-`repoId`/`categoryId` from <https://giscus.app> into `GISCUS` in `src/consts.ts`. The widget
-only renders once `categoryId` is set.
+Comments use the shared Cloudflare Worker and D1 service in `discussions/`. The public
+tenant base URL is configured as `DISCUSSIONS_BACKEND` in `src/consts.ts`. See
+`discussions/worker/TUTORIAL.md` for deployment and tenant setup, and
+`discussions/worker/OPERATIONS.md` for routine maintenance.
 
 ## Deploy
 

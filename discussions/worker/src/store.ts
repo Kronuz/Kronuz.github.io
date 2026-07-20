@@ -1,8 +1,7 @@
 /**
  * SelfHostedStore — the comment store whose system of record is D1.
  *
- * A port of discussions/backend/discussions/store/{base,selfhosted}.py. The full
- * commenting system (comments, replies, edits, hides, reactions) lives in D1; OAuth is
+ * The full commenting system (comments, replies, edits, hides, reactions) lives in D1; OAuth is
  * used only to learn who the reader is; Markdown is rendered locally (md.render). Threads
  * are keyed by `term` (the post slug) within a tenant. Authorization is ours: a comment's
  * author may edit/delete it; a moderator of the comment's tenant may delete/hide any.
@@ -38,7 +37,7 @@ const REACTION_CONTENT = new Set([
 const HIDE_REASONS = new Set(["OUTDATED", "OFF_TOPIC", "RESOLVED", "DUPLICATE", "SPAM", "ABUSE"]);
 
 /** Epoch seconds -> ISO-8601 UTC (what the widget's `new Date(...)` expects), seconds
- * precision to match the Python backend's strftime output. */
+ * precision so timestamps remain stable across reads. */
 function iso(epoch: number | null | undefined): string | null {
   if (epoch === null || epoch === undefined) return null;
   return new Date(epoch * 1000).toISOString().replace(/\.\d{3}Z$/, "Z");

@@ -6,7 +6,7 @@ captures the conventions and the non-obvious gotchas an agent needs to not break
 ## What this is
 
 German's personal blog (`https://kronuz.github.io`). Astro + Starlight + starlight-blog,
-a custom *Kronuz* code theme, build-time D2 diagrams, giscus comments. Self-deploying:
+a custom *Kronuz* code theme, build-time D2 diagrams, and a multi-tenant comments Worker. Self-deploying:
 push to the default branch and GitHub Actions builds and publishes to Pages
 (`.github/workflows/deploy.yml`).
 

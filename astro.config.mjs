@@ -160,16 +160,14 @@ export default defineConfig({
 			},
 		}),
 		// Brand the GitHub Pages host as "Kronuz.github.io" in the built output's *visible*
-		// URLs (nav/body hrefs, the Giscus theme URL, ...). Astro lowercases the host of every
+		// URLs (nav and body hrefs). Astro lowercases the host of every
 		// generated absolute URL (new URL() normalizes it), so `site` can't carry the capital
 		// K; GitHub serves the host case-insensitively, so we rewrite it in the built files.
 		// BUT machine-read URLs must stay on the canonical lowercase host: the RSS feed +
 		// sitemap (.xml, skipped entirely) and, in HTML, the feed-autodiscovery <link>, <link
 		// rel=canonical>, and og:url/twitter:url meta. A mixed-case host there gets rejected by
 		// case-sensitive feed readers / TLS host checks (Reeder "couldn't find a feed") or
-		// de-duplicated wrong by crawlers. Matching only "//kronuz.github.io" is deliberate: it
-		// skips the bare 'kronuz.github.io' literal the Giscus theme compares against
-		// location.hostname, which the browser always reports lowercased.
+		// de-duplicated wrong by crawlers. Matching only "//kronuz.github.io" is deliberate.
 		{
 			name: 'kz-brand-host-case',
 			hooks: {

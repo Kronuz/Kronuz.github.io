@@ -183,9 +183,8 @@ Internal: https://discussions.kronuz.workers.dev/gmendezb-pages/auth/callback
 
 Click **Update application** after each change.
 
-Do the public change immediately after submitting the `kronuz` configuration. Changing
-the internal callback stops login through the old Python backend, so do that immediately
-before switching the internal static site to the Worker.
+Update each callback immediately after submitting that tenant's configuration and before
+switching its static site to the Worker.
 
 ## 8. Verify the service
 
