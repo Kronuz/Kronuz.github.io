@@ -115,7 +115,8 @@ The full prompt at the bottom is unmarked. If I type a second command there and 
 ```ansi
 [31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33msh -c 'printf "nope\n"; exit 1'[0m[2m\n[0m
 [1;33m\e]133;C;\r\a[0mnope[2m\n[0m
-[1;31m\e]133;D;1\a[0m[34m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33mprintf "okay\n"[0m[2m\n[0m
+[1;31m\e]133;D;1\a[0m[2;31m⏎ 1[0m[2m\n[0m
+[34m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33mprintf "okay\n"[0m[2m\n[0m
 [1;33m\e]133;C;\r\a[0mokay[2m\n[0m
 [1;31m\e]133;D;0\a[0m[32m●[0m kronuz at Germans-MacBook-Pro.local[2m\n[0m
 [16:14:31] [38;5;39m~/code/KronuZSH ❯❯❯[0m
@@ -129,10 +130,10 @@ The four sequences are boundaries:
 
 - `\e]133;A\a` says, "the prompt starts here." iTerm puts its gutter mark on that row, and Command-Shift-Up or Command-Shift-Down can jump to it.
 - `\e]133;B\a` says, "the prompt is finished; what follows is the editable command." That separates my two-line prompt from the text I typed.
-- `\e]133;C;\r\a` says, "Enter was pressed; output starts now." The bytes between `C` and `D` belong to the command, which is why iTerm can select only `nope` instead of copying the prompt and command with it.
+- `\e]133;C;\r\a` says, "Enter was pressed; output starts now." It gives iTerm the output's starting coordinate, after the prompt and command.
 - `\e]133;D;1\a` says, "the command is done, and its exit status was 1." iTerm can turn the mark red, calculate how long the command ran from `C` to `D`, and attach both facts to that command. A successful command ends with `\e]133;D;0\a`.
 
-The ordinary lifecycle is pleasantly linear: prompt from `A` to `B`, command from `B` to the newline before `C`, output from `C` to `D`, then another `A` starts the next prompt. The captured transient path is different in one important way: the full prompt after `D` has no `A` or `B`. It is temporary. Its markers are emitted only when Enter collapses it into the next permanent history line.
+The protocol lifecycle is pleasantly linear: prompt from `A` to `B`, command from `B` to the newline before `C`, execution from `C` to `D`, then another `A` starts the next prompt. The captured transient path is different in one important way: the full prompt after `D` has no `A` or `B`. It is temporary. Its markers are emitted only when Enter collapses it into the next permanent history line.
 
 In the non-transient prompt, `A` and `B` are part of `PROMPT` itself:
 
@@ -162,12 +163,16 @@ The real fix was to stop marking the live prompt at all when transience is enabl
 ```zsh
 osc_a=$'%{\e]133;A\a%}'
 osc_b=$'%{\e]133;B\a%}'
-PROMPT="${osc_a}${tp}${osc_b}"
+PROMPT="${status_prefix}${osc_a}${tp}${osc_b}"
 zle .reset-prompt
 zle .accept-line
 ```
 
-`C` and the eventual `D;<status>` now attach to the line that actually survives in scrollback. With transience disabled, the normal prompt gets the markers instead. Same four letters, two different paths through them.
+`status_prefix` is the dimmed `⏎ 1` or running time from the command that just finished. It sits before `A`, so it survives in history without moving the next blue triangle away from the collapsed `path ❯`. An empty Enter takes the same A/B path, but runs no command, so no C/D pair follows. That gives the empty prompt its own triangle and its own Command-Shift-Up stop instead of folding it into the previous command.
+
+There is one consequence I only found by trying **Select Output of Last Command**. iTerm does not end that selection at `D`. [Its source computes the range](https://github.com/gnachman/iTerm2/blob/9272e49d03728e4f56dc18c93a7d2f20bcb3aa73/sources/VT100Screen/VT100ScreenState.m#L1039-L1065) from the command's output coordinate to the start of the next prompt mark. The status is deliberately between those two points, so copied output includes `⏎ 1`. Moving `A` before the status would exclude it, but would also put the gutter triangle beside the status again. I kept the useful result metadata in copied output and kept the triangle on the command line. The alternative was another cursor-positioning trick in code I had just made less patchy.
+
+`C` and the eventual `D;<status>` still attach to the line that actually survives in scrollback. With transience disabled, the normal prompt gets the markers instead. Same four letters, two different paths through them.
 
 iTerm had one more small demand. The shared terminal protocol accepts `OSC 133;C`, but iTerm's own zsh integration emits `OSC 133;C;` followed by a carriage return. That trailing `;\r` matters to its screen-scraping command capture. So KronuZSH sends iTerm the exact form it expects and keeps the parameter-free form for other terminals. It also announces shell integration once with `OSC 1337`, then reports the current host and directory on each prompt. I did not source iTerm's integration script because it would wrap the prompt and emit a second set of the same marks I was already struggling to place.
 
@@ -189,10 +194,10 @@ else
 fi
 ```
 
-The test was no longer "does the caret fade?" It was: run `sh -c 'printf "nope\\n"; exit 1'`, confirm the collapsed command gets one red triangle, confirm `⏎ 1` gets none, inspect the mark for status and running time, then select the command's output and make sure neither prompt came with it. The terminal integration was finally working when the invisible structure agreed with the visible one.
+The test was no longer "does the caret fade?" It was: run `sh -c 'printf "nope\\n"; exit 1'`, confirm the collapsed command gets one red triangle, confirm `⏎ 1` persists without a triangle, press Enter on an empty prompt and get a separate blue navigation mark, then select the command's output and see `nope` plus its result metadata but neither prompt. The terminal integration was finally working when the invisible structure agreed with the visible one.
 
 ## Where it landed
 
-The finished feature is small: old prompts collapse, old commands keep their syntax colors at half brightness, and terminals that will not report a palette fall back to the xterm values. The prompt still drops all color under [`NO_COLOR`](https://no-color.org/) or on a dumb terminal. The implementation lives in [KronuZSH](https://github.com/Kronuz/KronuZSH), alongside the pty test that runs the real plugin stack and makes sure the recursion stays dead.
+The finished feature is small: old prompts collapse, exit status and slow-command duration stay in history, old commands keep their syntax colors at half brightness, and terminals that will not report a palette fall back to the xterm values. The prompt still drops all color under [`NO_COLOR`](https://no-color.org/) or on a dumb terminal. The implementation lives in [KronuZSH](https://github.com/Kronuz/KronuZSH), alongside the pty test that runs the real plugin stack and makes sure the recursion stays dead.
 
 The framework migration taught me to own the machinery. This smaller box taught me something more useful: ownership does not mean guessing what the machinery does. Sometimes the machine knows the answer, and the shortest route is to ask it.
