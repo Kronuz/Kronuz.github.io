@@ -1,36 +1,47 @@
 ---
-title: "Ask the Terminal"
-subtitle: "What your terminal actually means by green"
-description: I wanted old commands to keep their syntax colors, only dimmer. That led through zsh highlighting internals, terminal palette queries, and one recursive hook that screamed.
-excerpt: Making an old command fade looked like a ten-minute prompt tweak. Then I learned that "green" has no RGB value until the terminal tells you what it chose.
-series: "Opening Boxes"
-seriesOrder: 9
-date: 2026-06-18
+title: "What the Prompt Leaves Behind"
+subtitle: "Turning KronuZSH's full prompt into quiet, accurate scrollback."
+description: "After pulling my prompt out of Prezto, I taught it to collapse old prompts without losing syntax colors, exit status, command timing, or iTerm's invisible shell integration."
+excerpt: "Owning my zsh setup made the next refinement possible: keep the full prompt while I am working, then leave behind one quiet, syntax-colored command that the terminal still understands."
+series: "Home Made"
+seriesOrder: 4
+date: 2026-07-20
+authors: kronuz
 draft: true
 tags:
-  - opening-boxes
+  - tooling
+  - shell
   - zsh
   - terminal
 ---
 
-I had already [pulled my prompt out of Prezto and built a small zsh setup around it](/blog/molting/). That story was about leaving a framework: what I kept, what broke, and which quiet conveniences I had to rebuild. This one starts afterward, with a ten-minute improvement that took three evenings.
+I had already [pulled my prompt out of Prezto and built a small zsh setup around it](/blog/molting/). That made KronuZSH mine, small enough to read and change without negotiating with a framework. The next step was not another migration. It was the kind of fussy refinement that owning the whole thing finally made practical.
 
-I wanted a **transient prompt**. When you press Enter, the full two-line prompt for the command you just ran collapses to a single faded caret, so your scrollback is a clean column instead of a wall of repeated prompts:
+I wanted the prompt to be useful while I was typing and quiet after I pressed Enter. The live prompt could keep the host, git state, time, working directory, and the three colored carets. Once it entered scrollback, all of that could collapse to a dim `path ❯ command`. Failures and slow commands would leave their result behind too.
+
+## A quieter history
+
+Here is the intended before and after. This is one session, first with every full prompt preserved, then with previous prompts collapsed. The last prompt stays full because it is still live:
 
 ```ansi
-[2m# before: every past command keeps its whole two-line prompt[0m
-[32m●[0m [1;37mgmendezb[0m at [34mhost[0m [90m(10.0.0.5)[0m  [90m⎇[0m [1;37mmain[0m  [1;31m❯[0m[1;33m❯[0m[1;32m❯[0m cd src
-[32m●[0m [1;37mgmendezb[0m at [34mhost[0m [90m(10.0.0.5)[0m  [90m⎇[0m [1;37msrc[0m   [1;31m❯[0m[1;33m❯[0m[1;32m❯[0m make
-[32m●[0m [1;37mgmendezb[0m at [34mhost[0m [90m(10.0.0.5)[0m  [90m⎇[0m [1;37msrc[0m   [1;31m❯[0m[1;33m❯[0m[1;32m❯[0m ./run
+[2m# before[0m
+[0;32m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m
+[0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38:5:94mcd[0m [0;4m~/code/KronuZSH[0m
+[0;32m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:5:231;1mmain[0m [0;90m⇅[0m [0;38:5:231morigin/main[0;90m [[0;90m([0;38:5:83m✔[0;90m)[0m
+[0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38:5:94mfalse[0m
+[0;31m⏎ 1[0m
+[0;31m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:5:231;1mmain[0m [0;90m⇅[0m [0;38:5:231morigin/main[0;90m [[0;90m([0;38:5:83m✔[0;90m)[0m
+[0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 
-[2m# after: past commands collapse to a faded caret; only the live prompt stays full[0m
-[2m❯ cd src[0m
-[2m❯ make[0m
-[2m❯ ./run[0m
-[32m●[0m [1;37mgmendezb[0m at [34mhost[0m [90m(10.0.0.5)[0m  [90m⎇[0m [1;37mmain[0m  [1;31m❯[0m[1;33m❯[0m[1;32m❯[0m
+[2m# after[0m
+[38;5;31m~[0m [0;38:5:249;1m❯[0m [0;38:5:130mcd[0m [0;4m~/code/KronuZSH[0m
+[38;5;31m~/code/KronuZSH[0m [0;38:5:249;1m❯[0m [0;38:5:130mfalse[0m
+[0;31m⏎ 1[0m
+[0;31m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:5:231;1mmain[0m [0;90m⇅[0m [0;38:5:231morigin/main[0;90m [[0;90m([0;38:5:83m✔[0;90m)[0m
+[0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 
-I liked it immediately. Then I wanted one more thing: the command you typed should fade too, the way old history feels old. Keep its syntax colors, just dimmer. A trivial ask. I budgeted ten minutes.
+The collapse worked, and the difference was immediate. Scrollback became a command log instead of a stack of status dashboards. Then the plain command text started bothering me. If the live editor knew that `cd` was a command and `lib` was a path, the historical line should keep those syntax colors, only dimmer. I budgeted ten minutes.
 
 zsh paints the command line through an array called `region_highlight`, a list of "from here to here, in this style" spans. So I would just add a `faint` attribute to each span and be done.
 
@@ -38,7 +49,7 @@ zsh does not have a `faint` attribute. `region_highlight` understands `bold`, `u
 
 If the terminal will not dim a color for me, I will dim it myself. Take each color the syntax highlighter chose, pull it apart into red, green, blue, scale all three toward black, and hand back the darker version. Real arithmetic instead of an attribute. I wired it up, set the factor to a gentle 0.7, pressed Enter, and the faded command came back the wrong color.
 
-## What color is green?
+## Green is not a color
 
 Not a little wrong. The greens went olive, the blues went muddy. I lowered the factor to almost nothing, 0.99, barely a fade at all, and the hue *still* shifted. The math was not the problem. The math was halving numbers. The problem was which numbers.
 
@@ -66,9 +77,9 @@ The `\e` is the printable spelling of the ESC byte. The terminal receives the by
 
 There it was. `#8ae234`, straight from iTerm, no guessing. So at startup the prompt now asks the terminal for all sixteen of its ANSI colors, once, and caches the answers. When it dims `fg=green`, it darkens *that* green. Halved, `#8ae234` becomes `#45711a`: same hue, genuinely darker, the faded-history look I wanted three evenings earlier. If a terminal does not answer, it falls back to the xterm table and life goes on.
 
-The lesson was the whole post in miniature. With the framework gone, there was no abstraction left between me and the machine, and the answer to "what is true" was not in a config file or a module. It was in the terminal, and I could just ask.
+That solved the visible part. The historical command now kept the palette I was actually looking at, not a nominal xterm approximation of it. Getting the right pixels onto the screen, however, was only the first layer.
 
-## The loop that screamed
+## The highlighter that called itself
 
 I shipped the dimming, felt good about it, and a day later saw this sitting on top of a window I was not even typing in:
 
@@ -94,32 +105,32 @@ The fix was to stop fighting over the widget. Instead of hooking `zle-line-finis
 
 I tested it the only way that is honest for a prompt, which is in a real terminal pressing real Enters: a pty running the full plugin stack, eight commands, each forced to fail so the exit-code path ran too. Zero recursion errors, empty stderr. The screaming stopped.
 
-## The marks stayed behind
+## The structure behind the pixels
 
-The prompt looked right to me, but iTerm2 disagreed.
+With the colors and recursion fixed, the prompt looked right to me. iTerm2 disagreed.
 
 iTerm keeps an [invisible record of each command](https://iterm2.com/documentation-shell-integration.html). A terminal normally sees only a stream of bytes. It does not know that one line is a prompt, the next few characters are something I typed, and everything after Enter came from a program. Shell integration teaches it that grammar by slipping four non-printing `OSC 133` markers into the stream: `A`, `B`, `C`, and `D`.
 
 Suppose I run a command that prints one line and fails. I captured this from the real prompt in an interactive pty, with iTerm detection enabled. Keeping the visible text and the four `OSC 133` boundaries, in their exact relative positions, it is:
 
 ```ansi
-[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33msh -c 'printf "nope\n"; exit 1'[0m[2m\n[0m
+[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38:5:249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38:5:137msh[0m -c '[0;38:5:94mprintf[0m [0;38:5:65m"nope\n"[0m; [0;38:5:94mexit[0m 1'[0m[2m\n[0m
   [1;33m\e]133;C;\r\a[0mnope[2m\n[0m
   [1;31m\e]133;D;1\a[0m[31m⏎ 1[0m[2m\n[0m
-  [32m●[0m kronuz at Germans-MacBook-Pro.local[2m\n[0m
-  [16:14:29] [38;5;39m~/code/KronuZSH ❯❯❯[0m
+  [32m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m
+  [0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 
 The full prompt at the bottom is unmarked. If I type a second command there and press Enter, `reset-prompt` erases those live lines and replaces them with the next collapsed history line. This time the command succeeds. Keeping the first command above it, the cumulative history is:
 
 ```ansi
-[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33msh -c 'printf "nope\n"; exit 1'[0m[2m\n[0m
+[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38:5:249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38:5:137msh[0m -c '[0;38:5:94mprintf[0m [0;38:5:65m"nope\n"[0m; [0;38:5:94mexit[0m 1'[0m[2m\n[0m
   [1;33m\e]133;C;\r\a[0mnope[2m\n[0m
   [1;31m\e]133;D;1\a[0m[2;31m⏎ 1[0m[2m\n[0m
-[34m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~/code/KronuZSH ❯ [0m[1;36m\e]133;B\a[0m[33mprintf "okay\n"[0m[2m\n[0m
+[34m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38:5:249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38:5:94mprintf[0m [0;38:5:65m"okay\n"[0m[2m\n[0m
   [1;33m\e]133;C;\r\a[0mokay[2m\n[0m
-  [1;31m\e]133;D;0\a[0m[32m●[0m kronuz at Germans-MacBook-Pro.local[2m\n[0m
-  [16:14:31] [38;5;39m~/code/KronuZSH ❯❯❯[0m
+  [1;31m\e]133;D;0\a[0m[32m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m[2m\n[0m
+  [0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 
 The backslash forms are visible stand-ins for bytes that normally print nothing: `\e` is ESC, `\a` is BEL, `\r` is carriage return, and each dim `\n` marks an actual newline. Magenta is `A`, cyan is `B`, yellow is `C`, and red is `D`. The terminal receives the control bytes, not the backslash notation.
@@ -154,6 +165,8 @@ print -n '\e]133;C;\r\a'
 print -n "\e]133;D;${ret}\a"
 ```
 
+## Redrawing a prompt without lying
+
 A transient prompt is not linear. In my first attempt, iTerm had already seen `A` and `B` around the full prompt by the time I pressed Enter. Then my widget called `reset-prompt`, erased that prompt, and redrew a shorter one in its place. The pixels moved. The markers did not. iTerm still thought the command belonged to the two-line prompt that no longer existed, so its gutter mark landed on the wrong row and its idea of the command's output drifted away from what was on screen.
 
 My first fix was the obvious one: after the redraw, emit a fresh `A` and `B` around the collapsed prompt. That moved the mark to the right place, but left the first pair alive too. One command now had two beginnings. Jumping through history stopped on ghost prompts, and output selection acquired pieces of the prompt I had meant to erase.
@@ -175,6 +188,8 @@ There is one consequence I only found by trying **Select Output of Last Command*
 `C` and the eventual `D;<status>` still attach to the line that actually survives in scrollback. With transience disabled, the normal prompt gets the markers instead. Same four letters, two different paths through them.
 
 iTerm had one more small demand. The shared terminal protocol accepts `OSC 133;C`, but iTerm's own zsh integration emits `OSC 133;C;` followed by a carriage return. That trailing `;\r` matters to its screen-scraping command capture. So KronuZSH sends iTerm the exact form it expects and keeps the parameter-free form for other terminals. It also announces shell integration once with `OSC 1337`, then reports the current host and directory on each prompt. I did not source iTerm's integration script because it would wrap the prompt and emit a second set of the same marks I was already struggling to place.
+
+## One marker too many
 
 There was still a second set of marks, just not from the integration script. I was also sending the standard current-directory sequence on every `precmd`:
 
@@ -200,4 +215,6 @@ The test was no longer "does the caret fade?" It was: run `sh -c 'printf "nope\\
 
 The finished feature is small: old prompts collapse, exit status and slow-command duration stay in history, old commands keep their syntax colors at half brightness, and terminals that will not report a palette fall back to the xterm values. The prompt still drops all color under [`NO_COLOR`](https://no-color.org/) or on a dumb terminal. The implementation lives in [KronuZSH](https://github.com/Kronuz/KronuZSH), alongside the pty test that runs the real plugin stack and makes sure the recursion stays dead.
 
-The framework migration taught me to own the machinery. This smaller box taught me something more useful: ownership does not mean guessing what the machinery does. Sometimes the machine knows the answer, and the shortest route is to ask it.
+Pulling the prompt out of Prezto made this work possible. There was no framework boundary left to work around, and no hidden module to blame. The color spans, widget lifecycle, redraw, and terminal integration were all in one system I could follow end to end.
+
+That is the less tidy continuation of making a tool your own. First you make the machinery small enough to understand. Then you refine it until the visible result and the invisible structure tell the same story.
