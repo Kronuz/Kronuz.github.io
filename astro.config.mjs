@@ -6,6 +6,7 @@ import sitemap from '@astrojs/sitemap';
 import starlightBlog from 'starlight-blog';
 import remarkGfm from 'remark-gfm';
 import rehypeExternalLinks from 'rehype-external-links';
+import remarkAnsi from './src/plugins/remark-ansi.mjs';
 import remarkD2 from './src/plugins/remark-d2.mjs';
 import remarkSnippet from './src/plugins/remark-snippet.mjs';
 import remarkSnippetLink from './src/plugins/remark-snippet-link.mjs';
@@ -58,7 +59,7 @@ export default defineConfig({
 	// GFM tables in .mdx, and external links (http/https) open in a new tab.
 	// Internal relative links (/blog/...) and mailto are left alone.
 	markdown: {
-		remarkPlugins: [remarkGfm, remarkD2, remarkSnippet, remarkSnippetLink, remarkSoftBlogLinks],
+		remarkPlugins: [remarkGfm, remarkAnsi, remarkD2, remarkSnippet, remarkSnippetLink, remarkSoftBlogLinks],
 		rehypePlugins: [
 			[
 				rehypeExternalLinks,

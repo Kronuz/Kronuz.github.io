@@ -24,20 +24,20 @@ I wanted the prompt to be useful while I was typing and quiet after I pressed En
 Here is the intended before and after. This is one session, first with every full prompt preserved, then with previous prompts collapsed. The last prompt stays full because it is still live:
 
 ```ansi
-[2m# before[0m
-[0;32m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m
-[0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38:5:94mcd[0m [0;4m~/code/KronuZSH[0m
-[0;32m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:5:231;1mmain[0m [0;90m⇅[0m [0;38:5:231morigin/main[0;90m [[0;90m([0;38:5:83m✔[0;90m)[0m
-[0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38:5:94mfalse[0m
+[0;38:2:1:149:129:94m# before[0m
+[0;32m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m
+[0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38;5;94mcd[0m [0;4m~/code/KronuZSH[0m
+[0;32m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38;5;231;1mmain[0m [0;90m⇅[0m [0;38;5;231morigin/main[0;90m [0;90m([0;38;5;83m✔[0;90m)[0m
+[0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38;5;94mfalse[0m
 [0;31m⏎ 1[0m
-[0;31m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:5:231;1mmain[0m [0;90m⇅[0m [0;38:5:231morigin/main[0;90m [[0;90m([0;38:5:83m✔[0;90m)[0m
+[0;31m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38;5;231;1mmain[0m [0;90m⇅[0m [0;38;5;231morigin/main[0;90m [0;90m([0;38;5;83m✔[0;90m)[0m
 [0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 
-[2m# after[0m
-[38;5;31m~[0m [0;38:5:249;1m❯[0m [0;38:5:130mcd[0m [0;4m~/code/KronuZSH[0m
-[38;5;31m~/code/KronuZSH[0m [0;38:5:249;1m❯[0m [0;38:5:130mfalse[0m
+[0;38:2:1:149:129:94m# after[0m
+[38;5;31m~[0m [0;38;5;249;1m❯[0m [0;38;5;130mcd[0m [0;4m~/code/KronuZSH[0m
+[38;5;31m~/code/KronuZSH[0m [0;38;5;249;1m❯[0m [0;38;5;130mfalse[0m
 [0;31m⏎ 1[0m
-[0;31m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:5:231;1mmain[0m [0;90m⇅[0m [0;38:5:231morigin/main[0;90m [[0;90m([0;38:5:83m✔[0;90m)[0m
+[0;31m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38;5;231;1mmain[0m [0;90m⇅[0m [0;38;5;231morigin/main[0;90m [0;90m([0;38;5;83m✔[0;90m)[0m
 [0;90m[7:13:00][0m [38;5;39m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 
@@ -114,22 +114,22 @@ iTerm keeps an [invisible record of each command](https://iterm2.com/documentati
 Suppose I run a command that prints one line and fails. I captured this from the real prompt in an interactive pty, with iTerm detection enabled. Keeping the visible text and the four `OSC 133` boundaries, in their exact relative positions, it is:
 
 ```ansi
-[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38:5:249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38:5:137msh[0m -c '[0;38:5:94mprintf[0m [0;38:5:65m"nope\n"[0m; [0;38:5:94mexit[0m 1'[0m[2m\n[0m
+[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38;5;249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38;5;137msh[0m -c '[0;38;5;94mprintf[0m [0;38;5;65m"nope\n"[0m; [0;38;5;94mexit[0m 1'[0m[2m\n[0m
   [1;33m\e]133;C;\r\a[0mnope[2m\n[0m
   [1;31m\e]133;D;1\a[0m[31m⏎ 1[0m[2m\n[0m
-  [32m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m
+  [32m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m
   [0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 
 The full prompt at the bottom is unmarked. If I type a second command there and press Enter, `reset-prompt` erases those live lines and replaces them with the next collapsed history line. This time the command succeeds. Keeping the first command above it, the cumulative history is:
 
 ```ansi
-[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38:5:249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38:5:137msh[0m -c '[0;38:5:94mprintf[0m [0;38:5:65m"nope\n"[0m; [0;38:5:94mexit[0m 1'[0m[2m\n[0m
+[31m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38;5;249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38;5;137msh[0m -c '[0;38;5;94mprintf[0m [0;38;5;65m"nope\n"[0m; [0;38;5;94mexit[0m 1'[0m[2m\n[0m
   [1;33m\e]133;C;\r\a[0mnope[2m\n[0m
   [1;31m\e]133;D;1\a[0m[2;31m⏎ 1[0m[2m\n[0m
-[34m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38:5:249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38:5:94mprintf[0m [0;38:5:65m"okay\n"[0m[2m\n[0m
+[34m▶[0m [1;35m\e]133;A\a[0m[38;5;31m~[0m [0;38;5;249;1m❯[0m [0m[1;36m\e]133;B\a[0m[0;38;5;94mprintf[0m [0;38;5;65m"okay\n"[0m[2m\n[0m
   [1;33m\e]133;C;\r\a[0mokay[2m\n[0m
-  [1;31m\e]133;D;0\a[0m[32m●[0m [0;38:5:231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m[2m\n[0m
+  [1;31m\e]133;D;0\a[0m[32m●[0m [0;38;5;231;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m[2m\n[0m
   [0;90m[7:13:00][0m [38;5;39m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 

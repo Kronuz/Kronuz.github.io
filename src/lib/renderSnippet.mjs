@@ -12,6 +12,7 @@ import path from "node:path";
 import { getSingletonHighlighter } from "shiki";
 import lightTheme from "../styles/kronuz-light.json";
 import darkTheme from "../styles/kronuz-dark.json";
+import { normalizeAnsiForShiki } from "./normalizeAnsi.mjs";
 
 const LANGS = [
   "bash", "python", "javascript", "typescript", "json", "c", "cpp", "rust",
@@ -107,7 +108,8 @@ export function rawHref(file) {
 export async function highlight(code, lang) {
   const hl = await highlighter();
   const use = LANGS.includes(lang) ? lang : "text";
-  return hl.codeToHtml(code, {
+  const source = use === "ansi" ? normalizeAnsiForShiki(code) : code;
+  return hl.codeToHtml(source, {
     lang: use,
     themes: { light: "kronuz-light", dark: "kronuz-dark" },
     defaultColor: false,

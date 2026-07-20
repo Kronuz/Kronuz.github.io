@@ -103,11 +103,12 @@ console.log(`${Math.round(+m[1])}x${Math.round(+m[2])} ratio=${(+m[1]/+m[2]).toF
   modal. Both render via `lib/renderSnippet.mjs` (`remark-snippet.mjs` /
   `remark-snippet-link.mjs`), driven by the global `<SnippetScript>`. Served raw at
   `/snippets/raw/<file>.txt`, full page at `/snippets/view/<file>/`.
-- **Terminal output (colored):** a plain ```` ```ansi ```` fence — Expressive Code
-  renders Shiki's `ansi` grammar natively, so raw SGR escape bytes in the fence body come
-  out colored and theme-aware, with the same frame, `title=`, and copy button as any code
-  fence (no custom plugin). Use ```` ```ansi ```` for an inline capture (a prompt, a build
-  log); a ```` ```snippet ```` with a `.out`/`.ansi` file is only for *sharing the whole file*.
+- **Terminal output (colored):** a plain ```` ```ansi ```` fence — `remark-ansi.mjs`
+  normalizes terminal-valid colon-form extended SGR colors before Expressive Code renders
+  Shiki's `ansi` language, so raw captures come out colored and theme-aware. The same
+  `normalizeAnsi.mjs` helper runs in `renderSnippet.mjs` for `.out`/`.ansi`/`.log` snippets.
+  Use ```` ```ansi ```` for an inline capture (a prompt, a build log); a ```` ```snippet ````
+  with a terminal-output file is only for *sharing the whole file*.
 - **Soft cross-links:** a `/blog/<slug>/` link to a post that is a *draft* (so not in a
   production build) renders as plain text instead of 404ing, then becomes a real link once
   that post publishes (`remark-soft-blog-links.mjs`). Only known post slugs are softened, so
@@ -164,7 +165,8 @@ This repo and the **internal** mirror (`~/Development/KronuzBlog/gmendezb-pages`
 served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared components,
 `renderSnippet.mjs`, the snippet pages, `PageTitle.astro`, `Sidebar.astro`, `ThemeSelect.astro`,
 `TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
-(`remark-d2.mjs`, `remark-snippet.mjs`, `remark-snippet-link.mjs`, `remark-soft-blog-links.mjs`).
+(`remark-ansi.mjs`, `remark-d2.mjs`, `remark-snippet.mjs`, `remark-snippet-link.mjs`,
+`remark-soft-blog-links.mjs`) plus `lib/normalizeAnsi.mjs`.
 After editing a shared file, copy it to the other repo and rebuild both. **Legitimately
 different:** content (posts, `about.md`, `index.mdx`, `projects.md`), `sidebar.mjs` (this side adds
 Projects), `content.config.ts`, `astro.config.mjs`, `consts.ts`, `SiteTitle.astro`, `Footer.astro`,
