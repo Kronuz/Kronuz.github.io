@@ -10,12 +10,12 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "discussions"
-database_id = "4e2b8a6d-1b8b-4172-aad9-5ea9b905eabe"
+database_id = "local-dev-placeholder"
 migrations_dir = "migrations"
 
 # Blog-specific configuration lives in encrypted D1 tenant documents. These are the only
 # non-secret, deployment-wide settings. SESSION_SECRET, CONFIG_MASTER_KEY, and
 # SERVICE_ADMIN_TOKEN are Worker secrets.
 [vars]
-PUBLIC_BASE_URL = "https://discussions.kronuz.workers.dev"
+PUBLIC_BASE_URL = "https://comments.example.com"
 REQUEST_MAX_BYTES = "1048576"

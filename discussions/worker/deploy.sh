@@ -21,6 +21,7 @@ fi
 
 command -v npx >/dev/null || die "node/npx not found"
 command -v openssl >/dev/null || die "openssl not found"
+[ -f wrangler.toml ] || die "Copy wrangler.toml.example to wrangler.toml and configure PUBLIC_BASE_URL"
 $WRANGLER whoami >/dev/null 2>&1 || die "Run: npx wrangler login"
 
 if grep -q 'database_id = "local-dev-placeholder"' wrangler.toml; then
@@ -64,11 +65,11 @@ Deploy complete.
 Create or replace a tenant by copying tenant-config.example.json, filling every value,
 then sending the complete document:
 
-  curl -X PUT '$base/kronuz/config' \\
+  curl -X PUT '$base/my-blog/config' \\
     -H 'Authorization: Bearer <SERVICE_ADMIN_TOKEN>' \\
     -H 'Content-Type: application/json' \\
     --data-binary @tenant-config.json
 
 OAuth callback for that tenant:
-  $base/kronuz/auth/callback
+  $base/my-blog/auth/callback
 TXT

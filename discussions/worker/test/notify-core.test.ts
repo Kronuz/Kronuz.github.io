@@ -13,13 +13,13 @@ import {
 
 const input: NotifyInput = {
   commentId: "c_123",
-  author: "German",
-  authorLogin: "Kronuz",
-  postTitle: "House Rules",
-  postTerm: "house-rules",
-  postUrl: "https://kronuz.github.io/blog/house-rules/",
-  siteName: "Kronuz/Kronuz.github.io",
-  siteUrl: "https://kronuz.github.io",
+  author: "Alex",
+  authorLogin: "alex",
+  postTitle: "My Post",
+  postTerm: "my-post",
+  postUrl: "https://blog.example.com/blog/my-post/",
+  siteName: "owner/blog",
+  siteUrl: "https://blog.example.com",
   body: "A comment",
   isReply: false,
 };
@@ -27,15 +27,15 @@ const input: NotifyInput = {
 test("builds the same stable comment permalink used by the feed", () => {
   assert.equal(
     commentPermalink(input.postUrl, input.siteUrl, input.commentId),
-    "https://kronuz.github.io/blog/house-rules/#c_123",
+    "https://blog.example.com/blog/my-post/#c_123",
   );
-  assert.equal(commentPermalink(null, input.siteUrl, input.commentId), "https://kronuz.github.io#c_123");
+  assert.equal(commentPermalink(null, input.siteUrl, input.commentId), "https://blog.example.com#c_123");
 });
 
 test("uses the term and site URL fallbacks and identifies replies", () => {
   const text = notificationMessage({ ...input, postTitle: null, postUrl: null, isReply: true });
-  assert.match(text, /^💬 \[Kronuz\/Kronuz\.github\.io\] New reply by German on “house-rules”/);
-  assert.match(text, /https:\/\/kronuz\.github\.io#c_123$/);
+  assert.match(text, /^💬 \[owner\/blog\] New reply by Alex on “my-post”/);
+  assert.match(text, /https:\/\/blog\.example\.com#c_123$/);
 });
 
 test("recognizes only configured providers", () => {

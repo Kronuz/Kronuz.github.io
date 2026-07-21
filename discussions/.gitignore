@@ -1,6 +1,1 @@
-# Never commit the OAuth client secret or the local venv.
-backend/.env
-backend/.venv/
-__pycache__/
-*.log
-.ruff_cache/
+.DS_Store

@@ -1,5 +1,5 @@
 /**
- * D1Database driver — the Cloudflare D1 backing store for the self-hosted comments.
+ * D1Database driver for the Cloudflare D1 backing store.
  *
  * D1 uses SQLite semantics. Queries go through its prepared-statement API
  * (`.prepare(sql).bind(...).all()/.first()/.run()`, `.batch([...])` for atomic groups).

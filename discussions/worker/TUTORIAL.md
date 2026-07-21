@@ -1,143 +1,185 @@
-# Deploying and operating the multi-tenant comments Worker
+# Deploying Kronuz Discussions
 
-This is the end-to-end procedure for the first multi-tenant cutover, adding another
-public-comments tenant later, and replacing a tenant's complete configuration.
-
-For routine database inspection, backups, migrations, logs, recovery, and incident
-checks after deployment, use [OPERATIONS.md](./OPERATIONS.md).
-
-The examples use these tenants:
-
-| tenant | backend URL | OAuth callback |
-| --- | --- | --- |
-| `kronuz` | `https://discussions.kronuz.workers.dev/kronuz` | `https://discussions.kronuz.workers.dev/kronuz/auth/callback` |
-| `gmendezb-pages` | `https://discussions.kronuz.workers.dev/gmendezb-pages` | `https://discussions.kronuz.workers.dev/gmendezb-pages/auth/callback` |
-
-## 1. Know which files contain secrets
-
-The following files are deliberately gitignored and must remain local:
+This tutorial creates one multi-tenant Cloudflare Worker and adds a blog tenant. Repeat the
+tenant steps for every additional site. Each tenant gets a URL such as:
 
 ```text
-secrets.sh
-tenant-config.kronuz.json
-tenant-config.gmendezb-pages.json
-.dev.vars
+https://comments.example.com/my-blog
 ```
 
-`secrets.sh` contains deployment-wide secrets:
+The Worker stores comments in D1. Complete tenant documents, including OAuth client secrets,
+are encrypted in D1 and managed with authenticated full-document `PUT` requests.
+
+## 1. Install and configure the Worker
+
+Requirements:
+
+- Node.js and npm
+- A Cloudflare account with Workers and D1
+- An OAuth 2.0 client from the identity provider you want readers to use
+
+Install dependencies and create deployment-local files:
 
 ```bash
-SESSION_SECRET=
-CONFIG_MASTER_KEY=<64-character random value>
-SERVICE_ADMIN_TOKEN=<64-character random value>
+npm install
+cp wrangler.toml.example wrangler.toml
+cp .dev.vars.example .dev.vars
+cp tenant-config.example.json tenant-config.my-blog.json
 ```
 
-- An empty `SESSION_SECRET` tells `deploy.sh` to preserve the value already stored in
-  Cloudflare. On a new service, the script generates one.
-- `CONFIG_MASTER_KEY` encrypts the complete tenant documents in D1.
-- `SERVICE_ADMIN_TOKEN` authorizes `PUT /:tenant/config`.
+`wrangler.toml`, `.dev.vars`, `secrets.sh`, and `tenant-config.*.json` are gitignored. The
+sanitized `tenant-config.example.json` remains tracked.
 
-Each `tenant-config.*.json` is the complete editable source of truth for that tenant,
-including its OAuth client secret, webhook, and feed token. `GET /:tenant/config` is
-redacted, and a protected tenant also requires its access key, so it cannot reconstruct
-this private document.
+Edit `wrangler.toml`:
 
-## Generate tenant tokens
+- Set `name` and `database_name` if you do not want the defaults.
+- Set `PUBLIC_BASE_URL` to the final Worker origin, without a tenant path.
+- Leave `database_id = "local-dev-placeholder"` for a new D1 database. `deploy.sh` creates
+  the database and writes its ID into the local file.
 
-Generate a 32-byte base64url value with Node:
+For local development, replace every `change-me` value in `.dev.vars`.
+
+## 2. Understand the three deployment secrets
+
+The Worker has only three deployment-wide secrets:
+
+| Secret | Purpose |
+| --- | --- |
+| `SESSION_SECRET` | Signs OAuth state and tenant-bound sessions. |
+| `CONFIG_MASTER_KEY` | Encrypts complete tenant configuration documents in D1. |
+| `SERVICE_ADMIN_TOKEN` | Authorizes `PUT /:tenant/config`. |
+
+Generate each value independently:
 
 ```bash
-node --input-type=module -e \
-  'import { randomBytes } from "node:crypto"; console.log(randomBytes(32).toString("base64url"))'
+node --input-type=module -e 'import { randomBytes } from "node:crypto"; console.log(randomBytes(32).toString("base64url"))'
 ```
 
-Run it separately for every value. Do not reuse one value for different purposes.
+You may place the values in a gitignored `secrets.sh` before the first deployment:
 
-- `accessKey`: leave it empty for a public tenant. For a protected tenant, paste one
-  generated value at the top level of its complete tenant JSON and into that site's private
-  build configuration.
-- `feed.token`: generate a different value when the private Atom feed is enabled.
-- `SERVICE_ADMIN_TOKEN`: deployment-wide administration credential. `deploy.sh` generates
-  it on a new service when no non-empty value is supplied in `secrets.sh`.
+```bash
+SESSION_SECRET='...'
+CONFIG_MASTER_KEY='...'
+SERVICE_ADMIN_TOKEN='...'
+```
 
-An access key is compiled into the static site. Every reader allowed to load that site can
-extract it, so it protects against public discovery and direct unauthenticated API access,
-not against an authorized reader sharing the key.
+`deploy.sh` preserves existing remote secrets. On a new service it generates missing values,
+but you must save any generated `CONFIG_MASTER_KEY` and `SERVICE_ADMIN_TOKEN` immediately.
+Losing the configuration master key makes stored tenant documents unrecoverable.
 
-## 2. Find or create the GitHub OAuth Apps
+## 3. Create an OAuth client
 
-These are **OAuth Apps**, not GitHub Apps.
-
-For an app owned by your personal account:
-
-1. Sign into the GitHub account that owns it.
-2. Click the profile picture in the upper-right.
-3. Open **Settings**.
-4. Open **Developer settings** in the left sidebar.
-5. Open **OAuth apps**.
-6. Select the application whose Client ID matches `oauth.clientId` in the tenant JSON.
-
-The direct personal-account page is <https://github.com/settings/developers>.
-
-For an organization-owned app:
-
-1. Open **Your organizations** from the profile menu.
-2. Open **Settings** for the owning organization.
-3. Open **Developer settings**, then **OAuth apps**.
-4. Match the Client ID to the tenant JSON.
-
-If the app is not visible, the usual cause is being signed into the wrong personal,
-managed-user, or organization owner account. GitHub documents both ownership locations in
-[Creating an OAuth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app)
-and the edit path in
-[Modifying an OAuth app](https://docs.github.com/en/apps/oauth-apps/maintaining-oauth-apps/modifying-an-oauth-app).
-
-An OAuth App created by an Enterprise Managed User or by an organization with managed
-users can only be accessed by members of that enterprise. That makes such an app the right
-identity provider for the internal tenant, even though comment privacy itself is a
-separate, deferred feature. See
-[GitHub's OAuth App best practices](https://docs.github.com/en/enterprise-cloud@latest/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app).
-
-OAuth Apps support one configured callback URL. The Worker also sends the tenant callback
-as `redirect_uri`, so configure the exact URL shown in the table above.
-
-## 3. Finish and check the tenant documents
-
-Every tenant document must include all fields. Start from `tenant-config.example.json` for
-a new tenant. For the two current tenants, the prepared files are:
+Create an OAuth application in your identity provider. During initial setup, register this
+callback URL, replacing the origin and tenant:
 
 ```text
-tenant-config.kronuz.json
-tenant-config.gmendezb-pages.json
+https://comments.example.com/my-blog/auth/callback
 ```
 
-Before deployment, make sure neither OAuth secret is blank:
+For GitHub, OAuth Apps are under **Settings**, **Developer settings**, **OAuth Apps**. Use:
 
-```bash
-jq -e '.oauth.clientId != "" and .oauth.clientSecret != ""' \
-  tenant-config.kronuz.json tenant-config.gmendezb-pages.json
+```json
+{
+  "name": "GitHub",
+  "authorizeUrl": "https://github.com/login/oauth/authorize",
+  "tokenUrl": "https://github.com/login/oauth/access_token",
+  "userUrl": "https://api.github.com/user",
+  "scope": "read:user",
+  "clientAuthMethod": "client_secret_post",
+  "fields": {
+    "subject": "id",
+    "login": "login",
+    "name": "name",
+    "avatar": "avatar_url",
+    "profileUrl": "html_url"
+  }
+}
 ```
 
-Also confirm that `kronuz` has an empty access key and the internal tenant has a generated
-43-character base64url key:
+Other OAuth 2.0 providers work when their token response contains an access token and their
+user endpoint returns JSON fields that can be selected by the configured field paths. Each
+tenant may use a different provider or OAuth client.
 
-```bash
-jq -e '.accessKey == ""' tenant-config.kronuz.json
-jq -e '.accessKey | test("^[A-Za-z0-9_-]{43}$")' \
-  tenant-config.gmendezb-pages.json
-```
+## 4. Complete the tenant document
 
-Also verify that each canonical and development origin is present. Both current tenants
-allow their deployed origin plus:
+Edit `tenant-config.my-blog.json`. Every update sends the entire document.
+
+Important fields:
+
+- `active`: set `false` to disable the tenant without deleting data.
+- `site`: canonical site URL and repository metadata.
+- `origins`: every browser origin allowed to call the tenant, including localhost aliases
+  used during development.
+- `oauth`: provider URLs, client credentials, scope, authentication method, and user-field
+  mapping.
+- `moderators`: stable OAuth subjects when available, with login as a fallback.
+- `widget`: display-only options.
+- `limits`: maximum comment body and session lifetime.
+- `notifications`: webhook provider and destination.
+- `feed`: optional private recent-comments Atom feed.
+
+### Public and capability-protected tenants
+
+Leave the top-level `accessKey` empty for a public tenant. For a protected tenant, generate
+a 32-byte base64url value with the command from step 2. Compile that same value into the
+private static site and pass it to the widget as `accessKey`.
+
+This is a static site capability. Anyone who can read the generated page can inspect it. It
+prevents public discovery and unauthenticated direct API access, but does not identify the
+reader. OAuth authentication is still required to write comments.
+
+### Private Atom feed
+
+To enable the owner feed, set `feed.enabled` to `true` and generate a separate token. Never
+reuse `accessKey` or a deployment secret. Subscribe with:
 
 ```text
-http://localhost:4321
-http://127.0.0.1:4321
+https://comments.example.com/my-blog/comments/feed?token=<feed.token>
 ```
 
-Those aliases let `npm run dev` use the production Worker and production comments.
+The feed token stays in the private tenant document and the feed reader. The static widget
+does not need it.
 
-## 4. Validate before touching production
+## 5. Validate locally
+
+Apply D1 migrations and start the local Worker:
+
+```bash
+npm run migrate:local
+npm run dev
+```
+
+In another terminal, load the local administrator token and submit the tenant:
+
+```bash
+set -a
+source .dev.vars
+set +a
+
+curl --fail-with-body -X PUT \
+  http://127.0.0.1:8787/my-blog/config \
+  -H "Authorization: Bearer $SERVICE_ADMIN_TOKEN" \
+  -H 'Content-Type: application/json' \
+  --data-binary @tenant-config.my-blog.json
+```
+
+Point Astro at the local tenant:
+
+```bash
+PUBLIC_DISCUSSIONS_BACKEND=http://127.0.0.1:8787/my-blog npm run dev
+```
+
+For a protected tenant, also set `PUBLIC_DISCUSSIONS_ACCESS_KEY`. The value becomes part of
+the generated client page, so this environment variable is a build input rather than a
+server secret.
+
+You may instead use the production Worker from local Astro. Add both
+`http://localhost:4321` and `http://127.0.0.1:4321` to the production tenant's `origins`.
+OAuth starts and finishes at the Worker, then its signed state returns the reader to localhost.
+
+## 6. Test and deploy
+
+Run the local checks:
 
 ```bash
 npm run typecheck
@@ -145,155 +187,90 @@ npm test
 npx wrangler deploy --dry-run
 ```
 
-For a full local API validation, run `npm run dev`, then submit the documents to the local
-Worker with the `SERVICE_ADMIN_TOKEN` from `.dev.vars`.
-
-## 5. Deploy the Worker
-
-Authenticate once if needed:
+Authenticate and deploy:
 
 ```bash
 npx wrangler login
-```
-
-Then deploy:
-
-```bash
 ./deploy.sh
 ```
 
-The script:
-
-1. Verifies Cloudflare authentication.
-2. Creates D1 if this is a new service.
-3. Applies all remote migrations.
-4. Preserves an existing `SESSION_SECRET`.
-5. Creates missing `CONFIG_MASTER_KEY` and `SERVICE_ADMIN_TOKEN` bindings using the
-   values from `secrets.sh`.
-6. Deploys the Worker.
-
-There is a short cutover interval after deployment when a tenant returns `404` until its
-complete configuration is submitted. Have both JSON files ready before running the script.
-
-## 6. Submit both complete configurations
-
-Load the service-administrator token into the shell:
+Load the production administrator token and submit the complete tenant document:
 
 ```bash
 set -a
-source ./secrets.sh
+source secrets.sh
 set +a
-```
-
-Create or replace both tenants:
-
-```bash
-curl --fail-with-body -X PUT \
-  https://discussions.kronuz.workers.dev/kronuz/config \
-  -H "Authorization: Bearer $SERVICE_ADMIN_TOKEN" \
-  -H 'Content-Type: application/json' \
-  --data-binary @tenant-config.kronuz.json
 
 curl --fail-with-body -X PUT \
-  https://discussions.kronuz.workers.dev/gmendezb-pages/config \
+  https://comments.example.com/my-blog/config \
   -H "Authorization: Bearer $SERVICE_ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
-  --data-binary @tenant-config.gmendezb-pages.json
+  --data-binary @tenant-config.my-blog.json
 ```
 
-`201 Created` means a new tenant. `200 OK` means an existing tenant was completely
-replaced. Both are successful.
+`201 Created` means the tenant was created. `200 OK` means its complete configuration was
+replaced. There is no delete API. Set `active` to `false` to take a tenant offline while
+preserving its comments.
 
-## 7. Update the OAuth callback URLs
+## 7. Add the Astro component
 
-In the GitHub OAuth App settings found in step 2, change **Authorization callback URL**:
+Import the component vendored with Kronuz Discussions:
 
-```text
-Public:   https://discussions.kronuz.workers.dev/kronuz/auth/callback
-Internal: https://discussions.kronuz.workers.dev/gmendezb-pages/auth/callback
+```astro
+---
+import Discussions from '../discussions/astro/Discussions.astro';
+---
+
+<Discussions
+  backend="https://comments.example.com/my-blog"
+  term="blog/my-post"
+  title="My post"
+  url="https://blog.example.com/blog/my-post/"
+/>
 ```
 
-Click **Update application** after each change.
+`term` is the stable page identity. Renaming it creates a new discussion. Tenant paths keep
+identical terms from different blogs isolated.
 
-Update each callback immediately after submitting that tenant's configuration and before
-switching its static site to the Worker.
+For plain HTML or another framework, follow [`../widget/README.md`](../widget/README.md).
 
-## 8. Verify the service
+## 8. Verify production
 
-Check global health and both public configuration projections:
+Check health and the public configuration projection:
 
 ```bash
-curl --fail https://discussions.kronuz.workers.dev/health
-curl --fail https://discussions.kronuz.workers.dev/kronuz/config
+curl --fail https://comments.example.com/health
+curl --fail https://comments.example.com/my-blog/config
+```
+
+For a protected tenant, include the site capability:
+
+```bash
 curl --fail \
-  -H "X-Discussions-Key: $(jq -r '.accessKey' tenant-config.gmendezb-pages.json)" \
-  https://discussions.kronuz.workers.dev/gmendezb-pages/config
+  -H "X-Discussions-Key: $(jq -r '.accessKey' tenant-config.my-blog.json)" \
+  https://comments.example.com/my-blog/config
 ```
 
-Then verify in a browser for each tenant:
+Then test in the browser:
 
-1. Open a post.
-2. Confirm existing comments load.
-3. Sign in through the expected GitHub identity system.
-4. Post a comment.
-5. Edit it, react to it, and delete it.
-6. Confirm the configured webhook and feed, when enabled.
-7. Repeat from `npm run dev` on `localhost:4321`.
+1. Confirm comments load on an existing page.
+2. Sign in through the configured OAuth provider.
+3. Post, edit, react to, and delete a comment.
+4. Verify moderator actions with a configured moderator account.
+5. Verify the notification hook and private feed when enabled.
+6. Repeat from each registered localhost origin.
 
-## 9. Switch the blogs
+## Adding or changing a tenant
 
-The public blog uses:
+There is no separate database provisioning step per tenant:
 
-```text
-https://discussions.kronuz.workers.dev/kronuz
-```
+1. Choose a URL-safe tenant ID.
+2. Register `<PUBLIC_BASE_URL>/<tenant>/auth/callback` with its OAuth client.
+3. Copy `tenant-config.example.json` to a gitignored tenant file.
+4. Fill every field and generate distinct optional access and feed tokens.
+5. Send an authenticated full-document `PUT /<tenant>/config`.
+6. Point the site at `<PUBLIC_BASE_URL>/<tenant>`.
+7. Verify production and localhost flows.
 
-The internal blog uses:
-
-```text
-https://discussions.kronuz.workers.dev/gmendezb-pages
-```
-
-Build both sites before publishing. Import any existing production Python/SQLite comments
-into D1 before publishing the internal switch; the local checkout has no production
-`discussions.db` to migrate.
-
-## 10. Remove legacy Cloudflare secrets
-
-Only after both tenants have passed OAuth and comment testing:
-
-```bash
-npx wrangler secret delete OAUTH_CLIENT_ID
-npx wrangler secret delete OAUTH_CLIENT_SECRET
-npx wrangler secret delete NOTIFY_WEBHOOK
-npx wrangler secret delete NOTIFY_FEED_TOKEN
-```
-
-Keep:
-
-```text
-SESSION_SECRET
-CONFIG_MASTER_KEY
-SERVICE_ADMIN_TOKEN
-```
-
-Confirm the final bindings:
-
-```bash
-npx wrangler secret list
-```
-
-## Adding or changing a tenant later
-
-1. Create or find its OAuth App.
-2. Register `https://discussions.kronuz.workers.dev/<tenant>/auth/callback`.
-3. Copy `tenant-config.example.json` to a gitignored private file.
-4. Fill every field and keep that file as the private source of truth.
-5. Send a complete authenticated `PUT /<tenant>/config`.
-6. Point the blog widget at `https://discussions.kronuz.workers.dev/<tenant>`.
-7. For a protected tenant, compile the same `accessKey` into its private static-site
-   configuration.
-8. Verify production and localhost login/comment flows.
-
-There is no tenant delete operation. To take one offline without deleting comments, send
-its complete configuration with `"active": false`.
+For routine D1 queries, backups, migrations, logs, and recovery, continue with
+[`OPERATIONS.md`](OPERATIONS.md).

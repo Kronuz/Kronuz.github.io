@@ -38,7 +38,7 @@ export function atomFeed(config: TenantConfig, feedId: string, rows: RecentComme
   const author = config.site.repo || site || "Comments";
   const updated = rows.length ? iso(rows[0].created_at) : EMPTY_TS;
   // A brand-new backend has no comments, and many readers refuse to subscribe to a feed
-  // with zero entries — so emit one stable placeholder until a real comment arrives.
+  // with zero entries, so emit one stable placeholder until a real comment arrives.
   const items = rows.length
     ? rows.map((r) => {
         const postName = r.post_title || r.term;

@@ -2,12 +2,12 @@
   "active": true,
   "accessKey": "",
   "site": {
-    "url": "https://kronuz.github.io",
-    "repo": "Kronuz/Kronuz.github.io",
-    "repoUrl": "https://github.com/Kronuz/Kronuz.github.io"
+    "url": "https://blog.example.com",
+    "repo": "owner/blog",
+    "repoUrl": "https://github.com/owner/blog"
   },
   "origins": [
-    "https://kronuz.github.io",
+    "https://blog.example.com",
     "http://localhost:4321",
     "http://127.0.0.1:4321"
   ],
@@ -28,7 +28,7 @@
       "profileUrl": "html_url"
     }
   },
-  "moderators": [{ "login": "Kronuz" }],
+  "moderators": [{ "login": "owner" }],
   "widget": { "stripSuffix": "", "giphyKey": "" },
   "limits": { "maxBody": 65536, "sessionTtl": 604800 },
   "notifications": { "kind": "", "webhookUrl": "", "telegramChat": "" },

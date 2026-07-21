@@ -1,12 +1,9 @@
 -- Initial schema for the self-hosted comments store on D1.
 --
--- This is a fresh deployment, so unlike the Python SQLite driver (which carries
--- idempotent PRAGMA/ALTER migrations for pre-tenant data) we ship the final shape
--- directly. There is no `sessions` table: sessions are stateless HMAC-signed cookies
+-- There is no `sessions` table: sessions are stateless HMAC-signed cookies
 -- (see src/sessions.ts), so nothing session-related is persisted.
 --
--- Time columns are epoch seconds stored as REAL (matching the Python backend, which
--- writes time.time()); JS writes Date.now()/1000.
+-- Time columns are epoch seconds stored as REAL. The Worker writes Date.now()/1000.
 
 -- Tenants: one row per hosted blog. `origin` is the blog's site URL (the per-request
 -- CORS/identity key); `repo`/`repo_url` are that blog's repo; strip_suffix/giphy_key

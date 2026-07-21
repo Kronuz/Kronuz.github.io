@@ -1,5 +1,5 @@
 /**
- * SelfHostedStore — the comment store whose system of record is D1.
+ * SelfHostedStore is the comment store whose system of record is D1.
  *
  * The full commenting system (comments, replies, edits, hides, reactions) lives in D1; OAuth is
  * used only to learn who the reader is; Markdown is rendered locally (md.render). Threads
@@ -33,7 +33,7 @@ const REACTION_CONTENT = new Set([
   "EYES",
 ]);
 
-// GitHub's ReportedContentClassifiers — the valid reasons for hiding a comment.
+// GitHub's ReportedContentClassifiers define the valid reasons for hiding a comment.
 const HIDE_REASONS = new Set(["OUTDATED", "OFF_TOPIC", "RESOLVED", "DUPLICATE", "SPAM", "ABUSE"]);
 
 /** Epoch seconds -> ISO-8601 UTC (what the widget's `new Date(...)` expects), seconds

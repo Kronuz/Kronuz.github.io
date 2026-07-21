@@ -1,14 +1,14 @@
-# discussions Worker
+# Kronuz Discussions Worker
 
-Public, multi-tenant blog comments on Cloudflare Workers, Hono, and D1. A deployment can
+Multi-tenant blog comments on Cloudflare Workers, Hono, and D1. A deployment can
 serve any number of blogs. The tenant is the first URL segment:
 
 ```text
-https://discussions.kronuz.workers.dev/kronuz
+https://comments.example.com/my-blog
 ```
 
-For the complete first deployment, OAuth App, cutover, verification, cleanup, and
-future-tenant procedure, follow [TUTORIAL.md](./TUTORIAL.md).
+For first deployment, OAuth setup, verification, and future tenant procedures, follow
+[TUTORIAL.md](./TUTORIAL.md).
 
 For routine D1 inspection, backups, migrations, logs, tenant administration, recovery,
 and troubleshooting, use [OPERATIONS.md](./OPERATIONS.md).
@@ -62,6 +62,7 @@ when those remote secrets do not exist yet.
 
 ```bash
 npm install
+cp wrangler.toml.example wrangler.toml
 cp .dev.vars.example .dev.vars
 npm run migrate:local
 npm run dev
@@ -72,7 +73,7 @@ Create a tenant in the local Worker:
 ```bash
 cp tenant-config.example.json tenant-config.json
 # Fill every value, including OAuth credentials.
-curl -X PUT http://localhost:8787/kronuz/config \
+curl -X PUT http://localhost:8787/my-blog/config \
   -H 'Authorization: Bearer dev-local-service-admin-token-change-me' \
   -H 'Content-Type: application/json' \
   --data-binary @tenant-config.json
@@ -87,13 +88,15 @@ to the production callback, then the signed state sends the reader back to local
 
 ```bash
 npx wrangler login
+cp wrangler.toml.example wrangler.toml
+# Set PUBLIC_BASE_URL and, for an existing D1 database, database_id.
 ./deploy.sh
 ```
 
 After deployment, copy and fill `tenant-config.example.json`, then send the full document:
 
 ```bash
-curl -X PUT https://discussions.kronuz.workers.dev/kronuz/config \
+curl -X PUT https://comments.example.com/my-blog/config \
   -H 'Authorization: Bearer <SERVICE_ADMIN_TOKEN>' \
   -H 'Content-Type: application/json' \
   --data-binary @tenant-config.json
@@ -102,14 +105,14 @@ curl -X PUT https://discussions.kronuz.workers.dev/kronuz/config \
 Register this callback with that tenant's OAuth client:
 
 ```text
-https://discussions.kronuz.workers.dev/kronuz/auth/callback
+https://comments.example.com/my-blog/auth/callback
 ```
 
 The blog needs only the tenant base URL:
 
 ```ts
 export const DISCUSSIONS_BACKEND =
-  "https://discussions.kronuz.workers.dev/kronuz";
+  "https://comments.example.com/my-blog";
 ```
 
 ## Tenant API

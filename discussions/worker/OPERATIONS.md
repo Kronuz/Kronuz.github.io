@@ -36,11 +36,11 @@ Check that the Worker is running and that each active tenant exposes its redacte
 configuration:
 
 ```bash
-curl --fail https://discussions.kronuz.workers.dev/health
-curl --fail https://discussions.kronuz.workers.dev/kronuz/config
+curl --fail https://comments.example.com/health
+curl --fail https://comments.example.com/my-blog/config
 curl --fail \
-  -H "X-Discussions-Key: $(jq -r '.accessKey' tenant-config.gmendezb-pages.json)" \
-  https://discussions.kronuz.workers.dev/gmendezb-pages/config
+  -H "X-Discussions-Key: $(jq -r '.accessKey' tenant-config.private-blog.json)" \
+  https://comments.example.com/private-blog/config
 ```
 
 A tenant config response must not contain its OAuth client secret, webhook URL, feed
@@ -50,7 +50,7 @@ Check that OAuth starts with a redirect instead of following it:
 
 ```bash
 curl --silent --show-error --head \
-  https://discussions.kronuz.workers.dev/kronuz/auth/login
+  https://comments.example.com/my-blog/auth/login
 ```
 
 The `Location` header should name the configured OAuth authorization endpoint and contain
@@ -202,10 +202,10 @@ To submit a local tenant, fill a private tenant JSON and use the service admin t
 `.dev.vars`:
 
 ```bash
-curl --fail-with-body -X PUT http://localhost:8787/kronuz/config \
+curl --fail-with-body -X PUT http://localhost:8787/my-blog/config \
   -H 'Authorization: Bearer dev-local-service-admin-token-change-me' \
   -H 'Content-Type: application/json' \
-  --data-binary @tenant-config.kronuz.json
+  --data-binary @tenant-config.my-blog.json
 ```
 
 The OAuth App callback still needs to match the Worker receiving the callback. The normal
@@ -339,7 +339,7 @@ The complete gitignored JSON is the editable source of truth. Read the redacted 
 projection:
 
 ```bash
-curl --fail https://discussions.kronuz.workers.dev/kronuz/config
+curl --fail https://comments.example.com/my-blog/config
 ```
 
 Create or completely replace the private configuration:
@@ -350,10 +350,10 @@ source ./secrets.sh
 set +a
 
 curl --fail-with-body -X PUT \
-  https://discussions.kronuz.workers.dev/kronuz/config \
+  https://comments.example.com/my-blog/config \
   -H "Authorization: Bearer $SERVICE_ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
-  --data-binary @tenant-config.kronuz.json
+  --data-binary @tenant-config.my-blog.json
 ```
 
 There is no partial update and no tenant deletion. To disable a tenant, change its full

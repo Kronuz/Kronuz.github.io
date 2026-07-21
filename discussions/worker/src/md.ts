@@ -7,9 +7,8 @@
  * XSS safety: rehype-sanitize uses GitHub's allow-list, so raw HTML is
  * dropped and dangerous URL schemes (javascript:, data:, ...) are neutralized.
  *
- * Syntax highlighting: done here with **Shiki**, reusing the blog's own Kronuz themes
- * (src/themes/kronuz-{dark,light}.json), so comment code is pixel-identical to the article
- * code blocks. To fit a free Worker (1 MB gzipped) we use Shiki's fine-grained core with the
+ * Syntax highlighting: done here with **Shiki** and bundled light and dark themes. To keep
+ * the Worker bundle small we use Shiki's fine-grained core with the
  * pure-JS regex engine (no WASM) and a curated language set. Dual-theme output emits
  * CSS-variable styles (`--shiki` / `--shiki-dark`), so one render supports light+dark and no
  * highlight.css token table is needed (the widget's highlight.css only flips the dark vars).
@@ -44,8 +43,8 @@ import typescript from "@shikijs/langs/typescript";
 import javascript from "@shikijs/langs/javascript";
 import yaml from "@shikijs/langs/yaml";
 
-import kronuzDark from "./themes/kronuz-dark.json";
-import kronuzLight from "./themes/kronuz-light.json";
+import discussionsDark from "./themes/discussions-dark.json";
+import discussionsLight from "./themes/discussions-light.json";
 
 // Curated language set (kept small for the free-tier bundle budget). Unlisted languages fall
 // back to plain text, so an exotic fence still renders (just uncolored).
@@ -59,7 +58,7 @@ async function build(): Promise<Processor> {
   const highlighter: HighlighterCore = await createHighlighterCore({
     // Our themes are VS Code-style (colors + tokenColors), which Shiki accepts at runtime;
     // the cast bridges that to Shiki's stricter resolved-theme type.
-    themes: [kronuzLight as unknown as ThemeRegistrationAny, kronuzDark as unknown as ThemeRegistrationAny],
+    themes: [discussionsLight as unknown as ThemeRegistrationAny, discussionsDark as unknown as ThemeRegistrationAny],
     langs: LANGS,
     engine: createJavaScriptRegexEngine(),
   });
@@ -70,7 +69,7 @@ async function build(): Promise<Processor> {
     .use(remarkRehype)
     .use(rehypeSanitize)
     .use(rehypeShikiFromHighlighter, highlighter as unknown as HighlighterGeneric<string, string>, {
-      themes: { light: "kronuz-light", dark: "kronuz-dark" },
+      themes: { light: "discussions-light", dark: "discussions-dark" },
       defaultLanguage: "text",
       fallbackLanguage: "text",
     })

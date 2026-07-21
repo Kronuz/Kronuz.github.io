@@ -10,7 +10,7 @@
 // ("you already have a MarkdownContent override") and skip its own registration.
 // That's expected: we re-import its override below, so the blog frame still renders.
 import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
-import Discussions from './Discussions.astro';
+import Discussions from '../../discussions/astro/Discussions.astro';
 import SnippetScript from './SnippetScript.astro';
 import { resolveSeries, resolveChronological } from '../lib/series.mjs';
 import { DISCUSSIONS_ACCESS_KEY, DISCUSSIONS_BACKEND, DISCUSSIONS_STRIP_SUFFIX, DISCUSSIONS_GIPHY_KEY } from '../consts';

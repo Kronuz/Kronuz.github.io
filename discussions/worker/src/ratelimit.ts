@@ -1,9 +1,9 @@
 /**
- * A tiny sliding-window rate limiter — a port of ratelimit.py.
+ * A tiny sliding-window rate limiter.
  *
  * IMPORTANT caveat vs the Python original: that backend was a single process, so an
  * in-memory limiter was authoritative. A Worker runs as many short-lived isolates, so this
- * module-level map is only *per-isolate, best-effort* — it dampens a flood but isn't a hard
+ * module-level map is only *per-isolate, best-effort*. It dampens a flood but isn't a hard
  * global limit. The real distributed answer on Cloudflare is the Rate Limiting binding or a
  * Durable Object; wire one of those before relying on this in production.
  */

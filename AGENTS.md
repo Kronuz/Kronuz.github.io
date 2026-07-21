@@ -172,12 +172,13 @@ different:** content (posts, `about.md`, `index.mdx`, `projects.md`), `sidebar.m
 Projects), `content.config.ts`, `astro.config.mjs`, `consts.ts`, `SiteTitle.astro`, `Footer.astro`,
 `ReplHero.astro`, and the surrounding `MarkdownContent.astro` layout.
 
-The comments frontend has a three-repo sync contract. `discussions/widget/` and
-`src/components/Discussions.astro` must be byte-identical here, in
-`~/code/KronuzBlog/gmendezb-pages`, and in `~/code/Kronuz/Xapiand/docs`. The public and
-internal blogs mount it with different tenant base URLs on the shared Cloudflare Worker.
-Xapiand carries the component and widget for reuse but does not currently mount comments.
-The Worker and D1 backend live only in this repository under `discussions/worker/`.
+Kronuz Discussions has a three-repo vendor sync contract. The complete tracked
+`discussions/` package must be byte-identical here, in `~/code/KronuzBlog/gmendezb-pages`,
+and in `~/code/Kronuz/Xapiand/docs`. It includes the framework-free widget, packaged Astro
+component, Worker, D1 migrations, tests, and generic documentation. Deployment-local files
+inside `discussions/worker/` are gitignored and excluded from comparisons. The public and
+internal blogs import `discussions/astro/Discussions.astro` with different tenant URLs.
+Xapiand carries the complete package for reuse but does not currently mount comments.
 
 ## Deferred ideas
 
