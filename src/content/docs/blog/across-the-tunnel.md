@@ -58,8 +58,10 @@ git clone --recurse-submodules \
   https://github.com/Kronuz/EternalTerminal.git
 
 cmake -S EternalTerminal -B EternalTerminal/build -G Ninja \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DDISABLE_TELEMETRY=ON \
   -DBUILD_TESTING=OFF \
+  -DCMAKE_INSTALL_PREFIX=/usr \
   -DCMAKE_C_COMPILER=clang \
   -DCMAKE_CXX_COMPILER=clang++
 
