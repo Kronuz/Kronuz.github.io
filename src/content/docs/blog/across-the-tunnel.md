@@ -1,8 +1,8 @@
 ---
 title: "The Room Across the Tunnel"
 subtitle: "Surviving the trip home"
-description: My real work happens on a dev VM, not my laptop, and a normal connection to it dies every time the lid closes. This is why I reach it over EternalTerminal, how I got the client and server running on a Mac and a CBL-Mariner box, and why a session that outlives the connection changes how it feels to work on a machine across a tunnel.
-excerpt: The laptop is a window; the VM is the room. The trouble with a room across a tunnel is that the tunnel keeps dropping. EternalTerminal is the fix, a session that survives a closed lid, a changed network, and the ride home, and is exactly where you left it the next morning.
+description: My real work happens on a remote machine, not my laptop, and a normal connection to it dies every time the lid closes. This is why I reach it over EternalTerminal, how I got the client and server running on a Mac and a Linux box, and why a session that outlives the connection changes how it feels to work on a machine across a tunnel.
+excerpt: The laptop is a window; the machine is the room. The trouble with a room across a tunnel is that the tunnel keeps dropping. EternalTerminal is the fix, a session that survives a closed lid, a changed network, and the ride home, and is exactly where you left it the next morning.
 date: 2026-06-28
 authors: kronuz
 series: "Driving Eternal"
@@ -16,7 +16,7 @@ tags:
 
 *Part of the **Driving Eternal** series: giving a script or an AI agent a real handle on a remote terminal. Installing [Eternal Terminal](https://eternalterminal.dev/).*
 
-I do most of my real work on a dev VM, not on the laptop in front of me. The laptop is a window; the VM is the room. Everything heavy lives there: the checkouts, the build caches, the cores, the memory. My machine just looks in on it.
+I do most of my real work on a remote machine, not on the laptop in front of me. The laptop is a window; the machine is the room. Everything heavy lives there: the checkouts, the build caches, the cores, the memory. My laptop just looks in on it.
 
 The trouble with a room across a tunnel is that the tunnel keeps dropping. A plain `ssh` session is only alive as long as nothing moves. The laptop sleeps and the session dies. I leave the office and the laptop jumps from wifi to a phone hotspot, and the session dies. The VPN reconnects with a new IP and the session dies. I close the lid to go home and, of course, the session dies, taking whatever I was in the middle of with it. You learn to work in fear of the connection, and that's a bad way to live in a room.
 
@@ -42,52 +42,27 @@ The part that still feels like a small magic trick is going home. I close the la
 
 ## Getting it running
 
-`et` is a client and a server, and you need both. On the Mac the client is one Homebrew formula away. I run my own fork of it, the same durable terminal with a machine-driving piece I get to later in the series:
+`et` is a client and a server, and you need both. On the Mac the client is one Homebrew formula away. I run my own fork, EternalTerminal 7.0.0 plus `etctl`, a machine-driving piece I [proposed upstream](https://github.com/MisterTea/EternalTerminal/issues/779) and get to later in the series:
 
 ```sh
 brew install Kronuz/tap/et      # et (and etctl), at /opt/homebrew/bin/et
 ```
 
-I built the Eternal Terminal server from source on the VM because the [CBL-Mariner](https://github.com/microsoft/CBL-Mariner) image we use doesn't ship a prebuilt package. The build is unremarkable until the last step, where the firewall reminds you it exists:
+The server is the other half. On a Linux box it's a single `dnf install` aimed straight at the release, self-contained enough to land on any x86_64 RPM distro with a reasonably current glibc (2.34 or newer):
 
 ```sh
-sudo dnf install -y clang cmake ninja-build pkgconf-pkg-config
+sudo dnf install -y \
+  https://github.com/Kronuz/homebrew-tap/releases/download/EternalTerminal-v7.0.0-etctl.1/EternalTerminal-7.0.0-Linux.rpm
+```
 
-git clone --recurse-submodules \
-  --branch etctl-2-richer-verbs \
-  https://github.com/Kronuz/EternalTerminal.git
+Everything it links against is baked into that one package. It lays `etserver` and its siblings into `/usr/bin`, installs the systemd unit and a default `/etc/et.cfg`, and then, deliberately, does nothing else. You start it yourself:
 
-cmake -S EternalTerminal -B EternalTerminal/build -G Ninja \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-  -DDISABLE_TELEMETRY=ON \
-  -DBUILD_TESTING=OFF \
-  -DCMAKE_INSTALL_PREFIX=/usr \
-  -DCMAKE_C_COMPILER=clang \
-  -DCMAKE_CXX_COMPILER=clang++
-
-cmake --build EternalTerminal/build
-sudo cmake --install EternalTerminal/build
-
-sudo install -m 644 \
-  EternalTerminal/systemctl/et.service \
-  /etc/systemd/system/et.service
-
-sudo install -m 644 \
-  EternalTerminal/etc/et.cfg \
-  /etc/et.cfg
-
+```sh
 sudo systemctl daemon-reload
 sudo systemctl enable --now et.service
 ```
 
-The one gotcha about the firewall is the VM's `iptables` INPUT chain is default-deny, so the server can be running happily on port 2022 and still be unreachable until you punch the hole and persist it past a reboot.
-
-```sh
-sudo iptables -A INPUT -p tcp --dport 2022 -j ACCEPT
-sudo sh -c 'iptables-save > /etc/systemd/scripts/ip4save'
-```
-
-Both ends end up on `et` 6.2.11. From my terminal it Just Works™️: I type `et kronuz@...`, and a second or two later I'm home, in the room, exactly where I left it.
+Both ends end up on `et` 7.0.0. From my terminal it Just Works™️: I type `et kronuz@...`, and a second or two later I'm home, in the room, exactly where I left it.
 
 ## The catch I didn't see coming
 
