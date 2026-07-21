@@ -3,8 +3,7 @@ title: "A Pair of Missing Hands"
 subtitle: "No eyes, no hands"
 description: I had a durable terminal onto the box I live on, and it felt like home because every inch of it was built for a person. That is exactly what locked everyone else out, the deploy scripts, the scheduled jobs, the AI agents I pair with, none of which have eyes to read a prompt or fingers to hit Enter. This is the need a control plane exists to fill, and what it would mean to give a human-shaped world handles that something without hands can hold.
 excerpt: An agent I was pairing with needed to restart a service on a remote box. It knew the command and the host, and it just sat there, because the only way in was a terminal built for eyes and fingers it doesn't have. The whole human-shaped world is like that. The work isn't a smarter agent. It's a pair of hands.
-date: 2026-09-04
-draft: true
+date: 2026-07-21
 series: "Driving Eternal"
 seriesOrder: 2
 tags:
