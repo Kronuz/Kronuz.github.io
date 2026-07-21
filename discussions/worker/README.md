@@ -14,8 +14,13 @@ For routine D1 inspection, backups, migrations, logs, tenant administration, rec
 and troubleshooting, use [OPERATIONS.md](./OPERATIONS.md).
 
 Every tenant owns its complete site, origin, OAuth, moderator, widget, limit,
-notification, and feed configuration. Comments are public; authentication is required to
-post, react, edit, or moderate.
+notification, and feed configuration. Reading is public when `accessKey` is empty and
+capability-protected otherwise. Authentication is required to post, react, edit, or
+moderate.
+
+An empty top-level `accessKey` makes a tenant public. A 32-byte base64url value protects
+all browser-facing tenant operations behind the `X-Discussions-Key` header. The key is a
+static site capability, not per-reader authorization.
 
 ## Configuration model
 
@@ -114,6 +119,7 @@ GET  /:tenant/config
 PUT  /:tenant/config
 
 GET  /:tenant/auth/login
+POST /:tenant/auth/login
 GET  /:tenant/auth/callback
 POST /:tenant/auth/logout
 

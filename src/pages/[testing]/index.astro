@@ -8,13 +8,14 @@
  */
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import Discussions from "../../components/Discussions.astro";
-import { DISCUSSIONS_BACKEND, DISCUSSIONS_GIPHY_KEY, DISCUSSIONS_STRIP_SUFFIX } from "../../consts";
+import { DISCUSSIONS_ACCESS_KEY, DISCUSSIONS_BACKEND, DISCUSSIONS_GIPHY_KEY, DISCUSSIONS_STRIP_SUFFIX } from "../../consts";
 
 export function getStaticPaths() {
 	return [{ params: { testing: "_testing" } }];
 }
 
 const backend = import.meta.env.PUBLIC_DISCUSSIONS_BACKEND || DISCUSSIONS_BACKEND;
+const accessKey = import.meta.env.PUBLIC_DISCUSSIONS_ACCESS_KEY || DISCUSSIONS_ACCESS_KEY;
 const head = [{ tag: "meta", attrs: { name: "robots", content: "noindex, nofollow" } }];
 ---
 
@@ -40,6 +41,7 @@ const head = [{ tag: "meta", attrs: { name: "robots", content: "noindex, nofollo
 				subtitle="End-to-end comment fixture"
 				url={Astro.url.href}
 				backend={backend}
+				accessKey={accessKey}
 				stripSuffix={DISCUSSIONS_STRIP_SUFFIX}
 				giphyKey={DISCUSSIONS_GIPHY_KEY}
 			/>

@@ -38,7 +38,9 @@ configuration:
 ```bash
 curl --fail https://discussions.kronuz.workers.dev/health
 curl --fail https://discussions.kronuz.workers.dev/kronuz/config
-curl --fail https://discussions.kronuz.workers.dev/gmendezb-pages/config
+curl --fail \
+  -H "X-Discussions-Key: $(jq -r '.accessKey' tenant-config.gmendezb-pages.json)" \
+  https://discussions.kronuz.workers.dev/gmendezb-pages/config
 ```
 
 A tenant config response must not contain its OAuth client secret, webhook URL, feed
@@ -406,7 +408,7 @@ this schema.
 | symptom | first checks |
 | --- | --- |
 | `/health` fails | deployment list, `wrangler tail`, Worker route and account |
-| `/:tenant/config` returns `404` | tenant spelling, `active`, encrypted config lengths |
+| `/:tenant/config` returns `404` | tenant spelling, `active`, access key, encrypted config lengths |
 | tenant config returns `500` after a secret change | `CONFIG_MASTER_KEY` continuity, Worker logs |
 | OAuth provider rejects callback | exact OAuth App callback, tenant `oauth.callbackUrl`, Worker base URL |
 | browser reports CORS failure | exact scheme and host in tenant `origins`, including localhost alias |

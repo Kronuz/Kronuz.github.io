@@ -1,7 +1,9 @@
 import { HttpError, type Env } from "./config.js";
+import { isAccessKey } from "./access.js";
 
 export interface TenantConfig {
   active: boolean;
+  accessKey: string;
   site: { url: string; repo: string; repoUrl: string };
   origins: string[];
   oauth: {
@@ -103,6 +105,10 @@ export function validateTenantConfig(input: unknown, env: Env): TenantConfig {
   const notifications = object(root.notifications, "notifications");
   const feed = object(root.feed, "feed");
   if (typeof root.active !== "boolean") throw new HttpError(400, "active must be a boolean");
+  const accessKey = string(root.accessKey, "accessKey");
+  if (!isAccessKey(accessKey)) {
+    throw new HttpError(400, "accessKey must be empty or a 32-byte base64url value");
+  }
   if (!Array.isArray(root.origins) || root.origins.length === 0) throw new HttpError(400, "origins must be a non-empty array");
   if (!Array.isArray(root.moderators)) throw new HttpError(400, "moderators must be an array");
   const authMethod = string(oauth.clientAuthMethod, "oauth.clientAuthMethod");
@@ -112,6 +118,7 @@ export function validateTenantConfig(input: unknown, env: Env): TenantConfig {
   const maxBodyCeiling = Number(env.REQUEST_MAX_BYTES || 1_048_576);
   return {
     active: root.active,
+    accessKey,
     site: {
       url: origin(site.url, "site.url"),
       repo: string(site.repo, "site.repo"),

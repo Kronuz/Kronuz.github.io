@@ -9,6 +9,7 @@ import { notifyNewComment } from "./notify.js";
 import { RateLimit } from "./ratelimit.js";
 import { CookieSessionStore } from "./sessions.js";
 import { SelfHostedStore, type Viewer } from "./store.js";
+import { accessKeyMatches } from "./access.js";
 import { encryptTenantConfig, publicTenantConfig, validateTenantConfig, validateTenantId, type TenantConfig } from "./tenant-config.js";
 import { loadTenant, type TenantContext } from "./tenants.js";
 
@@ -136,8 +137,23 @@ app.use("/:tenant/*", (c, next) => cors({
   origin: (origin) => origin && c.get("tenant").config.origins.includes(origin) ? origin : null,
   credentials: true,
   allowMethods: ["GET", "POST", "PUT", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization"],
+  allowHeaders: ["Content-Type", "Authorization", "X-Discussions-Key"],
 })(c, next));
+
+// A non-empty tenant access key protects every browser-facing operation. The OAuth
+// callback is authorized by its short-lived signed state, and the feed has its own token.
+app.use("/:tenant/*", async (c, next) => {
+  const expected = c.get("tenant").config.accessKey;
+  if (!expected) return next();
+  c.header("Cache-Control", "private, no-store");
+  if (c.req.method === "OPTIONS") return next();
+  const path = new URL(c.req.url).pathname;
+  if (path.endsWith("/auth/callback") || path.endsWith("/comments/feed")) return next();
+  if (!accessKeyMatches(expected, c.req.header("x-discussions-key") || "")) {
+    return c.json({ detail: "not found" }, 404);
+  }
+  await next();
+});
 
 app.use("/:tenant/*", async (c, next) => {
   if (c.req.method !== "OPTIONS") {
@@ -159,13 +175,21 @@ app.get("/:tenant/api/me", async (c) => {
   return c.json({ ...base, authenticated: true, login: session.login, avatarUrl: session.avatarUrl, name: session.name, isAdmin: c.get("tenant").isAdmin(c.get("tenantId"), session.subject, session.login) });
 });
 
-app.get("/:tenant/auth/login", async (c) => {
+async function oauthAuthorizationUrl(c: Ctx): Promise<string> {
   const config = c.get("tenant").config;
   const returnUrl = c.req.query("return") || config.site.url;
   if (!allowedReturn(config, returnUrl)) throw new HttpError(400, "return URL is not allowed for this tenant");
   const redirectUri = `${tenantBase(c)}/auth/callback`;
   const params = new URLSearchParams({ client_id: config.oauth.clientId, redirect_uri: redirectUri, scope: config.oauth.scope, state: await makeState(c.get("cfg").sessionSecret, c.get("tenantId"), returnUrl) });
-  return c.redirect(`${config.oauth.authorizeUrl}?${params}`);
+  return `${config.oauth.authorizeUrl}?${params}`;
+}
+
+app.get("/:tenant/auth/login", async (c) => {
+  return c.redirect(await oauthAuthorizationUrl(c));
+});
+
+app.post("/:tenant/auth/login", async (c) => {
+  return c.json({ url: await oauthAuthorizationUrl(c) });
 });
 
 app.get("/:tenant/auth/callback", async (c) => {

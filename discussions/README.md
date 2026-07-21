@@ -25,3 +25,6 @@ See `worker/README.md` for the backend (features, D1 schema, configuration, depl
 The backend URL includes the tenant, for example
 `https://discussions.kronuz.workers.dev/kronuz`. See `worker/README.md` for the
 complete configuration and deployment contract.
+
+Tenants with an empty `accessKey` are public. A non-empty key is a static capability sent
+by the widget in `X-Discussions-Key`; see the Worker tutorial for generation and rollout.

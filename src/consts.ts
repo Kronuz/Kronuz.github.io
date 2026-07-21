@@ -17,6 +17,8 @@ export const REPO_URL = 'https://github.com/Kronuz/Kronuz.github.io';
 // Multi-tenant discussions Worker. PUBLIC_DISCUSSIONS_BACKEND overrides this for local
 // development when testing against another Worker instance.
 export const DISCUSSIONS_BACKEND = 'https://discussions.kronuz.workers.dev/kronuz';
+// Static tenant capability. Empty keeps this tenant public.
+export const DISCUSSIONS_ACCESS_KEY = '';
 // Login suffix dropped when displaying handles (cosmetic; e.g. "_sso"). Empty = as-is.
 export const DISCUSSIONS_STRIP_SUFFIX = '';
 // Public GIPHY key; when set, the composer shows a client-side GIF picker. Empty = no GIF button.

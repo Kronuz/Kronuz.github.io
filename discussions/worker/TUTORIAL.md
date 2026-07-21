@@ -39,7 +39,30 @@ SERVICE_ADMIN_TOKEN=<64-character random value>
 
 Each `tenant-config.*.json` is the complete editable source of truth for that tenant,
 including its OAuth client secret, webhook, and feed token. `GET /:tenant/config` is
-intentionally public and redacted, so it cannot reconstruct this private document.
+redacted, and a protected tenant also requires its access key, so it cannot reconstruct
+this private document.
+
+## Generate tenant tokens
+
+Generate a 32-byte base64url value with Node:
+
+```bash
+node --input-type=module -e \
+  'import { randomBytes } from "node:crypto"; console.log(randomBytes(32).toString("base64url"))'
+```
+
+Run it separately for every value. Do not reuse one value for different purposes.
+
+- `accessKey`: leave it empty for a public tenant. For a protected tenant, paste one
+  generated value at the top level of its complete tenant JSON and into that site's private
+  build configuration.
+- `feed.token`: generate a different value when the private Atom feed is enabled.
+- `SERVICE_ADMIN_TOKEN`: deployment-wide administration credential. `deploy.sh` generates
+  it on a new service when no non-empty value is supplied in `secrets.sh`.
+
+An access key is compiled into the static site. Every reader allowed to load that site can
+extract it, so it protects against public discovery and direct unauthenticated API access,
+not against an authorized reader sharing the key.
 
 ## 2. Find or create the GitHub OAuth Apps
 
@@ -93,6 +116,15 @@ Before deployment, make sure neither OAuth secret is blank:
 ```bash
 jq -e '.oauth.clientId != "" and .oauth.clientSecret != ""' \
   tenant-config.kronuz.json tenant-config.gmendezb-pages.json
+```
+
+Also confirm that `kronuz` has an empty access key and the internal tenant has a generated
+43-character base64url key:
+
+```bash
+jq -e '.accessKey == ""' tenant-config.kronuz.json
+jq -e '.accessKey | test("^[A-Za-z0-9_-]{43}$")' \
+  tenant-config.gmendezb-pages.json
 ```
 
 Also verify that each canonical and development origin is present. Both current tenants
@@ -193,7 +225,9 @@ Check global health and both public configuration projections:
 ```bash
 curl --fail https://discussions.kronuz.workers.dev/health
 curl --fail https://discussions.kronuz.workers.dev/kronuz/config
-curl --fail https://discussions.kronuz.workers.dev/gmendezb-pages/config
+curl --fail \
+  -H "X-Discussions-Key: $(jq -r '.accessKey' tenant-config.gmendezb-pages.json)" \
+  https://discussions.kronuz.workers.dev/gmendezb-pages/config
 ```
 
 Then verify in a browser for each tenant:
@@ -257,7 +291,9 @@ npx wrangler secret list
 4. Fill every field and keep that file as the private source of truth.
 5. Send a complete authenticated `PUT /<tenant>/config`.
 6. Point the blog widget at `https://discussions.kronuz.workers.dev/<tenant>`.
-7. Verify production and localhost login/comment flows.
+7. For a protected tenant, compile the same `accessKey` into its private static-site
+   configuration.
+8. Verify production and localhost login/comment flows.
 
 There is no tenant delete operation. To take one offline without deleting comments, send
 its complete configuration with `"active": false`.
