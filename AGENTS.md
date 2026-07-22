@@ -161,7 +161,7 @@ durable rules:
 
 ## Cross-repo sync
 
-This repo and the **internal** mirror (`~/Development/KronuzBlog/gmendezb-pages`, branch `main`,
+This repo and the **internal** mirror (`~/code/KronuzBlog/gmendezb-pages`, branch `main`,
 served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared components,
 `renderSnippet.mjs`, the snippet pages, `PageTitle.astro`, `Sidebar.astro`, `ThemeSelect.astro`,
 `TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
@@ -179,6 +179,12 @@ component, Worker, D1 migrations, tests, and generic documentation. Deployment-l
 inside `discussions/worker/` are gitignored and excluded from comparisons. The public and
 internal blogs import `discussions/astro/Discussions.astro` with different tenant URLs.
 Xapiand carries the complete package for reuse but does not currently mount comments.
+
+The internal tenant sets `oauth.identitySource: app-token` (public stays on the default
+`userinfo`): it resolves the signed-in user via the OAuth App's token-introspection endpoint
+instead of `GET /user`, because an enterprise IP allow list on the internal tenant's identity
+provider blocks the Worker's Cloudflare IP on the authenticated userinfo call. See the
+Worker's OPERATIONS.md / TUTORIAL.md.
 
 ## Deferred ideas
 
