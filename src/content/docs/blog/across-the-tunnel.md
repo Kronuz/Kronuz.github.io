@@ -52,7 +52,7 @@ The server is the other half. On a Linux box it's a single `dnf install` aimed s
 
 ```sh
 sudo dnf install -y \
-  https://github.com/Kronuz/homebrew-tap/releases/download/EternalTerminal-v7.0.0-etctl.1/EternalTerminal-7.0.0-Linux.rpm
+  https://github.com/Kronuz/homebrew-tap/releases/download/EternalTerminal-v7.0.0-etctl.3/et-7.0.0-etctl.3.x86_64.rpm
 ```
 
 Everything it links against is baked into that one package. It lays `etserver` and its siblings into `/usr/bin`, installs the systemd unit and a default `/etc/et.cfg`, and then, deliberately, does nothing else. You start it yourself:
