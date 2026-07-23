@@ -13,6 +13,34 @@
 	--sl-color-accent-high: #c8e4a1;
 }
 
+/* Code font: a subset of Hack Nerd Font, so code blocks, the ```ansi terminal
+   captures, and the snippet viewers render Nerd Font glyphs (git branch, host
+   logos, diff marks, and anything a future post reaches for) instead of tofu.
+   Regular keeps every classic Nerd Font set (Font Awesome, Octicons, Devicons,
+   Codicons, Powerline, Seti, Weather, Font Logos) via the whole BMP Private Use
+   Area; only the ~7000-glyph Material Design plane (U+F0000+) is dropped. Bold
+   stays a tight subset, since Nerd Font icons are never bold (only text like a
+   branch name is). Whatever Hack itself lacks (a few dingbats such as the
+   check/cross) falls through to the system mono, exactly as in a terminal.
+   Regenerated from a local Hack Nerd Font with scripts/subset-font.sh. */
+@font-face {
+	font-family: "Hack Nerd Font";
+	src: url("/fonts/HackNerdFont-Regular.subset.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Hack Nerd Font";
+	src: url("/fonts/HackNerdFont-Bold.subset.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+:root {
+	--sl-font-mono: "Hack Nerd Font", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 /* Nudge Starlight's neutral ramp off its cool 224deg default. The dark surfaces
    (page bg, elevated bg, borders) are neutral gray, anchored so the elevated
    surface lands on the Kronuz editor bg #383838; the text grays keep a faint
