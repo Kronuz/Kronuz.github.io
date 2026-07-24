@@ -57,7 +57,7 @@ That is fine while the shape is mine. It is useless if I want anyone else to res
 
 Set any of them and the prompt takes the new shape at the very next draw. No rebuild, no reload, no restart.
 
-Getting there took one trick that is not obvious. `PROMPT` is a template zsh re-expands on every draw, with `PROMPT_SUBST` on. A segment like `$kronuz[git]` works because it sits *literally* in that template, so each redraw re-parses it and resolves it. A layout handed in through a variable is a different animal: when zsh expands `$PROMPT_KRONUZ_PROMPT`, what comes back is *data*, a finished string, not fresh syntax to parse again. A single `${(e)...}` evaluates it once and stops, and the `$kronuz[git]` inside falls out as ten literal characters, unresolved.
+Getting there took one trick that is not obvious. `PROMPT` is a template zsh re-expands on every draw, with `PROMPT_SUBST` on. A segment like `$kz[git]` works because it sits *literally* in that template, so each redraw re-parses it and resolves it. A layout handed in through a variable is a different animal: when zsh expands `$PROMPT_KRONUZ_PROMPT`, what comes back is *data*, a finished string, not fresh syntax to parse again. A single `${(e)...}` evaluates it once and stops, and the `$kz[git]` inside falls out as ten literal characters, unresolved.
 
 The fix is to evaluate twice, in the one pass:
 
@@ -66,36 +66,36 @@ The fix is to evaluate twice, in the one pass:
 PROMPT='${(e)${(e)PROMPT_KRONUZ_PROMPT-$DEFAULT_PROMPT_KRONUZ_PROMPT}}'
 ```
 
-The inner `${(e)}` resolves the layout string; the outer one resolves the `$kronuz[...]` segments that string just produced. Both ride the single expansion zsh already does per draw, so a skin costs nothing at render time. It reads like a stutter. It is load-bearing.
+The inner `${(e)}` resolves the layout string; the outer one resolves the `$kz[...]` segments that string just produced. Both ride the single expansion zsh already does per draw, so a skin costs nothing at render time. It reads like a stutter. It is load-bearing.
 
 ## A palette, and the trap in it
 
-A skin composes from two sets. The segment palette, `$kronuz[git]`, `$kronuz[pwd]`, `$kronuz[time]` and the rest, each a ready-made piece. And the colour palette, `$fcol[blue]` for a foreground, `$bcol[blue]` for a background. So *minimal*, the entire skin, is one line:
+A skin composes from two sets. The segment palette, `$kz[git]`, `$kz[pwd]`, `$kz[time]` and the rest, each a ready-made piece. And the colour palette, `$kz[FG.blue]` for a foreground, `$kz[BG.blue]` for a background. So *minimal*, the entire skin, is one line:
 
 ```zsh
-PROMPT_KRONUZ_PROMPT='$kronuz[pwd]$kronuz[git] ${fcol[magenta]}${glyph[caret]}${fcol[none]} '
+PROMPT_KRONUZ_PROMPT='$kz[pwd]$kz[git] ${kz[FG.magenta]}${kz[GLYPH.caret]}${kz[RESET]} '
 ```
 
 ```ansi
 [38;2;255;255;255m~/project[0m[38;2;255;255;255m[24m[38;2;255;255;255m[27m[38;2;255;255;255m[39m[49m [90m[0m[90m[24m[90m[27m[90m[39m[49m [1m[38;2;255;255;255mmain[0m[38;2;255;255;255m[24m[38;2;255;255;255m[27m[38;2;255;255;255m[39m[49m [90m[0m[90m[24m[90m[27m[90m[39m[49m [38;2;255;255;255morigin/main[0m[38;2;255;255;255m[24m[38;2;255;255;255m[27m[38;2;255;255;255m[39m[49m[90m ([0m[90m[24m[90m[27m[90m[39m[49m[38;2;175;175;255m 1[0m[38;2;175;175;255m[24m[38;2;175;175;255m[27m[38;2;175;175;255m[39m[49m [38;2;135;95;0m✗[0m[38;2;135;95;0m[24m[38;2;135;95;0m[27m[38;2;135;95;0m[39m[49m [38;2;135;255;0m⇡1[0m[38;2;135;255;0m[24m[38;2;135;255;0m[27m[38;2;135;255;0m[39m[49m [38;2;215;95;0m 2[0m[38;2;215;95;0m[24m[38;2;215;95;0m[27m[38;2;215;95;0m[39m[49m [31m 1[0m[31m[24m[31m[27m[31m[39m[49m [90m⊖1[0m[90m[24m[90m[27m[90m[39m[49m[90m)[0m[90m[24m[90m[27m[90m[39m[49m [35m❯[0m[35m[24m[35m[27m[35m[39m[49m 
 ```
 
-You might ask why I reach for `${fcol[magenta]}` when zsh's own `%F{magenta}` is shorter and paints the same colour. I used to. It cost me an evening.
+You might ask why I reach for `${kz[FG.magenta]}` when zsh's own `%F{magenta}` is shorter and paints the same colour. I used to. It cost me an evening.
 
 The moment a colour goes *inside* a conditional, `%F{}` turns on you. Say the branch should appear only when there is one:
 
 ```zsh
 # looks right, renders as a truncated mess
-'${_prompt_kronuz_git_branch:+ %F{blue}(${_prompt_kronuz_git_branch})%f}'
+'${kz[git.branch]:+ %F{blue}(${kz[git.branch]})%f}'
 ```
 
-zsh reads `${name:+word}` by scanning for the brace that closes `word`. `%F{blue}` brought a brace of its own, and the `}` after `blue` is the first one zsh meets, so it decides the conditional ends *there*. Half the segment falls on the floor. `${fcol[blue]}` is a balanced `${...}`; zsh counts it right, and the segment stays whole. The palette earns its keep twice: once for theming a colour, and once for being a colour you can drop inside a conditional without it biting.
+zsh reads `${name:+word}` by scanning for the brace that closes `word`. `%F{blue}` brought a brace of its own, and the `}` after `blue` is the first one zsh meets, so it decides the conditional ends *there*. Half the segment falls on the floor. `${kz[FG.blue]}` is a balanced `${...}`; zsh counts it right, and the segment stays whole. The palette earns its keep twice: once for theming a colour, and once for being a colour you can drop inside a conditional without it biting.
 
 That is the whole reason the robbyrussell impression up top is only two lines, `git:(branch)` and all:
 
 ```zsh
-PROMPT_KRONUZ_GIT='${_prompt_kronuz_git_branch:+ ${fcol[blue]}git:(${fcol[red]}${_prompt_kronuz_git_branch}${fcol[blue]})${fcol[none]}${_prompt_kronuz_git_dirty:+ ${fcol[yellow]}✗${fcol[none]}}}'
-PROMPT_KRONUZ_PROMPT='%(?.${fcol[green]}.${fcol[red]})➜%f  ${fcol[cyan]}%c%f$kronuz[git] '
+PROMPT_KRONUZ_GIT='${kz[git.branch]:+ ${kz[FG.blue]}git:(${kz[FG.red]}${kz[git.branch]}${kz[FG.blue]})${kz[RESET]}${kz[git.dirty]:+ ${kz[FG.yellow]}✗${kz[RESET]}}}'
+PROMPT_KRONUZ_PROMPT='%(?.${kz[FG.green]}.${kz[FG.red]})➜%f  ${kz[FG.cyan]}%c%f$kz[git] '
 ```
 
 Two lines to wear oh-my-zsh's flagship theme, reading git from the same daemon, inside the same paint budget.
@@ -105,7 +105,7 @@ Two lines to wear oh-my-zsh's flagship theme, reading git from the same daemon, 
 Once the layout is loose, taste is the only limit, and I have little. The DOS box up top is one line, the path as a drive letter, bold green on the memory of a CRT:
 
 ```zsh
-PROMPT_KRONUZ_PROMPT='%B${fcol[green]}C:\\${PWD:t}\\>%f%b '
+PROMPT_KRONUZ_PROMPT='%B${kz[FG.green]}C:\\${PWD:t}\\>%f%b '
 ```
 
 Or an all-emoji line: a folder, a plant for the branch, a small fire when the tree is dirty, a spark for the caret:
@@ -114,7 +114,7 @@ Or an all-emoji line: a folder, a plant for the branch, a small fire when the tr
 📁 [36m~/project[39m 🌿 [32mmain[0m[32m[24m[32m[27m[32m[39m[49m 🔥 ⚡ 
 ```
 
-The agnoster ribbon up top wanted one thing the rest did not: backgrounds. `$fcol` is foreground only, so the engine derives a matching `$bcol` from it, turning each `%F{...}` into a `%K{...}`, and a powerline skin fills its blocks with `${bcol[green]}`. Nerd Font separators, solid colour, the whole agnoster silhouette, out of the engine that a line ago was a DOS box.
+The agnoster ribbon up top wanted one thing the rest did not: backgrounds. The palette is just colour codes now, layer-neutral, so the engine wraps each hue both ways: `${kz[FG.green]}` paints it as a foreground, `${kz[BG.green]}` the same code as a background. A powerline skin fills its blocks with the `BG.` side. Nerd Font separators, solid colour, the whole agnoster silhouette, out of the engine that a line ago was a DOS box.
 
 ## The one thing a skin can't break
 
