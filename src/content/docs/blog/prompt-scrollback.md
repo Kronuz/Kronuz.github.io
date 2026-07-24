@@ -3,8 +3,8 @@ title: "What the Prompt Leaves Behind"
 subtitle: "Turning KronuZSH's full prompt into quiet, accurate scrollback."
 description: "After pulling my prompt out of Prezto, I taught it to collapse old prompts without losing syntax colors, exit status, command timing, or iTerm's invisible shell integration."
 excerpt: "Owning my zsh setup made the next refinement possible: keep the full prompt while I am working, then leave behind one quiet, syntax-colored command that the terminal still understands."
-series: "Home Made"
-seriesOrder: 4
+series: "KronuZSH"
+seriesOrder: 2
 date: 2026-07-20
 authors: kronuz
 draft: true
@@ -15,7 +15,7 @@ tags:
   - terminal
 ---
 
-I had already [pulled my prompt out of Prezto and built a small zsh setup around it](/blog/molting/). That made KronuZSH mine, small enough to read and change without negotiating with a framework. The next step was not another migration. It was the kind of fussy refinement that owning the whole thing finally made practical.
+I had already [pulled my prompt out of Prezto and built a small zsh setup around it](/blog/molting-zsh/). That made KronuZSH mine, small enough to read and change without negotiating with a framework. The next step was not another migration. It was the kind of fussy refinement that owning the whole thing finally made practical.
 
 I wanted the prompt to be useful while I was typing and quiet after I pressed Enter. The live prompt could keep the host, git state, time, working directory, and the three colored carets. Once it entered scrollback, all of that could collapse to a dim `path ❯ command`. Failures and slow commands would leave their result behind too.
 

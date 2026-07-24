@@ -3,8 +3,8 @@ title: "Before You Ask"
 subtitle: "Reading a git repository's whole state from the prompt, one glyph at a time."
 description: "The KronuZSH git segment answers most of what you would run git status for, in a handful of colored glyphs. Here is every one of them: branch, remote host, ahead and behind, the dirty counts, conflicts, the overflow mark, and the direct-git fallback."
 excerpt: "Once the prompt was mine, I taught its git segment to say everything a git status would, in a line you read without stopping. This is the whole vocabulary, glyph by glyph."
-series: "Home Made"
-seriesOrder: 5
+series: "KronuZSH"
+seriesOrder: 3
 date: 2026-07-23
 authors: kronuz
 draft: true
@@ -16,7 +16,7 @@ tags:
   - terminal
 ---
 
-I [pulled my prompt out of Prezto](/blog/molting/) and then [taught it to collapse into quiet scrollback](/blog/prompt-history/). Somewhere in between, the part I actually stare at all day got good enough that I stopped running `git status`. The prompt already knew.
+I [pulled my prompt out of Prezto](/blog/molting-zsh/) and then [taught it to collapse into quiet scrollback](/blog/prompt-scrollback/). Somewhere in between, the part I actually stare at all day got good enough that I stopped running `git status`. The prompt already knew.
 
 The git segment of [KronuZSH](https://github.com/Kronuz/KronuZSH) sits at the end of the line, right after the working directory, and only when you are inside a repository. At rest it looks like this:
 ```ansi

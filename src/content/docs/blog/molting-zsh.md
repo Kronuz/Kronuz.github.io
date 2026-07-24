@@ -2,11 +2,11 @@
 title: "Molting Zsh"
 subtitle: "Down to the core"
 description: I ran Prezto for years and tuned a 500-line prompt on top of it. This is how I replaced the framework with KronuZSH, the ~1,500-line setup I now maintain myself, and what broke when I pulled my prompt out.
-excerpt: I used a sliver of Prezto's 22,000 lines, so I kept the part I cared about—my prompt—and wrote the few hundred lines of shell setup I wanted around it. Then I found out how many small conveniences the framework had been providing all along.
+excerpt: I used a sliver of Prezto's 22,000 lines, so I kept the part I cared about, my prompt, and wrote the few hundred lines of shell setup I wanted around it. Then I found out how many small conveniences the framework had been providing all along.
 date: 2026-07-14
 authors: kronuz
-series: "Home Made"
-seriesOrder: 2
+series: "KronuZSH"
+seriesOrder: 1
 tags:
   - tooling
   - shell
@@ -15,7 +15,7 @@ tags:
 
 There is a particular kind of comfort in a tool that is small enough to understand end to end. I'd used the same shell setup for years without really understanding it.
 
-It was [Prezto](https://github.com/sorin-ionescu/prezto), a framework for [zsh](https://www.zsh.org/). At some point long ago I'd forked it, tuned it, and stopped thinking about it. The prompt was the part I'd made my own: it had started from another theme, picked up ideas and pieces from a few others, and grown into a 528-line function I'd fussed over until it showed exactly what I wanted—the git state, the Python venv, an exit code when something broke, a tidy path. I rarely thought about everything underneath it.
+It was [Prezto](https://github.com/sorin-ionescu/prezto), a framework for [zsh](https://www.zsh.org/). At some point long ago I'd forked it, tuned it, and stopped thinking about it. The prompt was the part I'd made my own: it had started from another theme, picked up ideas and pieces from a few others, and grown into a 528-line function I'd fussed over until it showed exactly what I wanted: the git state, the Python venv, an exit code when something broke, a tidy path. I rarely thought about everything underneath it.
 
 That changed one evening when I went to update the fork and found it was seven years behind upstream. I had seven years of drift in code I mostly didn't run, all to keep a prompt that barely depended on it. So I opened the directory and counted what I'd been carrying.
 
@@ -29,7 +29,7 @@ So I asked the obvious question. What if I just kept the room?
 
 ## KronuZSH
 
-The plan was simple: lift the prompt out of the framework, vendor the handful of plugins I actually load, write the options, history, and completion setup I'd want on any machine anyway, and source those files directly. No general module system and no fork to reconcile—just an explicit core load order and a tiny loader for optional tool integrations.
+The plan was simple: lift the prompt out of the framework, vendor the handful of plugins I actually load, write the options, history, and completion setup I'd want on any machine anyway, and source those files directly. No general module system and no fork to reconcile, just an explicit core load order and a tiny loader for optional tool integrations.
 
 I called it [KronuZSH](https://github.com/Kronuz/KronuZSH).
 

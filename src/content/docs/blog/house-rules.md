@@ -5,8 +5,8 @@ description: "The boss fight in 'Goodbye, Dr. Jekyll' was comments, and giscus w
 excerpt: "Goodbye, Dr. Jekyll ended with giscus winning the comments boss fight. It turns out the boss got back up. This is the comment system I built to replace it: self-hosted, on the edge, mine down to the boards, and a blast to build."
 date: 2026-07-17
 authors: kronuz
-series: "Home Made"
-seriesOrder: 3
+series: "This Blog"
+seriesOrder: 2
 tags:
   - meta
   - cloudflare
@@ -23,7 +23,7 @@ But the truce chafed, in two places. The first was the frame. giscus renders ins
 
 The second was ownership. "Kept for you" is a polite way of saying "not yours." Every reply, every reaction, every correction a reader takes the time to write sits in someone else's database, under someone else's rules, one policy change away from a shape I did not choose. I did not want a room leased across the street. I wanted a front porch, bolted to my own house.
 
-I had made this trade once already with [my shell](/blog/molting/): keep the part I cared about, replace the machinery around it, and accept that every quiet convenience became mine to understand. Comments were the same bargain, only this time I wanted to own the place where other people left their words.
+I had made this trade once already with [my shell](/blog/molting-zsh/): keep the part I cared about, replace the machinery around it, and accept that every quiet convenience became mine to understand. Comments were the same bargain, only this time I wanted to own the place where other people left their words.
 
 ## What it is
 
