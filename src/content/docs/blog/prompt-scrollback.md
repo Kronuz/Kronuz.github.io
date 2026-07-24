@@ -156,10 +156,10 @@ The protocol lifecycle is pleasantly linear: prompt from `A` to `B`, command fro
 In the non-transient prompt, `A` and `B` are part of `PROMPT` itself:
 
 ```zsh
-_kronuz_osc_a=$'%{\e]133;A\a%}'
-_kronuz_osc_b=$'%{\e]133;B\a%}'
+_kz_osc_a=$'%{\e]133;A\a%}'
+_kz_osc_b=$'%{\e]133;B\a%}'
 
-PROMPT="\${_prompt_kronuz_status_live}\${_kronuz_osc_d}\${_kronuz_osc_a}$kronuz[err] $kronuz[info]$kronuz[context]$kronuz[etctl]$kronuz[git]$kronuz[venv]$kronuz[jobs]$kronuz[nl]$kronuz[time] $kronuz[pwd] $kronuz[prompt] \${_kronuz_osc_b}"
+PROMPT="\${_kz_prompt_status_live}\${_kz_osc_d}\${_kz_osc_a}$kz[err] $kz[info]$kz[context]$kz[etctl]$kz[git]$kz[venv]$kz[jobs]$kz[nl]$kz[time] $kz[pwd] $kz[prompt] \${_kz_osc_b}"
 ```
 
 The `%{` and `%}` tell zsh that the bytes inside occupy zero columns. Without those guards, zsh counts the invisible sequences as visible text and gets cursor movement and line wrapping wrong. `C` cannot live in `PROMPT` because it happens only after I press Enter, so the `preexec` hook writes it directly. The matching `precmd` hook writes `D` after the command returns, while `$?` still holds the real exit status:
@@ -209,7 +209,7 @@ I treated `OSC 7` as harmless metadata. In iTerm it is not. I cloned iTerm2 and 
 That explained the triangles none of my `A`, `B`, `C`, and `D` rearrangements could remove. One blue triangle came from `OSC 133;A`. The other came from a directory update I had not known was also a mark. The fix was not another ordering trick. iTerm already receives the same directory through its mark-free `OSC 1337;CurrentDir`, so KronuZSH stopped sending `OSC 7` to iTerm and kept it for other terminals:
 
 ```zsh
-if (( _kronuz_is_iterm )); then
+if (( _kz_is_iterm )); then
   print -Pn "\e]1337;RemoteHost=${USER}@%M\a\e]1337;CurrentDir=%d\a"
 else
   print -Pn '\e]7;file://%M%d\a'

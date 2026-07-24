@@ -51,19 +51,19 @@ For most of this project the layout was welded shut. `PROMPT` was assembled once
 
 That is fine while the shape is mine. It is useless if I want anyone else to reshape it without touching the file. So I lifted the layout out of the engine and into three variables you set from `~/.zshrc.local`:
 
-- `PROMPT_KRONUZ_PROMPT`, the live prompt (one line, or two).
-- `PROMPT_KRONUZ_RPROMPT`, the right prompt.
-- `PROMPT_KRONUZ_TRANSIENT_PROMPT`, the collapsed line [the scrollback trick](/blog/prompt-scrollback/) leaves behind.
+- `KZ_PROMPT_PROMPT`, the live prompt (one line, or two).
+- `KZ_PROMPT_RPROMPT`, the right prompt.
+- `KZ_PROMPT_TRANSIENT_PROMPT`, the collapsed line [the scrollback trick](/blog/prompt-scrollback/) leaves behind.
 
 Set any of them and the prompt takes the new shape at the very next draw. No rebuild, no reload, no restart.
 
-Getting there took one trick that is not obvious. `PROMPT` is a template zsh re-expands on every draw, with `PROMPT_SUBST` on. A segment like `$kz[git]` works because it sits *literally* in that template, so each redraw re-parses it and resolves it. A layout handed in through a variable is a different animal: when zsh expands `$PROMPT_KRONUZ_PROMPT`, what comes back is *data*, a finished string, not fresh syntax to parse again. A single `${(e)...}` evaluates it once and stops, and the `$kz[git]` inside falls out as ten literal characters, unresolved.
+Getting there took one trick that is not obvious. `PROMPT` is a template zsh re-expands on every draw, with `PROMPT_SUBST` on. A segment like `$kz[git]` works because it sits *literally* in that template, so each redraw re-parses it and resolves it. A layout handed in through a variable is a different animal: when zsh expands `$KZ_PROMPT_PROMPT`, what comes back is *data*, a finished string, not fresh syntax to parse again. A single `${(e)...}` evaluates it once and stops, and the `$kz[git]` inside falls out as ten literal characters, unresolved.
 
 The fix is to evaluate twice, in the one pass:
 
 ```zsh
 # one PROMPT_SUBST pass, two levels: the layout, then the segments it named
-PROMPT='${(e)${(e)PROMPT_KRONUZ_PROMPT-$DEFAULT_PROMPT_KRONUZ_PROMPT}}'
+PROMPT='${(e)${(e)KZ_PROMPT_PROMPT-$DEFAULT_KZ_PROMPT_PROMPT}}'
 ```
 
 The inner `${(e)}` resolves the layout string; the outer one resolves the `$kz[...]` segments that string just produced. Both ride the single expansion zsh already does per draw, so a skin costs nothing at render time. It reads like a stutter. It is load-bearing.
@@ -73,7 +73,7 @@ The inner `${(e)}` resolves the layout string; the outer one resolves the `$kz[.
 A skin composes from two sets. The segment palette, `$kz[git]`, `$kz[pwd]`, `$kz[time]` and the rest, each a ready-made piece. And the colour palette, `$kz[FG.blue]` for a foreground, `$kz[BG.blue]` for a background. So *minimal*, the entire skin, is one line:
 
 ```zsh
-PROMPT_KRONUZ_PROMPT='$kz[pwd]$kz[git] ${kz[FG.magenta]}${kz[GLYPH.caret]}${kz[RESET]} '
+KZ_PROMPT_PROMPT='$kz[pwd]$kz[git] ${kz[FG.magenta]}${kz[GLYPH.caret]}${kz[RESET]} '
 ```
 
 ```ansi
@@ -94,8 +94,8 @@ zsh reads `${name:+word}` by scanning for the brace that closes `word`. `%F{blue
 That is the whole reason the robbyrussell impression up top is only two lines, `git:(branch)` and all:
 
 ```zsh
-PROMPT_KRONUZ_GIT='${kz[git.branch]:+ ${kz[FG.blue]}git:(${kz[FG.red]}${kz[git.branch]}${kz[FG.blue]})${kz[RESET]}${kz[git.dirty]:+ ${kz[FG.yellow]}✗${kz[RESET]}}}'
-PROMPT_KRONUZ_PROMPT='%(?.${kz[FG.green]}.${kz[FG.red]})➜%f  ${kz[FG.cyan]}%c%f$kz[git] '
+KZ_PROMPT_GIT='${kz[git.branch]:+ ${kz[FG.blue]}git:(${kz[FG.red]}${kz[git.branch]}${kz[FG.blue]})${kz[RESET]}${kz[git.dirty]:+ ${kz[FG.yellow]}✗${kz[RESET]}}}'
+KZ_PROMPT_PROMPT='%(?.${kz[FG.green]}.${kz[FG.red]})➜%f  ${kz[FG.cyan]}%c%f$kz[git] '
 ```
 
 Two lines to wear oh-my-zsh's flagship theme, reading git from the same daemon, inside the same paint budget.
@@ -105,7 +105,7 @@ Two lines to wear oh-my-zsh's flagship theme, reading git from the same daemon, 
 Once the layout is loose, taste is the only limit, and I have little. The DOS box up top is one line, the path as a drive letter, bold green on the memory of a CRT:
 
 ```zsh
-PROMPT_KRONUZ_PROMPT='%B${kz[FG.green]}C:\\${PWD:t}\\>%f%b '
+KZ_PROMPT_PROMPT='%B${kz[FG.green]}C:\\${PWD:t}\\>%f%b '
 ```
 
 Or an all-emoji line: a folder, a plant for the branch, a small fire when the tree is dirty, a spark for the caret:

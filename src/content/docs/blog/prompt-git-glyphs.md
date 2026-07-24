@@ -69,7 +69,7 @@ This is the part I read all day. The moment the tree is dirty the green check be
 ```
 Orange for staged, red for modified-but-not-staged, grey for untracked, each with how many paths. Three colors, three questions answered without a keystroke: what is ready to commit, what still needs adding, and what git is not tracking yet.
 
-Sometimes you want to know not just how many, but what kind. Set `PROMPT_KRONUZ_GIT_SPLIT=1` and each group breaks apart into added `+`, changed `~`, and deleted `-`, still colored by staged-versus-unstaged so you can tell the two apart.
+Sometimes you want to know not just how many, but what kind. Set `KZ_PROMPT_GIT_SPLIT=1` and each group breaks apart into added `+`, changed `~`, and deleted `-`, still colored by staged-versus-unstaged so you can tell the two apart.
 ```ansi
 [0m [0;90m[0m [0;1;38;2;255;255;255mmain[0m [0;90m[0m [0;38;2;255;255;255morigin/main[0;90m ([0;38;2;135;95;0m✗[0m [0;38;2;215;95;0m 2[0m [0;38;2;215;95;0m 2[0m [0;38;2;215;95;0m 1[0m [0;31m 2[0m [0;31m 1[0m [0;90m⊖4)[0m
 ```
@@ -100,13 +100,13 @@ Staged is always counted exactly, so `+3` is real. The rest is genuinely unknown
 ## Make it yours
 
 The indicators are joined by a separator you can set. A space by default, or a middle dot, a colon, or nothing at all if you like them packed tight.
-```ansi title="PROMPT_KRONUZ_GIT_SEP"
+```ansi title="KZ_PROMPT_GIT_SEP"
 [0m [0;90m[0m [0;1;38;2;255;255;255mmain[0;90m ([0;38;2;135;95;0m✗[0m [0;38;2;215;95;0m 5[0m [0;31m 3[0m [0;90m⊖4)[0m
 [0m [0;90m[0m [0;1;38;2;255;255;255mmain[0;90m ([0;38;2;135;95;0m✗[0m·[0;38;2;215;95;0m 5[0m·[0;31m 3[0m·[0;90m⊖4)[0m
 [0m [0;90m[0m [0;1;38;2;255;255;255mmain[0;90m ([0;38;2;135;95;0m✗[0m:[0;38;2;215;95;0m 5[0m:[0;31m 3[0m:[0;90m⊖4)[0m
 [0m [0;90m[0m [0;1;38;2;255;255;255mmain[0;90m ([0;38;2;135;95;0m✗[0;38;2;215;95;0m 5[0;31m 3[0;90m⊖4)[0m
 ```
-And every glyph has a plain-Unicode twin, so the whole thing renders without a [Nerd Font](https://www.nerdfonts.com/). `PROMPT_KRONUZ_NERD_FONT=0`, or a `dumb` terminal, switches to it automatically. The host logo falls back to a plain compare-mark, and the split view keeps the same `+ ~ -`.
+And every glyph has a plain-Unicode twin, so the whole thing renders without a [Nerd Font](https://www.nerdfonts.com/). `KZ_PROMPT_NERD_FONT=0`, or a `dumb` terminal, switches to it automatically. The host logo falls back to a plain compare-mark, and the split view keeps the same `+ ~ -`.
 ```ansi title="plain-Unicode set"
 [0m [0;90m⎇[0m [0;1;38;2;255;255;255mmain[0m [0;90m⇅[0m [0;38;2;255;255;255morigin/main[0;90m ([0;38;2;95;255;95m✔[0;90m)[0m
 [0m [0;90m⎇[0m [0;1;38;2;255;255;255mmain[0m [0;90m⇅[0m [0;38;2;255;255;255morigin/main[0;90m ([0;38;2;135;95;0m✗[0m [0;38;2;215;95;0m✛5[0m [0;31m✴3[0m [0;90m⊖4)[0m
