@@ -39,9 +39,12 @@
 }
 :root {
 	--sl-font-mono: "Hack Nerd Font", ui-monospace, SFMono-Regular, Menlo, monospace;
-	/* Exact Hack Nerd Font box-drawing geometry (2,048 units/em): vertical
-	   glyphs span 2,480 units; horizontal glyphs overshoot by 20 per side. */
-	--kz-code-line-height: 1.2109375;
+	/* Hack Nerd Font's vertical box glyphs span 2,480 of 2,048 units/em.
+	   At our 14px code size that is 16.953125px; snap to 17px so browsers
+	   do not alternate physical-pixel rounding between rows. */
+	--kz-code-font-size: 0.875rem;
+	--kz-code-line-height: 1.2142857143;
+	/* Horizontal box glyphs overshoot their advance by 20 units per side. */
 	--kz-code-letter-spacing: 0.01953125em;
 }
 
@@ -426,6 +429,7 @@ transition: color 0.15s ease;
 }
 .expressive-code {
 	/* Expressive Code otherwise inherits Starlight's prose line-height (1.75). */
+	--ec-codeFontSize: var(--kz-code-font-size);
 	--ec-codeLineHt: var(--kz-code-line-height);
 }
 .expressive-code pre > code {
@@ -439,7 +443,7 @@ transition: color 0.15s ease;
 	margin: 0;
 	padding: 0.8rem 0.9rem;
 	border-radius: 0;
-	font-size: 0.85rem;
+	font-size: var(--kz-code-font-size);
 	line-height: var(--kz-code-line-height);
 	letter-spacing: var(--kz-code-letter-spacing);
 	/* Size to content so the highlighted background spans the full scroll
