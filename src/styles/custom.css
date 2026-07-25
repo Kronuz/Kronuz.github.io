@@ -39,6 +39,8 @@
 }
 :root {
 	--sl-font-mono: "Hack Nerd Font", ui-monospace, SFMono-Regular, Menlo, monospace;
+	/* Terminal diagrams rely on adjacent rows meeting as one character grid. */
+	--kz-code-line-height: 1;
 }
 
 /* Nudge Starlight's neutral ramp off its cool 224deg default. The dark surfaces
@@ -420,6 +422,10 @@ transition: color 0.15s ease;
 .sl-markdown-content .expressive-code .frame {
 	--ec-brdRad: 0.45rem;
 }
+.expressive-code {
+	/* Expressive Code otherwise inherits Starlight's prose line-height (1.75). */
+	--ec-codeLineHt: var(--kz-code-line-height);
+}
 .sl-markdown-content .expressive-code .frame.has-title:not(.is-terminal) .title {
 	border-radius: var(--ec-brdRad) 0 0 0;
 }
@@ -429,7 +435,7 @@ transition: color 0.15s ease;
 	padding: 0.8rem 0.9rem;
 	border-radius: 0;
 	font-size: 0.85rem;
-	line-height: 1.5;
+	line-height: var(--kz-code-line-height);
 	/* Size to content so the highlighted background spans the full scroll
 	   width (otherwise horizontal scroll reveals the page/backdrop). */
 	min-width: 100%;
@@ -452,7 +458,7 @@ transition: color 0.15s ease;
 .snippet-code pre.shiki .line {
 	display: block;
 	white-space: pre;
-	min-height: 1.5em;
+	min-height: 1em;
 }
 .snippet-code pre.shiki .line::before {
 	counter-increment: sl-line;
