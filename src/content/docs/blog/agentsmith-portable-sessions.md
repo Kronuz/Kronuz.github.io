@@ -1,8 +1,8 @@
 ---
-title: "The Directory Remembers"
-subtitle: "Portable sessions for coding agents"
-description: "AgentSmith treats a working directory as the durable identity behind Claude Code, Codex, and Copilot CLI sessions, then makes those sessions inspectable, exportable, and movable without writing into an agent's private store."
-excerpt: "I wanted one command that could enter a project and resume whatever its coding agent had been doing. That small convenience turned into AgentSmith, a translation and migration layer for three incompatible ideas of a session."
+title: "The Session Smith"
+subtitle: "One workbench for Claude, Codex, and Copilot"
+description: "AgentSmith is a local command-line workbench for finding, inspecting, resuming, exporting, moving, and cleaning sessions from Claude Code, Codex, and GitHub Copilot CLI."
+excerpt: "Coding agents remember plenty, each in a different place and shape. AgentSmith works those native stores into one directory-centered command line without flattening away where the work came from."
 date: 2026-07-24
 draft: true
 authors: kronuz
@@ -13,29 +13,36 @@ tags:
   - developer-tools
 ---
 
-I wanted one command that could enter a project and resume whatever its coding agent had been doing. That small convenience turned into **AgentSmith**, a translation and migration layer for three incompatible ideas of a session. It can find the work attached to a directory, inspect it, account for its usage, export it with its context, and hand it to another agent without pretending their private storage formats are interchangeable.
+[AgentSmith](https://github.com/Kronuz/AgentSmith) is a local command-line workbench for the sessions that [Claude Code](https://code.claude.com/docs/en/sessions), [Codex](https://github.com/openai/codex), and [GitHub Copilot CLI](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/chronicle) leave on your machine. It finds them, reads them, searches them, measures them, resumes them, exports them, and cleans them up. The working directory is the common thread.
 
-The command that started it was almost embarrassingly small:
+That last part is the one I care about.
+
+I do not wake up thinking, "I should resume session `019c7390-55cc-7e83-9537-e7534558d473`." I think, "I was working on AgentSmith." The repository is what I remember. The session ID is bookkeeping.
 
 ```sh
-asmith resume codex ~/code/project
+cd ~/code/AgentSmith
+asmith ls --here
+asmith resume codex
 ```
 
-Change `codex` to `claude` or `copilot`, and AgentSmith finds the newest resumable session associated with that directory. The directory is the durable key. The agent is a choice you can change.
+AgentSmith makes the directory the handle and lets the native agent remain the engine.
 
-That last sentence took considerably more work than the command suggests.
+## Three metals on the bench
 
-## Three agents walk into a directory
+The three agents all preserve useful history. They simply disagree on its shape.
 
-[Claude Code](https://docs.anthropic.com/en/docs/claude-code/getting-started), [Codex](https://developers.openai.com/codex/), and [GitHub Copilot CLI](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/about-copilot-cli) all understand sessions. They do not agree on what a session is.
+Claude Code keeps project-scoped JSONL conversations, including adjacent subagent material. Codex combines rollout files with a SQLite thread index. Copilot CLI has session-state files, an index, usage data, and its own rules for which records can still be resumed. Their token accounting does not line up either. Cache reads, cache writes, reasoning tokens, child agents, and Copilot's AIU belong to different ledgers.
 
-One stores conversations as JSONL with adjacent subagent and tool-result directories. Another combines a SQLite index with rollout files. The third has its own event stream, usage records, and continuation rules. Even their accounting differs: cache reads, cache writes, reasoning tokens, and child agents do not line up cleanly.
+None of this is bad design. Each store serves its own agent. It becomes awkward when one repository has been touched by all three.
 
-The files are an implementation detail until you want to answer a very ordinary question:
+```console
+$ asmith ls --here
+* codex    019c7390   18m    42 turns  ~/code/project  Tighten the parser
+* claude   bbe91a64    2h    19 turns  ~/code/project  Trace config loading
+* copilot  7a3fc324    1d     8 turns  ~/code/project  Add import validation
+```
 
-> What work happened in this repository, regardless of which agent did it?
-
-AgentSmith reads each native store through a backend and normalizes only the parts that can honestly be compared: session identity, working directory, timestamps, messages, touched files, and usage. It keeps the source label visible. A row from Claude should never quietly masquerade as one from Codex.
+The source label stays visible because normalization should not become laundering. A Codex turn remains a Codex turn. A Copilot AIU does not quietly turn into a Claude token. AgentSmith works each native store through a backend, then exposes the pieces that can be compared honestly: identity, directory, timestamps, messages, touched files, resumability, and usage.
 
 ```d2 alt="AgentSmith normalizes three native session stores around a working directory"
 direction: down
@@ -50,17 +57,52 @@ stores -> agentsmith
 agentsmith -> actions
 ```
 
-This gives me a single `asmith ls`, a single full-text search, and a usage view that says where every number came from. It also gives `resume` a stable meaning: find the newest compatible native session for this directory, then invoke that agent's own continuation mechanism. AgentSmith does not manufacture a fake common session underneath.
+Think of it as a smith. The three stores never get poured into one anonymous vat. Their internals are heated just enough to become workable, while provenance and native artifacts survive the hammer.
 
-## The box was not the session
+## The everyday workbench
 
-The first migration feature was called `dump --raw`. It copied native transcript data. That sounded faithful because nothing had been transformed.
+The command is `asmith`. Most days, five commands cover the ground:
 
-It was faithful to the file and unfaithful to the session.
+```console
+$ asmith ls -n 15       # recent sessions across all three agents
+$ asmith ls --here      # sessions attached to this directory
+$ asmith tree           # group the whole history by directory
+$ asmith show 019c7390  # metadata, files, usage, and resume details
+$ asmith dump 019c7390  # render the conversation
+```
 
-A transcript may have child-agent sidecars. Project memory can live elsewhere. Instructions may sit in the repository, the agent's home, or both. Hooks, skills, configuration, and touched-file records can all affect what happened without appearing as conversational turns. A raw dump can also represent only one of several sessions attached to the same directory.
+Every listing says which agent produced each row. Full IDs work, but a unique prefix is enough. Paths work where they make sense, so `asmith show .`, `asmith files .`, and `asmith usage .` follow the newest matching session for the current directory.
 
-So the portable unit became an **export bundle**, a directory with a manifest and checksummed inventory:
+There is one search across all three stores:
+
+```sh
+asmith search "palette cache"
+asmith grep 'OSC 133.*precmd' .
+```
+
+`search` finds a literal phrase across sessions. `grep` runs a regular expression over rendered transcripts. `dump` can include tool arguments, results, reasoning, or nested subagents, and it can render Markdown when the terminal is no longer the right place to read a long conversation.
+
+Usage gets the same treatment. AgentSmith keeps each model's fresh input, output, cache, and reasoning counts separate, then offers an explicitly estimated weighted-token count for ranking sessions across agents. The estimate is for comparison. Each native count remains beside it.
+
+## Resume the project
+
+Each native CLI already knows how to resume its own sessions. Claude Code, for example, scopes session lookup to the current project and its worktrees. Copilot records enough local state to resume and also offers its broader Chronicle history. AgentSmith does not replace those mechanisms.
+
+It chooses the newest resumable native session for a directory and calls the right one:
+
+```sh
+asmith resume claude
+asmith resume codex ~/code/KronuZSH
+asmith resume copilot ~/code/AgentSmith
+```
+
+The optional shell integration goes one step further. Calling `claude`, `codex`, or `copilot` with no arguments resumes the current directory when possible, and starts normally when there is nothing to resume. Arguments pass straight through to the real CLI.
+
+Directories become lightweight session names without creating another session database.
+
+## Carry the work with you
+
+A rendered transcript is useful, but it is not always the whole job. Sessions can have native sidecars, child-agent conversations, memory, project instructions, settings, hooks, and skills. AgentSmith exports the material it can attribute by default and records it in a checksummed directory bundle:
 
 ```text
 project-export/
@@ -73,114 +115,78 @@ project-export/
 └── environment/
 ```
 
-Each session carries a readable conversation, metadata, usage, file records, and its untouched native artifacts. Project memory and project-scoped instructions remain attached to their project. Global configuration is a separate export because copying the same global hook into twenty project bundles would be both wasteful and misleading.
-
-Exports include everything they can attribute by default. The smaller form is opt-out:
+Export the current project, copy the directory to another machine, and verify it there:
 
 ```sh
-asmith export . -o ~/exports/project
-asmith export --global -o ~/exports/globals
-asmith verify ~/exports/project
+asmith export . -o ~/exports/agentsmith
+asmith verify ~/exports/agentsmith
 ```
 
-That default matters. A person making a backup is unlikely to know which obscure sidecar will become important six months later.
+Multiple session IDs or project directories can go into one bundle. Path selection is exact unless `--recursive` is explicit, which keeps a careless parent-directory export from swallowing every nested project.
 
-## Moving without forgery
-
-Exporting is the easy half. Importing one agent's private session records into another agent's database would require reverse-engineering undocumented internals and lying convincingly enough for the destination to accept the result.
-
-I chose a less magical design.
-
-`asmith import` prepares a new directory containing the verified source, a generated `HANDOFF.md`, and the material needed to continue. `asmith launch` starts the destination agent and asks it to ingest that handoff. The resulting conversation is a real native session created by the destination itself.
+Import is conservative. AgentSmith does not forge a Claude conversation into Codex's private database and hope the schema remains stable. It prepares a readable, agent-neutral handoff from one or more bundles or old dumps. The destination agent reads that handoff and creates a real session of its own:
 
 ```sh
-handoff=$(asmith import ~/exports/project --cwd ~/code/project)
+handoff=$(asmith import ~/exports/agentsmith -o ~/imports/agentsmith)
 asmith launch codex "$handoff"
 ```
 
-The handoff requires the agent to inspect every preserved conversation, memory file, instruction, and native artifact. It builds a coverage ledger, names anything unreadable or omitted, and extracts concrete objectives, decisions, open work, and referenced files. It must not fabricate alternating historical turns. Provenance is better than counterfeit history.
-
-`asmith merge` uses the same machinery, but starts by discovering every live session attached to one or more projects:
+`merge` starts from live sessions instead of exported material:
 
 ```sh
-asmith merge ~/code/project -o ~/imports/merged-history
+handoff=$(asmith merge . -o ~/imports/combined-history)
+asmith launch claude "$handoff"
 ```
 
-The original sessions remain untouched. The merged handoff becomes a new continuation, not a destructive rewrite of history.
+The prepared directory remains inspectable before launch. Project context stays with the project. Global instructions, hooks, skills, and configuration have their own `--global` export, so a user-wide rule is not copied into every project bundle.
 
-## The 74,702-byte mistake
+This is continuation with provenance. The source remains available, omissions are named, and the new agent owns the new session.
 
-Global migration exposed a nastier problem.
+## The neighboring anvils
 
-I had several sets of instructions, commands, hooks, and skills from two agents. My first converter helpfully concatenated the shared instructions into a Codex `AGENTS.md`. It produced **74,702 bytes** and marked the file as ready for `~/.codex/AGENTS.md`.
+There is good prior art around this problem.
 
-Codex's default instruction-ingestion budget was **32,768 bytes**.
+[Agent Sessions](https://github.com/jazzyalex/agent-sessions) is a polished, local-first macOS application for browsing, searching, analyzing, and resuming history from a wide range of agents. It covers more harnesses than AgentSmith and gives the work a proper visual cockpit.
 
-The adapter was more than twice the budget, mixed global preferences with environment-specific workflows, and included skills whose commands did not exist on the destination machine. Some source hooks deliberately restricted networking or remote access. Installing the whole thing would have been a successful copy and a bad migration.
+[Agent Capsule](https://github.com/z2z23n0/agent-capsule) focuses on sharing a complete Codex or Claude conversation and continuing it as a native local session. [codex-claude-transfer](https://github.com/ahmojo/codex-claude-transfer) goes directly after translation, portable bundles, sync, and native import between those two agents. [agent-session-resume](https://github.com/hacktivist123/agent-session-resume) approaches continuation as a reusable skill that reconstructs context for the next agent.
 
-That changed the import model. A global import now has two trees:
+AgentSmith sits a little lower and wider in the toolbox. It is a scriptable CLI for three local stores, organized around directories, with inspection, cross-agent search, usage accounting, export/import, global and project context, cleanup, and shell-level resume in one place. Its transfer path deliberately favors a visible handoff over writing translated history into another vendor's private store.
 
-```text
-prepared-import/
-├── HANDOFF.md
-├── candidate/     # edit or delete here
-├── source/        # untouched provenance
-└── manifest.json
-```
+Different jobs want different tradeoffs. If you want a macOS session browser, use the good macOS session browser. If you want direct native translation between Claude and Codex, use a tool built for that. I wanted something I could pipe, audit, and teach to my shell.
 
-`candidate/` is the user's decision. Deleting a candidate means *exclude this*. The importing agent may consult `source/` to understand provenance or repair a reference, but it may not resurrect a deleted candidate behind the user's back.
+## Put it on the anvil
 
-Before writing live configuration, the agent must present a compact destination blueprint. Each proposed output gets a path, purpose, approximate size, source inputs, dependencies, and a keep/adapt/omit decision. Restrictive policies, missing commands, unavailable services, and environment-only skills go into a separate exception table. Ambiguous omissions require a question.
-
-Most importantly, the destination uses its native shapes. Concise global instructions stay concise. Project guidance remains in the project. Reusable workflows become skills. Hooks remain hooks, and configuration remains configuration. Concatenation is not architecture.
-
-## A receipt before the first cut
-
-An agent migrating its own global configuration is performing surgery on the instructions that govern its behavior. "I made a backup somewhere" felt too loose.
-
-AgentSmith therefore makes the approved path set explicit:
+AgentSmith is Python standard library only. You need `python3`, the agent CLIs you use, and `~/.local/bin` on `PATH`.
 
 ```sh
-receipt=$(asmith snapshot \
-  ~/.codex/AGENTS.md \
-  ~/.agents/skills/imported \
-  -o ~/.local/state/agentsmith/receipts/global-migration)
-
-# The destination agent performs the approved writes.
-
-asmith audit "$receipt" --seal
-asmith rollback "$receipt" --dry-run
+git clone https://github.com/Kronuz/AgentSmith.git ~/code/AgentSmith
+~/code/AgentSmith/install.sh
 ```
 
-The snapshot records the exact baseline before the first write. Sealing records what the migration produced. A later audit detects drift, and rollback restores modified or deleted paths while removing paths that the migration created.
+The installer links the executable into `~/.local/bin`. Add the optional shell integration to `~/.profile`, `~/.zshrc`, or `~/.bashrc` for auto-resume wrappers, `ascd`, and tab completion:
 
-It is deliberately narrower than snapshotting a home directory. The path list is also the approval boundary. If the plan grows another destination, the agent stops and asks before touching it.
+```sh
+[ -r "$HOME/code/AgentSmith/agentsmith.sh" ] &&
+  . "$HOME/code/AgentSmith/agentsmith.sh"
+```
 
-## Trying it on the ugly backup
+Open a new shell, then start somewhere harmless:
 
-The design stopped being theoretical when I fed it a real backup assembled by several methods on another machine.
+```sh
+asmith stats
+asmith dirs
+asmith tree
+asmith ls --here
+```
 
-The source contained standalone dumps, raw Claude project stores, two generations of memory, project instructions, and two generations of global Copilot configuration. Some transcripts were byte-identical duplicates. One duplicate in the raw project store had the sidecar directory that the standalone copy lacked. The newer global tree had to win path conflicts without erasing unique older files.
+These commands only read the local stores. When you are ready, try `asmith dump <id>` and `asmith resume codex`.
 
-The final reconstruction produced:
+AgentSmith also has sharp tools. `rm` shreds selected local session state, `purge` removes empty sessions, and `redact` scrubs a leaked value across mutable agent stores. They support previews and confirmations for a reason. Start with `--dry-run`.
 
-- **16 unique sessions** from 18 transcript files
-- **12 Claude sidecar files**
-- **83 project instruction files**
-- **49 global configuration files**
-- **34 independently verifiable bundles**
-- **zero synthesized destination adapters**
+```sh
+asmith rm . --dry-run
+asmith purge --dry-run
+asmith redact 'example-leaked-value' --dry-run
+```
 
-Every bundle passed checksum verification. I also imported representative project and global bundles, then checked that the prepared handoffs retained the expected candidates, provenance, working directories, and review protocol.
-
-The mistakes were useful. Hard-coded path guesses turned `/private/tmp` into a made-up project directory. Picking the most frequent Claude cwd placed one session inside a nested build dependency instead of its project root. Deduplicating in the wrong order kept a transcript and threw away its richer twin's sidecars.
-
-Each looked reasonable in isolation. Together they made the earlier export valid, checksummed, and wrong.
-
-## What portability means here
-
-AgentSmith cannot pour one model's working memory into another model. It cannot recover context absent from the source, and it cannot make a finite context window infinite. A dump made without memory or child sessions stays incomplete.
-
-What it can do is preserve the evidence, account for it, and start a native continuation with far less left on the floor. The directory remains the anchor. Agents can change. Machines can change. The work has somewhere durable to live between them.
-
-That is enough magic for one shell command.
+The [repository](https://github.com/Kronuz/AgentSmith) has the complete command reference and a copy-paste tutorial. Try it against the directory you are already working in. If one of the three agents has changed its private store again, bring a sample, an issue, or a hammer.
