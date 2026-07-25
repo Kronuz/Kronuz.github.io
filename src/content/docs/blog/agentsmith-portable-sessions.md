@@ -158,16 +158,22 @@ Different jobs want different tradeoffs. If you want a macOS session browser, us
 
 AgentSmith is Python standard library only. You need `python3`, the agent CLIs you use, and `~/.local/bin` on `PATH`.
 
+The checkout can live anywhere. This uses the standard per-user data directory:
+
 ```sh
-git clone https://github.com/Kronuz/AgentSmith.git ~/code/AgentSmith
-~/code/AgentSmith/install.sh
+agentsmith_home="${XDG_DATA_HOME:-$HOME/.local/share}/AgentSmith"
+mkdir -p "$(dirname "$agentsmith_home")"
+git clone https://github.com/Kronuz/AgentSmith.git "$agentsmith_home"
+"$agentsmith_home/install.sh"
 ```
 
 The installer links the executable into `~/.local/bin`. Add the optional shell integration to `~/.profile`, `~/.zshrc`, or `~/.bashrc` for auto-resume wrappers, `ascd`, and tab completion:
 
 ```sh
-[ -r "$HOME/code/AgentSmith/agentsmith.sh" ] &&
-  . "$HOME/code/AgentSmith/agentsmith.sh"
+agentsmith_home="${XDG_DATA_HOME:-$HOME/.local/share}/AgentSmith"
+[ -r "$agentsmith_home/agentsmith.sh" ] &&
+  . "$agentsmith_home/agentsmith.sh"
+unset agentsmith_home
 ```
 
 Open a new shell, then start somewhere harmless:
