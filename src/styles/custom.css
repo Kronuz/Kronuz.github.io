@@ -39,8 +39,10 @@
 }
 :root {
 	--sl-font-mono: "Hack Nerd Font", ui-monospace, SFMono-Regular, Menlo, monospace;
-	/* Terminal diagrams rely on adjacent rows meeting as one character grid. */
-	--kz-code-line-height: 1;
+	/* Exact Hack Nerd Font box-drawing geometry (2,048 units/em): vertical
+	   glyphs span 2,480 units; horizontal glyphs overshoot by 20 per side. */
+	--kz-code-line-height: 1.2109375;
+	--kz-code-letter-spacing: 0.01953125em;
 }
 
 /* Nudge Starlight's neutral ramp off its cool 224deg default. The dark surfaces
@@ -426,6 +428,9 @@ transition: color 0.15s ease;
 	/* Expressive Code otherwise inherits Starlight's prose line-height (1.75). */
 	--ec-codeLineHt: var(--kz-code-line-height);
 }
+.expressive-code pre > code {
+	letter-spacing: var(--kz-code-letter-spacing);
+}
 .sl-markdown-content .expressive-code .frame.has-title:not(.is-terminal) .title {
 	border-radius: var(--ec-brdRad) 0 0 0;
 }
@@ -436,6 +441,7 @@ transition: color 0.15s ease;
 	border-radius: 0;
 	font-size: 0.85rem;
 	line-height: var(--kz-code-line-height);
+	letter-spacing: var(--kz-code-letter-spacing);
 	/* Size to content so the highlighted background spans the full scroll
 	   width (otherwise horizontal scroll reveals the page/backdrop). */
 	min-width: 100%;
@@ -458,7 +464,7 @@ transition: color 0.15s ease;
 .snippet-code pre.shiki .line {
 	display: block;
 	white-space: pre;
-	min-height: 1em;
+	min-height: calc(var(--kz-code-line-height) * 1em);
 }
 .snippet-code pre.shiki .line::before {
 	counter-increment: sl-line;
