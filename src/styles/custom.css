@@ -39,12 +39,12 @@
 }
 :root {
 	--sl-font-mono: "Hack Nerd Font", ui-monospace, SFMono-Regular, Menlo, monospace;
-	/* Use an 18px row at the 14px code size. Hack Nerd Font's vertical box glyphs
-	   naturally span 16.953125px, so scale rendered glyph rows by 18/17 below.
-	   That adds one pixel of breathing room without opening box-drawing seams. */
+	/* Use a 20px row at the 14px code size. Hack Nerd Font's vertical box glyphs
+	   naturally span 16.953125px, so scale rendered glyph rows by 20/17 below.
+	   That adds breathing room without opening box-drawing seams. */
 	--kz-code-font-size: 0.875rem;
-	--kz-code-line-height: 1.2857142857;
-	--kz-code-glyph-scale-y: 1.0588235294;
+	--kz-code-line-height: 1.4285714286;
+	--kz-code-glyph-scale-y: 1.1764705882;
 	/* Horizontal box glyphs overshoot their advance by 20 units per side. */
 	--kz-code-letter-spacing: 0.01953125em;
 }
