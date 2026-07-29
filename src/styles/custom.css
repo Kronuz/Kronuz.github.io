@@ -24,28 +24,35 @@
    check/cross) falls through to the system mono, exactly as in a terminal.
    Regenerated from a local Hack Nerd Font with scripts/subset-font.sh. */
 @font-face {
-	font-family: "Hack Nerd Font";
-	src: url("/fonts/HackNerdFont-Regular.subset.woff2") format("woff2");
+	font-family: "MesloLGL Nerd Font";
+	src: url("/fonts/MesloLGLNerdFont-Regular.subset.woff2") format("woff2");
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
 }
 @font-face {
-	font-family: "Hack Nerd Font";
-	src: url("/fonts/HackNerdFont-Bold.subset.woff2") format("woff2");
+	font-family: "MesloLGL Nerd Font";
+	src: url("/fonts/MesloLGLNerdFont-Bold.subset.woff2") format("woff2");
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
 }
+/* The Fallback Bridge: Redirects bold icon requests to the regular font 
+   file to prevent blurry browser-synthesized bolding or broken tofu. */
+@font-face {
+	font-family: "MesloLGL Nerd Font";
+	src: url("/fonts/MesloLGLNerdFont-Regular.subset.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+E000-F8FF; /* Maps perfectly to the script's PUA_ALL range */
+}
 :root {
-	--sl-font-mono: "Hack Nerd Font", ui-monospace, SFMono-Regular, Menlo, monospace;
-	/* Hack Nerd Font's vertical box glyphs span 2,480 of 2,048 units/em.
-	   At our 14px code size that is 16.953125px; snap to 17px so browsers
-	   do not alternate physical-pixel rounding between rows. */
+	/* Calculated Web Metrics for MesloLGL Nerd Font at 14px base */
+	--sl-font-mono: "MesloLGL Nerd Font", ui-monospace, monospace;
 	--kz-code-font-size: 0.875rem;
-	--kz-code-line-height: 1.2142857143;
-	/* Horizontal box glyphs overshoot their advance by 20 units per side. */
-	--kz-code-letter-spacing: 0.01953125em;
+	--kz-code-line-height: 1.5714285714; /* 21.765625px -> 22px snap */
+	--kz-code-letter-spacing: 0.01171875em;
 }
 
 /* Nudge Starlight's neutral ramp off its cool 224deg default. The dark surfaces

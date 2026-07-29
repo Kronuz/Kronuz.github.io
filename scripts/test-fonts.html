@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nerd Font Fallback Verification</title>
+  <style>
+    /* ==========================================================================
+       1. Font Definitions & Fallback Bridge
+       ========================================================================== */
+    
+    /* Base Regular Font (Contains Latin, core symbols, and classic icons) */
+    @font-face {
+      font-family: "MesloLGL Nerd Font";
+      src: url("../public/fonts/MesloLGLNerdFont-Regular.subset.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    /* Base Bold Font (Strictly text and symbols, 0% icons) */
+    @font-face {
+      font-family: "MesloLGL Nerd Font";
+      src: url("../public/fonts/MesloLGLNerdFont-Bold.subset.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    /* The Fallback Bridge: Redirects bold icon requests to the regular font 
+    file to prevent blurry browser-synthesized bolding or broken tofu. */
+    @font-face {
+      font-family: "MesloLGL Nerd Font";
+      src: url("../public/fonts/MesloLGLNerdFont-Regular.subset.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+      unicode-range: U+E000-F8FF; /* Maps perfectly to the script's PUA_ALL range */
+    }
+    :root {
+      /* Calculated Web Metrics for MesloLGL Nerd Font at 14px base */
+      --sl-font-mono: "MesloLGL Nerd Font", ui-monospace, monospace;
+      --kz-code-font-size: 0.875rem;
+      --kz-code-line-height: 1.5714285714; /* 21.765625px -> 22px snap */
+      --kz-code-letter-spacing: 0.01171875em;
+    }
+
+    /* ==========================================================================
+       2. Diagnostic Page Styling
+       ========================================================================== */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #0f141c;
+      color: #e0e4ed;
+      padding: 40px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      border-bottom: 2px solid #2d3139;
+      padding-bottom: 15px;
+      margin-bottom: 30px;
+    }
+
+    .test-suite {
+      display: grid;
+      gap: 20px;
+    }
+
+    .test-card {
+      background-color: #161b24;
+      border: 1px solid #2d3139;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .test-card h3 {
+      margin-top: 0;
+      color: #70a5fd;
+      border-bottom: 1px dashed #2d3139;
+      padding-bottom: 8px;
+    }
+
+    /* Force our subsetted font inside the output wrappers */
+    .terminal-output {
+      font-family: var(--sl-font-mono);
+      font-size: var(--kz-code-font-size);
+      line-height: var(--kz-code-line-height);
+      letter-spacing: var(--kz-code-letter-spacing);
+
+      background-color: #0a0e14;
+      padding: 15px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+
+    .weight-regular {
+      font-weight: normal;
+    }
+
+    .weight-bold {
+      font-weight: bold;
+    }
+
+    .label {
+      color: #8b949e;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Nerd Font Subsetting &amp; Fallback Test</h1>
+  <p>Use this page to confirm your CSS mapping works. The icon glyphs below should render cleanly in both weights without relying on blurry system fonts.</p>
+
+  <div class="test-suite">
+
+    <!-- TEST 1: REGULAR WEIGHT -->
+    <div class="test-card">
+      <h3>1. Regular Weight Verification</h3>
+      <p>Verifies your text, powerline arrows, and common repository symbols load correctly via the <code>Regular</code> file definition.</p>
+      
+      <span class="label">Expected: Regular text + crisp icons</span>
+      <div class="terminal-output weight-regular">
+  ~/projects/my-web-app   main [⇡1]  
+❯  node --version  ➔  v20.11.0  ✔
+      </div>
+    </div>
+
+    <!-- TEST 2: BOLD WEIGHT (THE FALLBACK BRIDGE) -->
+    <div class="test-card">
+      <h3>2. Bold Weight &amp; Fallback Verification</h3>
+      <p>Verifies the browser displays bold English text correctly via the <code>Bold</code> file, but seamlessly pulls the icons from the <code>Regular</code> file without adding blurry font synthesis.</p>
+      
+      <span class="label">Expected: Bold text + crisp icons (no blurry edges)</span>
+      <div class="terminal-output weight-bold">
+  ~/projects/my-web-app   main [⇡1]  
+❯  node --version  ➔  v20.11.0  ✔
+      </div>
+    </div>
+
+    <!-- TEST 3: POPULAR DEVELOPER ICON SMOKE TEST -->
+    <div class="test-card">
+      <h3>3. Icon Compatibility Smoke Test</h3>
+      <p>Ensures miscellaneous PUA blocks inside your <code>U+E000-F8FF</code> range are present in both normal and bold wrappers.</p>
+      
+      <span class="label">Regular Icons:</span>
+      <div class="terminal-output weight-regular">
+ (C++)   (TS)   (HTML)   (CSS)   (Docker)  ⚙ (Gear)
+      </div>
+
+      <span class="label" style="margin-top: 15px;">Bold Icons (Should visually match the top line exactly):</span>
+      <div class="terminal-output weight-bold">
+ (C++)   (TS)   (HTML)   (CSS)   (Docker)  ⚙ (Gear)
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
+
