@@ -13,16 +13,16 @@
 	--sl-color-accent-high: #c8e4a1;
 }
 
-/* Code font: a subset of Hack Nerd Font, so code blocks, the ```ansi terminal
+/* Code font: a subset of MesloLGL Nerd Font, so code blocks, the ```ansi terminal
    captures, and the snippet viewers render Nerd Font glyphs (git branch, host
    logos, diff marks, and anything a future post reaches for) instead of tofu.
    Regular keeps every classic Nerd Font set (Font Awesome, Octicons, Devicons,
    Codicons, Powerline, Seti, Weather, Font Logos) via the whole BMP Private Use
    Area; only the ~7000-glyph Material Design plane (U+F0000+) is dropped. Bold
    stays a tight subset, since Nerd Font icons are never bold (only text like a
-   branch name is). Whatever Hack itself lacks (a few dingbats such as the
+   branch name is). Whatever MesloLGL itself lacks (a few dingbats such as the
    check/cross) falls through to the system mono, exactly as in a terminal.
-   Regenerated from a local Hack Nerd Font with scripts/subset-font.sh. */
+   Regenerated from local Nerd Fonts with scripts/subset-font.sh. */
 @font-face {
 	font-family: "MesloLGL Nerd Font";
 	src: url("/fonts/MesloLGLNerdFont-Regular.subset.woff2") format("woff2");
@@ -37,7 +37,7 @@
 	font-style: normal;
 	font-display: swap;
 }
-/* The Fallback Bridge: Redirects bold icon requests to the regular font 
+/* The Fallback Bridge: Redirects bold icon requests to the regular font
    file to prevent blurry browser-synthesized bolding or broken tofu. */
 @font-face {
 	font-family: "MesloLGL Nerd Font";
@@ -48,11 +48,13 @@
 	unicode-range: U+E000-F8FF; /* Maps perfectly to the script's PUA_ALL range */
 }
 :root {
-	/* Calculated Web Metrics for MesloLGL Nerd Font at 14px base */
+	/* Calculated by scripts/subset-fonts.py metrics from the regular font:
+	   row = ceil((1992 - -618) / 2048 * 14px) = 18px;
+	   tracking = (20 + 20) / 2048em = 0.01953125em. */
 	--sl-font-mono: "MesloLGL Nerd Font", ui-monospace, monospace;
 	--kz-code-font-size: 0.875rem;
-	--kz-code-line-height: 1.5714285714; /* 21.765625px -> 22px snap */
-	--kz-code-letter-spacing: 0.01171875em;
+	--kz-code-line-height: 1.2857142857; /* 18px / 14px */
+	--kz-code-letter-spacing: 0.01953125em;
 }
 
 /* Nudge Starlight's neutral ramp off its cool 224deg default. The dark surfaces
