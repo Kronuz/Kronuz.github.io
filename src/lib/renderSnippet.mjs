@@ -54,8 +54,13 @@ export function langForFile(file, explicit) {
 }
 
 // Snippet source files live here (NOT in public/), so the only public raw URL is
-// the charset-correct /snippets/raw/<file>.txt endpoint below.
+// the charset-correct /snippets/raw/<file>.txt endpoint below. The directory may be
+// its own repo pulled in as a submodule, hence the root-level metadata skip below.
 const SNIPPETS_DIR = path.resolve("src/snippets");
+
+// Repo metadata at the snippets root: present when src/snippets is its own repo, and
+// not a snippet. Skipped so it gets no /snippets/view page and no raw endpoint.
+const ROOT_META = /^(README|LICENSE|CONTRIBUTING|CODEOWNERS)(\.\w+)?$/i;
 
 /** List snippet files recursively, as posix relative paths (skipping dotfiles).
  *  A file in a subfolder (e.g. "demo/app.py") belongs to that "project". */
@@ -70,6 +75,7 @@ export function listSnippets() {
     }
     for (const e of entries) {
       if (e.name.startsWith(".")) continue;
+      if (!prefix && !e.isDirectory() && ROOT_META.test(e.name)) continue;
       const rel = prefix ? `${prefix}/${e.name}` : e.name;
       if (e.isDirectory()) walk(path.join(dir, e.name), rel);
       else out.push(rel);
