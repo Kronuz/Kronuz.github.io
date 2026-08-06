@@ -7,7 +7,6 @@ series: "KronuZSH"
 seriesOrder: 2
 date: 2026-07-20
 authors: kronuz
-draft: true
 tags:
   - tooling
   - shell

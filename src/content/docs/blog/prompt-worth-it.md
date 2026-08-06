@@ -8,6 +8,7 @@ seriesOrder: 4
 date: 2026-07-23
 authors: kronuz
 draft: true
+upcoming: true
 tags:
   - tooling
   - shell
