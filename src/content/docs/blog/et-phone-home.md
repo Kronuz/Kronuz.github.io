@@ -78,16 +78,18 @@ The existing tests had never caught it because they all drove a socket pair inst
 
 Median wall-clock, driving a real host over a real network, lower is better.
 
-| Task | `etctl` |
+| Task | Median |
 | --- | ---: |
-| Cold start (connect + first command) | ~10 s |
+| Reaching a usable shell on a cold connection | ~10 s |
 | Warm `run echo hello` (x15) | 195.5 ms |
 | Warm `run hostname; id -un` (x10) | 200.2 ms |
 | Output-heavy `run seq 1 3000` (x5) | 222.7 ms |
 | Interactive prompt cycle (x7) | 318.5 ms |
 | Local CLI startup (`--help`, x20) | **15.5 ms** |
 
-The first row is the one that decides how an agent should behave. Roughly **ten seconds** to reach a usable shell, against **200 milliseconds** for a command on a session that is already open. Opening a session per command costs about **fifty times** more than reusing one, which is the difference between an agent that feels like it is thinking and one that feels like it is dialing up, and it is why the first rule in the skill file is to open one session and keep it for the whole task.
+The first row is not something `etctl` charges you. It is what reaching a remote shell costs anybody. Type `ssh host 'some command'` and you pay it. Use `et -c 'some command'` and you pay it. Put either in a loop and you pay it on every iteration, which is how a script doing twenty small things spends **over three minutes** to accomplish about four seconds of work.
+
+`etctl` pays it once. Every command after the first lands in about **200 milliseconds**, so keeping one session open is worth roughly **fifty times** the connect-per-command path. That is the difference between an agent that feels like it is thinking and one that feels like it is dialing up, and it is why the first rule in the skill file is to open a session and keep it for the whole task.
 
 Cold start is also the one number that refuses to sit still, because it is dominated by the connection handshake and therefore tracks the link you are on. I have measured the same path at **3.8 s** on a good day and **9.5 s** on a slower one. Everything below it reproduced within a few percent across both.
 
