@@ -1,8 +1,8 @@
 ---
 title: "ET Phone Home"
 subtitle: "A native control plane for Eternal Terminal"
-description: "Eternal Terminal only ever spoke one language, the rendered screen, so a script or an agent had to stand outside and scrape it. This is how I taught et to speak machine instead: a control Console swapped in behind the client, a per-user socket, and a native CLI called etctl. A 3.7 second cold start, a 15 millisecond per-call floor, honest limits, and client-side only so it is easy to merge upstream."
-excerpt: "A terminal is built end to end for eyes and fingers, which is exactly what locks out everything that has neither. Rather than keep scraping the screen from outside, I went looking for a seam inside Eternal Terminal and found one already cut. etctl is what came out: a native control plane, the numbers behind it, the file transfer that fought back, and the parts that are still only a prototype."
+description: "Eternal Terminal only ever spoke one language, the rendered screen, so a script or an agent had to stand outside and scrape it. This is how I taught et to speak machine instead: a control Console swapped in behind the client, a per-user socket, and a native CLI called etctl. A 15 millisecond per-call floor, a deadlock I had been walking around for years that an agent finally pinned down, and a change that is client-side only so it is easy to merge upstream."
+excerpt: "A terminal is built end to end for eyes and fingers, which is exactly what locks out everything that has neither. Rather than keep scraping the screen from outside, I went looking for a seam inside Eternal Terminal and found one already cut. etctl is what came out: a native control plane, the numbers behind it, and a years-old deadlock that only held still once a machine was doing the typing."
 date: 2026-08-02
 featured: true
 series: "Driving Eternal"
@@ -55,15 +55,24 @@ etctl run  main 'cd ~/work && make'     # clean stdout + the real exit code
 etctl run  main 'systemctl is-active nginx' && echo up
 ```
 
-One thing did survive the move, honestly: `run` still wraps a command in `printf` sentinels to capture clean output, and the remote shell still echoes that framing into the transcript. `run`'s own stdout is clean, but a `sniff` of the session is noisier than what a human would type. That is a property of the remote shell's line editor, not of the scrape, so going native did not buy it back. I would rather say so than pretend it is gone.
+One thing did survive the move, honestly, though less of it than I expected. `etctl` sniffs the far shell once per session to see what it can speak. When the prompt supports [OSC 133](https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/prefix-and-status.md) shell integration and bracketed paste, `run` sends the bare command inside a paste and lets the shell's own markers say where output begins and ends, so there is no framing in the transcript at all. Only when the far end can speak neither does it fall back to wrapping the command in `printf` sentinels, and then the remote shell does echo that framing into the session. `run`'s stdout is clean either way; it is a `sniff` of a fallback session that looks noisier than what a human would type. That last case is a property of the shell on the other end, not of `etctl`, which is why the answer was to detect it rather than to paper over it.
 
-## The bug that wasn't
+## The bug that was always there
 
-I benchmarked the interactive prompt cycle against a real host, real round-trips and a real shell, and the first run came back damning: ten full seconds an iteration. I started writing the autopsy. I had a theory, too, something principled about a stateless `expect` racing the output.
+Something had been happening to me for years, every few months, always the same way. I would paste something big into a session, a heredoc or a chunk of config, and the whole thing would wedge. Not slow, not garbled: dead. Reconnect and it was fine. I never caught it in the act, because a person pastes a big block rarely enough that you shrug and move on.
 
-My theory was wrong, and so was the benchmark. The test prompt was `read -p 'Q? ' a`. `read -p` is a [bash](https://www.gnu.org/software/bash/) idiom, and the box's login shell is [zsh](https://www.zsh.org/), where `-p` means "read from a coprocess" and the line just errors out. The token I was waiting for never printed, so `expect` did the correct thing and waited the full ten-second timeout. The old wrapper had only looked like it passed because its looser matching latched onto the echoed command line instead of the answer. Swap in a portable `printf 'Q? '; read a` and the ten seconds become three hundred milliseconds.
+An agent does it constantly. Within a day of driving sessions with `etctl`, the wedge stopped being folklore and became a reproducible bug: paste past roughly one pty buffer, about 1 KB on macOS and 8 to 10 KB on Linux, and the session dies every single time.
 
-There was a real finding hiding behind the fake one. A stateless `expect` does start scanning at the session's current head, and in a tight write-then-wait loop the awaited bytes can land in the gap between the write returning and the `expect` sampling. Over a network round-trip it almost never bites, because the output takes longer to come back than the gap lasts. On a fast or pre-buffered session it can. The fix is to capture the cursor before you write and tell `expect` to scan from there, which costs one extra round-trip, about thirty milliseconds, and is now the documented default for loops. The lesson is the one live testing keeps teaching: measure against the real host and the real shell. A piped local bash would never have found the zsh failure.
+With a reproduction, the cause was plain, and it was a deadlock four steps deep. The per-session terminal pump on the server, `UserTerminalHandler::runUserTerminal`, is a single-threaded `select` loop, and it wrote client input to the pty master with a **blocking** write.
+
+1. The input echoes back and fills the pty's output buffer.
+2. With its output buffer full, the shell stalls and stops reading input.
+3. The blocking write to the master never drains, so it never returns.
+4. Stuck in that write, the loop stops draining output, which is the one thing that would unstick the shell.
+
+Each step is waiting on the step that follows it. The read path had tolerated `EAGAIN` all along, written as though the master were non-blocking, but nothing ever set `O_NONBLOCK` on it. The fix sets it where the fd is created, reworks the pump to buffer pending input and drain it through the `select` write set while still reading output every iteration, and adds backpressure so a full input buffer propagates back to the client. It is [merged upstream](https://github.com/MisterTea/EternalTerminal/pull/765), server-side only, with a regression test that pushes 8 KB through a real pty and times out against the old code. A 56 KB paste that used to kill a session now round-trips byte-exact.
+
+The existing tests had never caught it because they all drove a socket pair instead of a real pty, and a socket pair has no buffer to fill. Neither did I, in years of daily use, because I am a slow and forgiving client. The agent was neither, and that is the part worth keeping: giving the machine a handle did not just let it in, it made the machine an instrument. It does the boring thing ten thousand times without getting bored, and the flaw you have been walking around for years finally holds still long enough to be seen.
 
 ## The numbers
 
@@ -71,31 +80,20 @@ Median wall-clock, driving a real host over a real network, lower is better.
 
 | Task | `etctl` |
 | --- | ---: |
+| Cold start (connect + first command) | ~10 s |
 | Warm `run echo hello` (x15) | 195.5 ms |
 | Warm `run hostname; id -un` (x10) | 200.2 ms |
 | Output-heavy `run seq 1 3000` (x5) | 222.7 ms |
 | Interactive prompt cycle (x7) | 318.5 ms |
 | Local CLI startup (`--help`, x20) | **15.5 ms** |
 
-Two things stand out. Every steady-state run sits near **200 milliseconds**, which is the network round-trip and almost nothing else, and streaming three thousand lines costs no more than printing one, so the cursored scrollback adds no measurable tax on bulk reads.
+The first row is the one that decides how an agent should behave. Roughly **ten seconds** to reach a usable shell, against **200 milliseconds** for a command on a session that is already open. Opening a session per command costs about **fifty times** more than reusing one, which is the difference between an agent that feels like it is thinking and one that feels like it is dialing up, and it is why the first rule in the skill file is to open one session and keep it for the whole task.
 
-The other is the last row. `etctl` starts in about **15 milliseconds**, because it is a native binary already inside the `et` build. A Python entry point costs roughly **100 milliseconds** just to reach `main`, so going native hands back about **85 milliseconds on every single call**, and an agent driving a host issues a great many small calls. It is the kind of fixed cost that rounds to nothing in a demo and adds up to real time across a day of automated work.
+Cold start is also the one number that refuses to sit still, because it is dominated by the connection handshake and therefore tracks the link you are on. I have measured the same path at **3.8 s** on a good day and **9.5 s** on a slower one. Everything below it reproduced within a few percent across both.
 
-Cold start is the one number that refuses to sit still, because it is dominated by the connection handshake and therefore tracks the link you are on. I have measured the same path at **3.8 s** on a good day and **9.5 s** on a slower one. The steady-state rows above reproduced within a few percent across both, so those are the ones to trust.
+The rest of the table is network-bound and pleasantly boring. Every steady-state run sits near **200 milliseconds**, which is the round-trip and almost nothing else, and streaming three thousand lines costs no more than printing one, so the cursored scrollback adds no measurable tax on bulk reads.
 
-## A file through the keyhole
-
-A machine driving a box eventually needs to put a file *on* it. The handle it has is the session, so the clean move is to make that one channel carry the file too, instead of bolting on a separate transfer tool. The catch is that the channel is a terminal, and a terminal is the thing least built to move a file.
-
-The obvious move is to [base64](https://en.wikipedia.org/wiki/Base64) the file and paste it through. It works beautifully on a tiny file and falls apart above a hundred kilobytes, and not for the reason you would guess. The bytes do not land in a clean pipe. They land in the interactive line editor, zsh with syntax highlighting, which re-colors the entire growing line on every newline. That is quadratic, and a real file buries it. A megabyte did not transfer slowly, it took the session down.
-
-So stop feeding the line editor. Drive the remote terminal into raw, no-echo mode and stream the bytes straight at a waiting reader. Binary-clean, no base64, no echo, and for small files it was perfect. Then it hung on anything past a few kilobytes, for the reason a terminal is not a file transport: a tty's input buffer is only a few kilobytes, and in raw mode it has no flow control. Send a burst bigger than the buffer and the overflow is not backpressured, it is silently dropped, and the reader waits forever for bytes that will never arrive.
-
-What finally holds is unglamorous, and it is not a new verb at all. It is a procedure built out of the verbs already there. Capture the session's cursor, put the remote side into `stty raw -echo` and have it announce `READY`, and wait for exactly that before sending a byte. Then stream the file at a `head -c N` that reads precisely the length you announced and not one byte more, restore the saved terminal mode, and compare SHA-256 on both ends. Because the read is length-bounded, nothing inside the file can pose as an end marker, and there is no base64 anywhere: the bytes that arrive are the bytes you sent.
-
-The honest costs are worth naming. The ceiling is roughly **two megabytes**, the retained scrollback in each direction, and the exit code that comes back belongs to `stty` rather than `cat`, so you trust the hash and not `$?`. There is also a faster and sloppier path, streaming into a running `cat` with echo off, which moves about **27 KB/s** against roughly **2 KB/s** for a here-document typed through the prompt, about fifteen times quicker. That one leaves the tty canonical, and I watched it quietly translate line endings inside ordinary Python source, file size unchanged so nothing looked wrong. It is fine for a throwaway script and wrong for anything you intend to execute or diff.
-
-So I deliberately did not wrap this in a `put` verb. A subcommand would have promised something the channel cannot keep, and I would rather the shape of it stayed visible to whoever is driving. Anything genuinely large belongs in one of `et`'s own port-forward tunnels, a clean binary side-channel that is already sitting right there, and that is the next thing to cut in.
+The last row is the one I care about. `etctl` starts in about **15 milliseconds**, because it is a native binary already inside the `et` build. A Python entry point costs roughly **100 milliseconds** just to reach `main`, so going native hands back about **85 milliseconds on every single call**, and an agent driving a host issues a great many small calls. It is the kind of fixed cost that rounds to nothing in a demo and adds up to real time across a day of automated work.
 
 ## Handing it to the agent
 
@@ -105,23 +103,13 @@ Most of it is not about `etctl`. Open a named session, keep it, one driver per n
 
 That ratio is the result I did not expect and am happiest about. The channel stopped being the hard part, and what is left over is a shell that still assumes someone is sitting in front of it.
 
-## What it is not yet
+## Where it stands
 
-This is an honest report, so here is what `etctl` is not.
+It is a prototype, and an honest report says so. The [Catch2](https://github.com/catchorg/Catch2) suite passes 439 assertions across 26 cases, and a stress run against a real `etserver` shook out a teardown race where recreating a session the instant after ending it could catch the still-dying daemon and quietly no-op, now fixed with a `--wait`. It is more hardened than it was and still almost untested in anger. It does not survive a reboot, because the daemon dies with the host process, and the design for reattaching across one is sketched and parked. And it has to be built per platform, because it ships inside `et`.
 
-**It is a prototype.** The [Catch2](https://github.com/catchorg/Catch2) suite passes 439 assertions across 26 cases, and I have since put it through a stress run against a real `etserver`, hundreds of rapid commands, concurrent readers, parallel sessions, file transfers of every shape. That shook out a real teardown race, recreating a session the instant after ending it could catch the still-dying daemon and quietly no-op, now fixed with a `--wait` that blocks until the old one is truly gone. It is more hardened than it was, and still almost untested in anger. Speed is not robustness, and a race like that is exactly the class of bug only hard daily use flushes out.
+That last part is also the good news: it is built to be easy to say yes to. The change is client-side only, swapping one `Console` implementation and adding a control socket. Not a line of `etserver`, `etterminal`, or the wire protocol changed, so it cannot regress an existing session, and `et` without `--ctl` behaves exactly as it always has. The [conversation is open upstream](https://github.com/MisterTea/EternalTerminal/issues/779). Until it lands there, all of it, plus the deadlock fix, is already in the build from the [first part](/blog/across-the-tunnel/): `brew install Kronuz/tap/et`, and you have `etctl` too.
 
-**It does not survive a reboot.** The daemon dies with the host process, so a restart costs you every open session. The design for reattaching across one is sketched and parked.
-
-**It has to be built per platform,** because it ships inside `et`. A single portable script with no dependencies is an easier thing to hand someone, and that cost is real.
-
-None of that is fatal, and none of it is hidden. `etctl` earns its mileage the only way anything does, by getting used hard, and it has not had enough of that yet.
-
-## Built to merge
-
-I built this to be easy to say yes to. It is client-side only: the change lives entirely in the `et` client, swapping one `Console` implementation and adding a control socket. Not a line of `etserver`, `etterminal`, or the wire protocol changed, so it cannot regress an existing session, and `et` without `--ctl` behaves exactly as it always has. The whole thing is a handful of new files and three small touches to the launch path.
-
-It lives on a branch today, with a green test suite and real mileage still ahead of it, and I have [opened the conversation upstream](https://github.com/MisterTea/EternalTerminal/issues/779). Until it lands anywhere, it ships in my own build, the same `brew install Kronuz/tap/et` from the [first part](/blog/across-the-tunnel/). If you maintain or lean on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal), I would love to see something like this land upstream, so the next person who needs to drive a session from a script finds it already there, speaking their machine's language, instead of scraping the glass like I did.
+If you maintain or lean on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal), I would like to see something like this land upstream, so the next person who needs to drive a session from a script finds it already there instead of scraping the glass like I did.
 
 ## In its own voice
 
