@@ -18,7 +18,7 @@ An agent I was pairing with needed to restart a service on a remote box. It knew
 
 I had a durable, eternal terminal onto the machine I live on, [Eternal Terminal](https://eternalterminal.dev/), and it felt like home precisely because every inch of it, the prompt, the colors, the living terminal `et` hands you, was made for a person. The thing that makes it feel like home is the same thing that locks everyone else out.
 
-## Years before the agent
+## Thirty years at the same wall
 
 The agent was only the newest arrival at a wall people had been bruising themselves against for decades. Every team has someone who automates the toil so nobody else has to think about it. Picture her clearly enough and she gets a name. Maya.
 
@@ -54,7 +54,7 @@ So the work turns out to be quieter than making the models bigger, and a good de
 
 ## The shape of the handle
 
-I didn't know yet how many sharp edges were waiting in a terminal that never once expected to be driven by something without hands. There turned out to be more than I thought. But the shape of the fix was already clear: take the eternal terminal I love, the one built end to end for a person, and give it a handle a machine can hold. Clean output instead of tea leaves. A real exit code instead of a guess. A session that stays warm instead of a twelve-second handshake every single time.
+I didn't know yet how many sharp edges were waiting in a terminal that never once expected to be driven by something without hands. There turned out to be more than I thought. But the shape of the fix was already clear: take the eternal terminal I love, the one built end to end for a person, and give it a handle a machine can hold.
 
 Building that handle meant teaching a terminal that had only ever answered to a human to answer to something that wasn't one, and the machine on the far end didn't give that up without a fight.
 

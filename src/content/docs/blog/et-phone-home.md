@@ -59,40 +59,37 @@ One thing did survive the move, honestly: `run` still wraps a command in `printf
 
 ## The bug that wasn't
 
-I benchmarked the new thing against the old one on identical tasks, both driving the same remote host across a real network, real round-trips and a real shell. The first interactive run came back damning: `etctl` looked about **nineteen times slower** than etch on the prompt cycle, ten full seconds an iteration. I started writing the autopsy. I had a theory, too, something principled about a stateless `expect` racing the output.
+I benchmarked the interactive prompt cycle against a real host, real round-trips and a real shell, and the first run came back damning: ten full seconds an iteration. I started writing the autopsy. I had a theory, too, something principled about a stateless `expect` racing the output.
 
-My theory was wrong, and so was the benchmark. The test prompt was `read -p 'Q? ' a`. `read -p` is a [bash](https://www.gnu.org/software/bash/) idiom, and the box's login shell is [zsh](https://www.zsh.org/), where `-p` means "read from a coprocess" and the line just errors out. The token I was waiting for never printed, so `expect` did the correct thing and waited the full ten-second timeout. etch had only looked like it passed because its looser matching latched onto the echoed command line instead of the answer. Swap in a portable prompt, `printf 'Q? '; read a`, and both tools work, and `etctl` is the faster one.
+My theory was wrong, and so was the benchmark. The test prompt was `read -p 'Q? ' a`. `read -p` is a [bash](https://www.gnu.org/software/bash/) idiom, and the box's login shell is [zsh](https://www.zsh.org/), where `-p` means "read from a coprocess" and the line just errors out. The token I was waiting for never printed, so `expect` did the correct thing and waited the full ten-second timeout. The old wrapper had only looked like it passed because its looser matching latched onto the echoed command line instead of the answer. Swap in a portable `printf 'Q? '; read a` and the ten seconds become three hundred milliseconds.
 
-There was a real finding hiding behind the fake one. A stateless `expect` does start scanning at the session's current head, and in a tight write-then-wait loop the awaited bytes can land in the gap between the write returning and the `expect` sampling. Over a network round-trip it almost never bites, because the output takes longer to come back than the gap lasts. On a fast or pre-buffered session it can. The fix is to capture the cursor before you write and tell `expect` to scan from there, which costs one extra round-trip, about thirty milliseconds, and is now the documented default for loops. The lesson was the one the live testing keeps teaching: measure against the real host and the real shell. A piped local bash would never have found the zsh failure.
+There was a real finding hiding behind the fake one. A stateless `expect` does start scanning at the session's current head, and in a tight write-then-wait loop the awaited bytes can land in the gap between the write returning and the `expect` sampling. Over a network round-trip it almost never bites, because the output takes longer to come back than the gap lasts. On a fast or pre-buffered session it can. The fix is to capture the cursor before you write and tell `expect` to scan from there, which costs one extra round-trip, about thirty milliseconds, and is now the documented default for loops. The lesson is the one live testing keeps teaching: measure against the real host and the real shell. A piped local bash would never have found the zsh failure.
 
 ## The numbers
 
-Median wall-clock against the prototype it replaces, both driving the same `etserver` over the same network, lower is better. The Python wrapper is the only honest baseline I have, because nothing else was doing this job on my machine. `etctl/etch` below 1.0 means `etctl` is faster.
+Median wall-clock, driving a real host over a real network, lower is better.
 
-| Task | etch | etctl | etctl / etch |
-| --- | ---: | ---: | ---: |
-| Cold start (spawn + first command) | 7139.9 ms | 3755.1 ms | **0.53x** |
-| Warm `run echo hello` (x15) | 219.7 ms | 195.5 ms | 0.89x |
-| Warm `run hostname; id -un` (x10) | 275.5 ms | 200.2 ms | **0.73x** |
-| Output-heavy `run seq 1 3000` (x5) | 224.2 ms | 222.7 ms | 0.99x |
-| Interactive prompt cycle (x7) | 542.5 ms | 318.5 ms | **0.59x** |
-| Local CLI startup (`--help`, x20) | 106.3 ms | 15.5 ms | **0.15x** |
+| Task | `etctl` |
+| --- | ---: |
+| Warm `run echo hello` (x15) | 195.5 ms |
+| Warm `run hostname; id -un` (x10) | 200.2 ms |
+| Output-heavy `run seq 1 3000` (x5) | 222.7 ms |
+| Interactive prompt cycle (x7) | 318.5 ms |
+| Local CLI startup (`--help`, x20) | **15.5 ms** |
 
-The steady-state command runs are network-bound, so the wins there are modest and honest: most of that time is the same round-trip to the host, and going native shaves a consistent slice off the top by not starting a Python interpreter and not scraping a screen. Streaming three thousand lines is a tie, which is the right answer, the cursored scrollback adds no measurable tax on bulk reads.
+Two things stand out. Every steady-state run sits near **200 milliseconds**, which is the network round-trip and almost nothing else, and streaming three thousand lines costs no more than printing one, so the cursored scrollback adds no measurable tax on bulk reads.
 
-One caveat on the first row, because I re-ran it later on a slower link and it moved. Cold start is dominated by the connection handshake itself, and that cost lands on both tools alike: on the second day I measured the wrapper at **12.2 s** and `etctl` at **9.5 s**, each about five seconds worse than above, the gap between them roughly intact, and the ratio compressed from 0.53x to 0.78x. The warm rows reproduced within a few percent that same day. So read the cold-start ratio as a property of the link you are on, not a constant, and the steady-state rows as the durable ones.
+The other is the last row. `etctl` starts in about **15 milliseconds**, because it is a native binary already inside the `et` build. A Python entry point costs roughly **100 milliseconds** just to reach `main`, so going native hands back about **85 milliseconds on every single call**, and an agent driving a host issues a great many small calls. It is the kind of fixed cost that rounds to nothing in a demo and adds up to real time across a day of automated work.
 
-The number I care about most is the last row. `etctl` starts in about **15 milliseconds**, because it is a native binary already part of the `et` build rather than a Python import, and that is roughly **90 milliseconds back on every single call**. An agent driving a host issues a great many small calls. It is the kind of fixed cost that rounds to nothing in a demo and adds up to real time across a day of automated work.
+Cold start is the one number that refuses to sit still, because it is dominated by the connection handshake and therefore tracks the link you are on. I have measured the same path at **3.8 s** on a good day and **9.5 s** on a slower one. The steady-state rows above reproduced within a few percent across both, so those are the ones to trust.
 
 ## A file through the keyhole
 
-A machine driving a box eventually needs to put a file *on* it. The handle it has is the session, so the clean move is to make that one channel carry the file too, instead of bolting on a separate transfer tool. The catch is that the channel is a terminal, and a terminal is the thing least built to move a file. That turned out to be the hardest small problem in the project, and every wrong turn taught me something.
+A machine driving a box eventually needs to put a file *on* it. The handle it has is the session, so the clean move is to make that one channel carry the file too, instead of bolting on a separate transfer tool. The catch is that the channel is a terminal, and a terminal is the thing least built to move a file.
 
 The obvious move is to [base64](https://en.wikipedia.org/wiki/Base64) the file and paste it through. It works beautifully on a tiny file and falls apart above a hundred kilobytes, and not for the reason you would guess. The bytes do not land in a clean pipe. They land in the interactive line editor, zsh with syntax highlighting, which re-colors the entire growing line on every newline. That is quadratic, and a real file buries it. A megabyte did not transfer slowly, it took the session down.
 
-So stop feeding the line editor. Drive the remote terminal into raw, no-echo mode and stream the bytes straight at a waiting reader. Binary-clean, no base64, no echo, and for small files it was perfect. Then it hung on anything past a few kilobytes.
-
-The reason is the thing a terminal fundamentally is not: a file transport. A tty's input buffer is only a few kilobytes, and in raw mode it has no flow control. Send a burst bigger than the buffer and the overflow is not backpressured, it is silently dropped, and the reader waits forever for bytes that will never arrive.
+So stop feeding the line editor. Drive the remote terminal into raw, no-echo mode and stream the bytes straight at a waiting reader. Binary-clean, no base64, no echo, and for small files it was perfect. Then it hung on anything past a few kilobytes, for the reason a terminal is not a file transport: a tty's input buffer is only a few kilobytes, and in raw mode it has no flow control. Send a burst bigger than the buffer and the overflow is not backpressured, it is silently dropped, and the reader waits forever for bytes that will never arrive.
 
 What finally holds is unglamorous, and it is not a new verb at all. It is a procedure built out of the verbs already there. Capture the session's cursor, put the remote side into `stty raw -echo` and have it announce `READY`, and wait for exactly that before sending a byte. Then stream the file at a `head -c N` that reads precisely the length you announced and not one byte more, restore the saved terminal mode, and compare SHA-256 on both ends. Because the read is length-bounded, nothing inside the file can pose as an end marker, and there is no base64 anywhere: the bytes that arrive are the bytes you sent.
 
@@ -116,9 +113,9 @@ This is an honest report, so here is what `etctl` is not.
 
 **It does not survive a reboot.** The daemon dies with the host process, so a restart costs you every open session. The design for reattaching across one is sketched and parked.
 
-**It has to be built per platform,** because it ships inside `et`. A single portable script has no such cost, and that is the one place the Python prototype is still the easier thing to hand someone.
+**It has to be built per platform,** because it ships inside `et`. A single portable script with no dependencies is an easier thing to hand someone, and that cost is real.
 
-So I have not thrown the script away. It runs as the fallback while `etctl` earns its mileage the same way the script did, by getting used hard.
+None of that is fatal, and none of it is hidden. `etctl` earns its mileage the only way anything does, by getting used hard, and it has not had enough of that yet.
 
 ## Built to merge
 
