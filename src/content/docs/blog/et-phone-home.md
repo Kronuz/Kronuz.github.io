@@ -16,19 +16,11 @@ tags:
   - cpp
 ---
 
-In the last part, an agent sat in front of a terminal it could not drive, and I went looking for a handle a machine could hold. This part is the handle.
+In the last part, an agent sat in front of a terminal it could not drive, I wrote a Python wrapper that scraped the screen from outside, and I ended up convinced the wrapper was the wrong idea. This part is the right one.
 
 `et` speaks one language: the rendered screen, the one meant for human eyes. Everything else follows from that. A script cannot ask it for the exit code of the command it just ran, because there is no channel that carries one. The information exists, clean and structured, inside the client. It just never comes out anywhere a machine can reach.
 
 This is the part where I stopped reading the glass and taught the terminal to speak machine.
-
-## First, from the outside
-
-I did not start inside. I started with a Python wrapper called [`etch.py`](snippet:etch.py), which ran [Eternal Terminal](https://eternalterminal.dev/) inside a pseudo-terminal, kept the session warm, and scraped the rendered screen to hand a script back clean output and a real exit code where before there was a wall of color codes and tea leaves. It worked. It is still on my machine.
-
-But look at what it took. It neutralized the shell prompt so the [Powerlevel10k](https://github.com/romkatv/powerlevel10k) banner would stop bleeding into the output, stripped ANSI escape codes by hand, wrapped every command in `printf` sentinels to carve the real output out of the stream, chunked long lines so the kernel's input cap would not silently truncate them, resynced the session with a fresh nonce when a command wedged, and paid for a Python interpreter to start on every single call. None of that is `et`. All of it is a program outside the glass reconstructing, from a picture of a screen, the structured thing `et` already had on the inside and never offered to anyone.
-
-The prototype earned its keep twice over. It settled the vocabulary an agent actually wants, and it kept failing in one shape. A piped stdin that hung. A kilobyte-long line that the PTY's canonical mode chopped, leaving truncated junk that poisoned the warm channel until a full stop-and-sweep. Both were a scraper guessing at a stream built for eyes, and guessing wrong at an edge I would never have hit by hand. I fixed them, and the fixes were better guesses, not a different idea. The different idea was to stop guessing.
 
 ## So I went inside
 
@@ -87,6 +79,8 @@ Median wall-clock against the prototype it replaces, both driving the same `etse
 | Local CLI startup (`--help`, x20) | 106.3 ms | 15.5 ms | **0.15x** |
 
 The steady-state command runs are network-bound, so the wins there are modest and honest: most of that time is the same round-trip to the host, and going native shaves a consistent slice off the top by not starting a Python interpreter and not scraping a screen. Streaming three thousand lines is a tie, which is the right answer, the cursored scrollback adds no measurable tax on bulk reads.
+
+One caveat on the first row, because I re-ran it later on a slower link and it moved. Cold start is dominated by the connection handshake itself, and that cost lands on both tools alike: on the second day I measured the wrapper at **12.2 s** and `etctl` at **9.5 s**, each about five seconds worse than above, the gap between them roughly intact, and the ratio compressed from 0.53x to 0.78x. The warm rows reproduced within a few percent that same day. So read the cold-start ratio as a property of the link you are on, not a constant, and the steady-state rows as the durable ones.
 
 The number I care about most is the last row. `etctl` starts in about **15 milliseconds**, because it is a native binary already part of the `et` build rather than a Python import, and that is roughly **90 milliseconds back on every single call**. An agent driving a host issues a great many small calls. It is the kind of fixed cost that rounds to nothing in a demo and adds up to real time across a day of automated work.
 
