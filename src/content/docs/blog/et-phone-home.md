@@ -42,7 +42,7 @@ etctl -> daemon: "~/.et/ctl/main.sock\n0600, uid-checked"
 daemon -> remote: "encrypted ET"
 ```
 
-Because the backgrounded `et` is just an Eternal Terminal client, it reconnects on its own across network drops, the same way a human's session does. The durability I had hand-rolled in etch came for free, because this time it was not hand-rolled. It was the thing `et` already does.
+Because the backgrounded `et` is just an Eternal Terminal client, it reconnects on its own across network drops, the same way a human's session does. That durability was something [`etch.py`](/blog/a-pair-of-missing-hands/#first-from-the-outside), the screen-scraping prototype from the last part, had to hand-roll for itself. Here it came for free, because this time it was not hand-rolled. It was the thing `et` already does.
 
 All of it, the control mode, the socket, the cursored scrollback, the CLI, came together over a weekend. Not because the code was trivial, but because the seam was already cut. I was plugging into `et`, not prying it open.
 
