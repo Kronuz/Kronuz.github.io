@@ -65,7 +65,7 @@ Because the backgrounded `et` is just an Eternal Terminal client, it reconnects 
 
 All of it, the control mode, the socket, the cursored scrollback, the CLI, came together over a weekend. Not because the code was trivial, but because the seam was already cut. I was plugging into `et`, not prying it open.
 
-The verbs an agent uses are the same ones etch had, because that vocabulary was right: `run` for a command that finishes (clean output, real exit code), `script` for a multi-line block, `write` and `expect` and `read` for a prompt that waits, `peep` to tap the live exchange, `observe` and `attach` to take the wheel by hand. What changed is everything underneath. There is no prompt to neutralize, no ANSI to strip, no resync, no line-cap chunking, and no Python process per call. It reads `et`'s native byte stream over a local socket, locked to my user (`0700` directory, `0600` socket, and the daemon checks the peer's uid). The hacks did not get better. They became unnecessary.
+The verbs an agent uses are mostly the ones etch had, because that vocabulary was right: `run` for a command that finishes (clean output, a real exit code, and a multi-line body that runs as one unit), `write` and `writeln` and `expect` and `read` for a prompt that waits, `key` for the named keys and signals, `sniff` to tap the live exchange, `observe` and `attach` to take the wheel by hand. What changed is everything underneath. There is no prompt to neutralize, no ANSI to strip, no resync, no line-cap chunking, and no Python process per call. It reads `et`'s native byte stream over a local socket, locked to my user (`0700` directory, `0600` socket, and the daemon checks the peer's uid). The hacks did not get better. They became unnecessary.
 
 ```bash
 H=you@devbox
@@ -74,7 +74,7 @@ etctl run  main 'cd ~/work && make'     # clean stdout + the real exit code
 etctl run  main 'systemctl is-active nginx' && echo up
 ```
 
-One thing did survive the move, honestly: `run` still wraps a command in `printf` sentinels to capture clean output, and the remote shell still echoes that framing into the transcript. `run`'s own stdout is clean, but a `peep` of the session is noisier than what a human would type. That is a property of the remote shell's line editor, not of the scrape, so going native did not buy it back. I would rather say so than pretend it is gone.
+One thing did survive the move, honestly: `run` still wraps a command in `printf` sentinels to capture clean output, and the remote shell still echoes that framing into the transcript. `run`'s own stdout is clean, but a `sniff` of the session is noisier than what a human would type. That is a property of the remote shell's line editor, not of the scrape, so going native did not buy it back. I would rather say so than pretend it is gone.
 
 ## The bug that wasn't
 
@@ -111,9 +111,19 @@ So stop feeding the line editor. Drive the remote terminal into raw, no-echo mod
 
 The reason is the thing a terminal fundamentally is not: a file transport. A tty's input buffer is only a few kilobytes, and in raw mode it has no flow control. Send a burst bigger than the buffer and the overflow is not backpressured, it is silently dropped, and the reader waits forever for bytes that will never arrive.
 
-What finally holds is unglamorous. Send the file in small acknowledged chunks, with only one sub-buffer chunk in flight at a time. The remote reads exactly that many bytes (a length-prefixed read, so nothing in the file can pose as an end marker), appends them, and acks; only then does the next chunk go. A dropped chunk becomes a missing ack, a fast clear failure, instead of a silent forever-hang, and a SHA-256 round-trip checks the whole file at the end. I threw the nasty cases at it, every byte value, raw control characters, even its own ack and marker strings sitting in the file as ordinary data, and it held every time.
+What finally holds is unglamorous, and it is not a new verb at all. It is a procedure built out of the verbs already there. Capture the session's cursor, put the remote side into `stty raw -echo` and have it announce `READY`, and wait for exactly that before sending a byte. Then stream the file at a `head -c N` that reads precisely the length you announced and not one byte more, restore the saved terminal mode, and compare SHA-256 on both ends. Because the read is length-bounded, nothing inside the file can pose as an end marker, and there is no base64 anywhere: the bytes that arrive are the bytes you sent.
 
-The honest cost is that this is reliable, not fast. The acknowledgments are round-trip-bound, so incompressible bytes crawl at about **twenty kilobytes a second**. But `put` gzips by default, and the things you actually push to a box, configs and scripts and source and logs, compress hard: a megabyte of text lands in **under a second**, where a megabyte of random bytes takes the better part of a minute. For that big incompressible case the right answer is not the terminal at all. It is one of `et`'s own port-forward tunnels, a clean binary side-channel, and that is the next thing to cut in.
+The honest costs are worth naming. The ceiling is roughly **two megabytes**, the retained scrollback in each direction, and the exit code that comes back belongs to `stty` rather than `cat`, so you trust the hash and not `$?`. There is also a faster and sloppier path, streaming into a running `cat` with echo off, which moves about **27 KB/s** against roughly **2 KB/s** for a here-document typed through the prompt, about fifteen times quicker. That one leaves the tty canonical, and I watched it quietly translate line endings inside ordinary Python source, file size unchanged so nothing looked wrong. It is fine for a throwaway script and wrong for anything you intend to execute or diff.
+
+So I deliberately did not wrap this in a `put` verb. A subcommand would have promised something the channel cannot keep, and I would rather the shape of it stayed visible to whoever is driving. Anything genuinely large belongs in one of `et`'s own port-forward tunnels, a clean binary side-channel that is already sitting right there, and that is the next thing to cut in.
+
+## Handing it to the agent
+
+The whole point is for something without hands to use this, and the test of an interface is how much you have to explain before it works. So here is the entire handoff, the [agent skill](snippet:etctl-skill.md) I actually run, cleaned up for a machine that is not mine.
+
+Most of it is not about `etctl`. Open a named session, keep it, one driver per name, and here are the verbs: that part is short, and a careful reader could rebuild it from `--help` alone. Everything after it is about the remote *shell*, and it is all warnings. A pager wedges the session, backgrounding inside a command confuses the framing, and a stray `exit` kills the shell you are living in. My favorite is still `read -p`, the bash idiom that fails silently under zsh and cost me a benchmark and most of an afternoon.
+
+That ratio is the result I did not expect and am happiest about. The channel stopped being the hard part, and what is left over is a shell that still assumes someone is sitting in front of it.
 
 ## Where etch is still ahead
 
