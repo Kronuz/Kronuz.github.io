@@ -1,8 +1,8 @@
 ---
 title: "ET Phone Home"
 subtitle: "A native control plane for Eternal Terminal"
-description: "I gave a machine a handle on a remote box by wrapping Eternal Terminal in a pseudo-terminal and scraping the screen. Every clever thing that wrapper did was a workaround for one fact: et only speaks 'human terminal.' So I stopped scraping and taught et to speak machine, a native control plane called etctl. It is ~1.9x faster to cold-start, ~6.9x faster per call, deletes whole categories of the old hacks, and is built to merge: client-side only, no server or protocol changes."
-excerpt: "My first handle on a remote terminal worked by scraping a screen meant for human eyes. Every clever thing it did was a workaround for one fact: et only speaks 'human terminal.' So I built the control plane into et itself. etctl is faster on every axis I measured, deletes whole categories of the old hacks, moves files through the same session, and is built to be easy to merge upstream. The honest report, with numbers."
+description: "Eternal Terminal only ever spoke one language, the rendered screen, so a script or an agent had to stand outside and scrape it. This is how I taught et to speak machine instead: a control Console swapped in behind the client, a per-user socket, and a native CLI called etctl. A 3.7 second cold start, a 15 millisecond per-call floor, honest limits, and client-side only so it is easy to merge upstream."
+excerpt: "A terminal is built end to end for eyes and fingers, which is exactly what locks out everything that has neither. Rather than keep scraping the screen from outside, I went looking for a seam inside Eternal Terminal and found one already cut. etctl is what came out: a native control plane, the numbers behind it, the file transfer that fought back, and the parts that are still only a prototype."
 date: 2026-08-02
 featured: true
 series: "Driving Eternal"
@@ -20,21 +20,17 @@ tags:
 
 In the last part, an agent sat in front of a terminal it could not drive, and I went looking for a handle a machine could hold. This part is the handle.
 
-The first prototype I wrote was a Python wrapper I called [`etch.py`](snippet:etch.py). It ran [Eternal Terminal](https://eternalterminal.dev/) inside a pseudo-terminal, kept a warm session, and scraped the rendered screen to hand a script back clean output and a real exit code where before there was a wall of color codes and tea leaves. I was proud of it.
-
-Then I lived with it, and I kept seeing it for what it was. Every clever thing etch did was a workaround for a single fact: `et` only speaks one language, the rendered screen, the one meant for human eyes. etch stood outside that screen with its nose against the glass, reading.
+`et` speaks one language: the rendered screen, the one meant for human eyes. Everything else follows from that. A script cannot ask it for the exit code of the command it just ran, because there is no channel that carries one. The information exists, clean and structured, inside the client. It just never comes out anywhere a machine can reach.
 
 This is the part where I stopped reading the glass and taught the terminal to speak machine.
 
-## Everything etch had to fake
+## First, from the outside
 
-Look at what it took to fake a clean channel out of a screen. etch ran `et` inside a pseudo-terminal and then spent its whole life undoing what a terminal is for. It neutralized the shell prompt so the fancy [Powerlevel10k](https://github.com/romkatv/powerlevel10k) banner would stop bleeding into the output. It stripped ANSI escape codes by hand. It wrapped every command in `printf` sentinels to carve the real output and exit code out of the stream. It chunked long lines so the kernel's input cap would not silently truncate them. When a command wedged, it resynced the session with a fresh nonce. And it paid for a Python interpreter to start on every single call.
+I did not start inside. I started with a Python wrapper called [`etch.py`](snippet:etch.py), which ran [Eternal Terminal](https://eternalterminal.dev/) inside a pseudo-terminal, kept the session warm, and scraped the rendered screen to hand a script back clean output and a real exit code where before there was a wall of color codes and tea leaves. It worked. It is still on my machine.
 
-None of that is `et`. All of it is etch reaching around `et` to reconstruct, from a picture of a screen, the structured thing that `et` already had on the inside and never offered to anyone.
+But look at what it took. It neutralized the shell prompt so the [Powerlevel10k](https://github.com/romkatv/powerlevel10k) banner would stop bleeding into the output, stripped ANSI escape codes by hand, wrapped every command in `printf` sentinels to carve the real output out of the stream, chunked long lines so the kernel's input cap would not silently truncate them, resynced the session with a fresh nonce when a command wedged, and paid for a Python interpreter to start on every single call. None of that is `et`. All of it is a program outside the glass reconstructing, from a picture of a screen, the structured thing `et` already had on the inside and never offered to anyone.
 
-Two bugs in real use were the same shape, twice. A piped stdin that hung. A kilobyte-long line that the PTY's canonical mode chopped, leaving truncated junk that poisoned the warm channel until a full stop-and-sweep. Both were a scraper guessing at a stream built for eyes, and guessing wrong at an edge I would never have hit by hand. I fixed them. But the fixes were better guesses, not a different idea.
-
-The different idea was to stop guessing. `et` has the clean byte stream inside it. I just could not reach it from outside.
+The prototype earned its keep twice over. It settled the vocabulary an agent actually wants, and it kept failing in one shape. A piped stdin that hung. A kilobyte-long line that the PTY's canonical mode chopped, leaving truncated junk that poisoned the warm channel until a full stop-and-sweep. Both were a scraper guessing at a stream built for eyes, and guessing wrong at an edge I would never have hit by hand. I fixed them, and the fixes were better guesses, not a different idea. The different idea was to stop guessing.
 
 ## So I went inside
 
@@ -44,28 +40,23 @@ Eternal Terminal abstracts the local terminal behind a small interface it calls 
 
 On top of that swap, `et --ctl --name main user@host` backgrounds the client with no terminal attached and has it listen on a per-user unix socket at `~/.et/ctl/main.sock`. A small native CLI, `etctl`, talks to that socket. That is the whole shape.
 
-```d2 alt="The old etch.py wrapped et from outside in a pseudo-terminal and scraped the rendered screen. etctl instead sends input to and reads output from a backgrounded 'et --ctl' client over a local unix socket; that client maintains the normal encrypted Eternal Terminal session down to etserver, etterminal, and the remote shell."
+```d2 alt="etctl sends input to and reads output from a backgrounded 'et --ctl' client over a local unix socket; that client maintains the normal encrypted Eternal Terminal session down to etserver, etterminal, and the remote shell."
 direction: down
-agent: "agent / script"
-etctl: "etctl\n(native CLI)"
-etch: "etch.py\nPTY wrapper\n(scrapes the screen)" { style.stroke-dash: 3 }
-sock: "~/.et/ctl/main.sock\n0600, uid-checked" { shape: cylinder }
-daemon: "et --ctl\nbackgrounded client\n(auto-reconnecting)"
-remote: "etserver\netterminal\nshell" { shape: document }
+agent: "agent or script (no tty)"
+etctl: "etctl, the native CLI"
+daemon: "et --ctl, backgrounded and auto-reconnecting" { style.bold: true }
+remote: "etserver, etterminal, shell" { shape: document }
 
 agent -> etctl
-agent -> etch: "the old way" { style.stroke-dash: 3 }
-etctl -> sock
-sock -> daemon
+etctl -> daemon: "~/.et/ctl/main.sock\n0600, uid-checked"
 daemon -> remote: "encrypted ET"
-etch -> remote: "scrape" { style.stroke-dash: 3 }
 ```
 
 Because the backgrounded `et` is just an Eternal Terminal client, it reconnects on its own across network drops, the same way a human's session does. The durability I had hand-rolled in etch came for free, because this time it was not hand-rolled. It was the thing `et` already does.
 
 All of it, the control mode, the socket, the cursored scrollback, the CLI, came together over a weekend. Not because the code was trivial, but because the seam was already cut. I was plugging into `et`, not prying it open.
 
-The verbs an agent uses are mostly the ones etch had, because that vocabulary was right: `run` for a command that finishes (clean output, a real exit code, and a multi-line body that runs as one unit), `write` and `writeln` and `expect` and `read` for a prompt that waits, `key` for the named keys and signals, `sniff` to tap the live exchange, `observe` and `attach` to take the wheel by hand. What changed is everything underneath. There is no prompt to neutralize, no ANSI to strip, no resync, no line-cap chunking, and no Python process per call. It reads `et`'s native byte stream over a local socket, locked to my user (`0700` directory, `0600` socket, and the daemon checks the peer's uid). The hacks did not get better. They became unnecessary.
+The verbs are the ones the prototype had already settled, because that vocabulary was right: `run` for a command that finishes (clean output, a real exit code, and a multi-line body that runs as one unit), `write` and `writeln` and `expect` and `read` for a prompt that waits, `key` for the named keys and signals, `sniff` to tap the live exchange, `observe` and `attach` to take the wheel by hand. What changed is everything underneath. There is no prompt to neutralize, no ANSI to strip, no resync, no line-cap chunking, and no Python process per call. It reads `et`'s native byte stream over a local socket, locked to my user (`0700` directory, `0600` socket, and the daemon checks the peer's uid). The hacks did not get better. They became unnecessary.
 
 ```bash
 H=you@devbox
@@ -86,7 +77,7 @@ There was a real finding hiding behind the fake one. A stateless `expect` does s
 
 ## The numbers
 
-Median wall-clock, lower is better, both tools driving the same `etserver` over the same network. `etctl/etch` below 1.0 means `etctl` is faster.
+Median wall-clock against the prototype it replaces, both driving the same `etserver` over the same network, lower is better. The Python wrapper is the only honest baseline I have, because nothing else was doing this job on my machine. `etctl/etch` below 1.0 means `etctl` is faster.
 
 | Task | etch | etctl | etctl / etch |
 | --- | ---: | ---: | ---: |
@@ -97,9 +88,9 @@ Median wall-clock, lower is better, both tools driving the same `etserver` over 
 | Interactive prompt cycle (x7) | 542.5 ms | 318.5 ms | **0.59x** |
 | Local CLI startup (`--help`, x20) | 106.3 ms | 15.5 ms | **0.15x** |
 
-The steady-state command runs are network-bound, so the wins there are modest and honest: both tools are mostly waiting on the same round-trip to the host, and `etctl` shaves a consistent slice off the top by not starting a Python interpreter and not scraping a screen. Streaming three thousand lines is a tie, which is the right answer, the cursored scrollback adds no measurable tax on bulk reads.
+The steady-state command runs are network-bound, so the wins there are modest and honest: most of that time is the same round-trip to the host, and going native shaves a consistent slice off the top by not starting a Python interpreter and not scraping a screen. Streaming three thousand lines is a tie, which is the right answer, the cursored scrollback adds no measurable tax on bulk reads.
 
-The number I care about most is the last row. A `etctl` invocation starts in about **15 milliseconds** against etch's **106**, because one is a native binary already part of the `et` build and the other is a Python import. That is roughly **90 milliseconds saved on every single call**, and an agent driving a host issues a great many small calls. It is the kind of fixed cost that rounds to nothing in a demo and adds up to real time across a day of automated work.
+The number I care about most is the last row. `etctl` starts in about **15 milliseconds**, because it is a native binary already part of the `et` build rather than a Python import, and that is roughly **90 milliseconds back on every single call**. An agent driving a host issues a great many small calls. It is the kind of fixed cost that rounds to nothing in a demo and adds up to real time across a day of automated work.
 
 ## A file through the keyhole
 
@@ -125,17 +116,17 @@ Most of it is not about `etctl`. Open a named session, keep it, one driver per n
 
 That ratio is the result I did not expect and am happiest about. The channel stopped being the hard part, and what is left over is a shell that still assumes someone is sitting in front of it.
 
-## Where etch is still ahead
+## What it is not yet
 
-This is an honest report, so the column where etch wins matters as much as the table.
+This is an honest report, so here is what `etctl` is not.
 
-**Maturity.** etch has months of real agent sessions behind it. `etctl` is a working prototype: the [Catch2](https://github.com/catchorg/Catch2) suite passes 439 assertions across 26 cases, and I have since put it through a stress run against a real `etserver`, hundreds of rapid commands, concurrent readers, parallel sessions, file transfers of every shape. That shook out a real teardown race, recreating a session the instant after ending it could catch the still-dying daemon and quietly no-op, now fixed with a `--wait` that blocks until the old one is truly gone. It is more hardened than it was, and still almost untested in anger. Speed is not robustness, and a race like that is exactly the class of bug only hard daily use flushes out. etch earned my trust the hard way; `etctl` is beginning to.
+**It is a prototype.** The [Catch2](https://github.com/catchorg/Catch2) suite passes 439 assertions across 26 cases, and I have since put it through a stress run against a real `etserver`, hundreds of rapid commands, concurrent readers, parallel sessions, file transfers of every shape. That shook out a real teardown race, recreating a session the instant after ending it could catch the still-dying daemon and quietly no-op, now fixed with a `--wait` that blocks until the old one is truly gone. It is more hardened than it was, and still almost untested in anger. Speed is not robustness, and a race like that is exactly the class of bug only hard daily use flushes out.
 
-**Persistence.** Neither tool survives a reboot today. Both daemons die with the host process. The design for reattaching across a restart is sketched and parked, and until it exists, this is the one capability where `etctl` is not yet strictly better than etch, only faster.
+**It does not survive a reboot.** The daemon dies with the host process, so a restart costs you every open session. The design for reattaching across one is sketched and parked.
 
-**Deployment.** etch is a single portable script with no dependencies. `etctl` is a binary that has to be built per platform, because it ships inside `et`. That is a real cost the script does not have.
+**It has to be built per platform,** because it ships inside `et`. A single portable script has no such cost, and that is the one place the Python prototype is still the easier thing to hand someone.
 
-So I am not retiring etch. I am running both side by side, with `etctl` as the fast path and etch as the fallback that has never let me down, and I will let the prototype earn its mileage the same way the script did, by getting used hard.
+So I have not thrown the script away. It runs as the fallback while `etctl` earns its mileage the same way the script did, by getting used hard.
 
 ## Built to merge
 
@@ -143,10 +134,8 @@ I built this to be easy to say yes to. It is client-side only: the change lives 
 
 It lives on a branch today, with a green test suite and real mileage still ahead of it. If you maintain or lean on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal), I would love to see something like this land upstream, so the next person who needs to drive a session from a script finds it already there, speaking their machine's language, instead of scraping the glass like I did.
 
-## Cut in, not scratched on
+## In its own voice
 
-I named etch for two things at once: `et` plus the channel it held, and the verb, to etch, to cut something in so it stays. The script cut the channel from the outside, scratched onto the surface of a screen with a careful tool and a steady hand.
+The [pair of hands](/blog/a-pair-of-missing-hands/) an agent was missing is now a few hundred lines living inside Eternal Terminal, speaking machine in its own voice instead of miming it through glass. The handle did not just get faster. It stopped being a thing bolted on and became part of the thing it drives, which is why the reconnect and the durability came free. They were never mine to implement.
 
-`etctl` cuts it into the tool itself. The [pair of hands](/blog/a-pair-of-missing-hands/) an agent was missing, the clean channel the Python wrapper scraped together, all of it is now a few hundred lines living inside Eternal Terminal, speaking machine in its own voice instead of miming it through glass. The handle did not just get faster. It stopped being a thing bolted on and became part of the thing it drives.
-
-That is the move I keep coming back to. When a tool only talks to people, you can stand outside and scrape, and that gets you surprisingly far. But the real answer, when you can reach it, is to teach the tool to talk to machines too. Then nobody has to read the glass.
+That is the move I keep coming back to. When a tool only talks to people, you can stand outside and scrape, and that gets you surprisingly far. It got me a working prototype and a lot of real automation. But the answer, when you can reach it, is to teach the tool to talk to machines too. Then nobody has to read the glass.
