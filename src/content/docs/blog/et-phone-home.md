@@ -16,8 +16,6 @@ tags:
   - cpp
 ---
 
-*Part of the **Driving Eternal** series: giving a script or an AI agent a real handle on a remote terminal. The [first part](/blog/a-pair-of-missing-hands/) is the problem; this one is the fix, and an open invitation to merge it.*
-
 In the last part, an agent sat in front of a terminal it could not drive, and I went looking for a handle a machine could hold. This part is the handle.
 
 `et` speaks one language: the rendered screen, the one meant for human eyes. Everything else follows from that. A script cannot ask it for the exit code of the command it just ran, because there is no channel that carries one. The information exists, clean and structured, inside the client. It just never comes out anywhere a machine can reach.
@@ -132,7 +130,7 @@ So I have not thrown the script away. It runs as the fallback while `etctl` earn
 
 I built this to be easy to say yes to. It is client-side only: the change lives entirely in the `et` client, swapping one `Console` implementation and adding a control socket. Not a line of `etserver`, `etterminal`, or the wire protocol changed, so it cannot regress an existing session, and `et` without `--ctl` behaves exactly as it always has. The whole thing is a handful of new files and three small touches to the launch path.
 
-It lives on a branch today, with a green test suite and real mileage still ahead of it. If you maintain or lean on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal), I would love to see something like this land upstream, so the next person who needs to drive a session from a script finds it already there, speaking their machine's language, instead of scraping the glass like I did.
+It lives on a branch today, with a green test suite and real mileage still ahead of it, and I have [opened the conversation upstream](https://github.com/MisterTea/EternalTerminal/issues/779). Until it lands anywhere, it ships in my own build, the same `brew install Kronuz/tap/et` from the [first part](/blog/across-the-tunnel/). If you maintain or lean on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal), I would love to see something like this land upstream, so the next person who needs to drive a session from a script finds it already there, speaking their machine's language, instead of scraping the glass like I did.
 
 ## In its own voice
 

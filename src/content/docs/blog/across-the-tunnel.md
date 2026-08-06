@@ -14,8 +14,6 @@ tags:
   - tooling
 ---
 
-*Part of the **Driving Eternal** series: giving a script or an AI agent a real handle on a remote terminal. Installing [Eternal Terminal](https://eternalterminal.dev/).*
-
 I do most of my real work on a remote machine, not on the laptop in front of me. The laptop is a window; the machine is the room. Everything heavy lives there: the checkouts, the build caches, the cores, the memory. My laptop just looks in on it.
 
 The trouble with a room across a tunnel is that the tunnel keeps dropping. A plain `ssh` session is only alive as long as nothing moves. The laptop sleeps and the session dies. I leave the office and the laptop jumps from wifi to a phone hotspot, and the session dies. The VPN reconnects with a new IP and the session dies. I close the lid to go home and, of course, the session dies, taking whatever I was in the middle of with it. You learn to work in fear of the connection, and that's a bad way to live in a room.
@@ -42,10 +40,10 @@ The part that still feels like a small magic trick is going home. I close the la
 
 ## Getting it running
 
-`et` is a client and a server, and you need both. On the Mac the client is one Homebrew formula away. I run my own fork, EternalTerminal 7.0.0 plus `etctl`, a machine-driving piece I [proposed upstream](https://github.com/MisterTea/EternalTerminal/issues/779) and get to later in the series:
+`et` is a client and a server, and you need both. On the Mac the client is one Homebrew formula away. I run my own build of EternalTerminal 7.0.0, for reasons that belong to a later part of this story:
 
 ```sh
-brew install Kronuz/tap/et      # et (and etctl), at /opt/homebrew/bin/et
+brew install Kronuz/tap/et      # et, at /opt/homebrew/bin/et
 ```
 
 The server is the other half. On a Linux box it's a single `dnf install` aimed straight at the release, self-contained enough to land on any x86_64 RPM distro with a reasonably current glibc (2.34 or newer):

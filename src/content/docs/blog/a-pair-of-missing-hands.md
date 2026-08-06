@@ -14,8 +14,6 @@ tags:
   - automation
 ---
 
-*Part of the **Driving Eternal** series: giving a script or an AI agent a real handle on a remote terminal, ending in a small native addition to [Eternal Terminal](https://eternalterminal.dev/).*
-
 An agent I was pairing with needed to restart a service on a remote box. It knew the command. It knew the host. And it just sat there, because the only way onto that machine was a terminal built for my eyes and my hands, and an agent has neither. It cannot watch a prompt redraw. It cannot tell the echo of what it typed from the answer that came back. It has no fingers to hit Enter, and no way to know whether the thing it ran worked or failed.
 
 I had a durable, eternal terminal onto the machine I live on, [Eternal Terminal](https://eternalterminal.dev/), and it felt like home precisely because every inch of it, the prompt, the colors, the living terminal `et` hands you, was made for a person. The thing that makes it feel like home is the same thing that locks everyone else out.
