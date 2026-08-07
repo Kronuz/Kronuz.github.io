@@ -57,11 +57,11 @@ etctl run  main 'systemctl is-active nginx' && echo up
 
 One thing did survive the move, honestly, though less of it than I expected. `etctl` sniffs the far shell once per session to see what it can speak. When the prompt supports [OSC 133](https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/prefix-and-status.md) shell integration and bracketed paste, `run` sends the bare command inside a paste and lets the shell's own markers say where output begins and ends, so there is no framing in the transcript at all. Only when the far end can speak neither does it fall back to wrapping the command in `printf` sentinels, and then the remote shell does echo that framing into the session. `run`'s stdout is clean either way; it is a `sniff` of a fallback session that looks noisier than what a human would type. That last case is a property of the shell on the other end, not of `etctl`, which is why the answer was to detect it rather than to paper over it.
 
-## The bug that was always there
+## The hidden bug
 
-Something had been happening to me for years, every few months, always the same way. I would paste something big into a session, a heredoc or a chunk of config, and the whole thing would wedge. Not slow, not garbled: dead. Reconnect and it was fine. I never caught it in the act, because a person pastes a big block rarely enough that you shrug and move on.
+Something had been happening to me for years, every now and then, always the same way. I would paste something big into a session, a heredoc or a chunk of config, and the whole thing would wedge. Not slow, not garbled: dead. Reconnect and it was fine. I never caught it in the act, because a person pastes a big block rarely enough that you shrug and move on.
 
-An agent does it constantly. Within a day of driving sessions with `etctl`, the wedge stopped being folklore and became a reproducible bug: paste past roughly one pty buffer, about 1 KB on macOS and 8 to 10 KB on Linux, and the session dies every single time.
+An agent does it constantly, so within a day of driving sessions with `etctl`, the wedge stopped being folklore and became a reproducible bug: paste past roughly one pty buffer, about 1 KB on macOS and 8 to 10 KB on Linux, and the session dies **every single time**.
 
 With a reproduction, the cause was plain, and it was a deadlock four steps deep. The per-session terminal pump on the server, `UserTerminalHandler::runUserTerminal`, is a single-threaded `select` loop, and it wrote client input to the pty master with a **blocking** write.
 
