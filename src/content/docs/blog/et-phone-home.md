@@ -105,7 +105,7 @@ Most of it is not about `etctl`. Open a named session, keep it, one driver per n
 
 That ratio is the result I did not expect and am happiest about. The channel stopped being the hard part, and what is left over is a shell that still assumes someone is sitting in front of it.
 
-## Where it stands
+## On a branch, for now
 
 It is a prototype, and an honest report says so. It comes with tests, 439 assertions across 26 cases written in [Catch2](https://github.com/catchorg/Catch2), the C++ test framework Eternal Terminal already builds with, so they run as part of the normal `et` suite rather than off to one side. A stress run against a real `etserver` shook out a teardown race where recreating a session the instant after ending it could catch the still-dying daemon and quietly no-op, now fixed with a `--wait`. It is more hardened than it was and still almost untested in anger. It does not survive a reboot, because the daemon dies with the host process, and the design for reattaching across one is sketched and parked. And it has to be built per platform, because it ships inside `et`.
 
@@ -113,7 +113,7 @@ That last part is also the good news: it is built to be easy to say yes to. The 
 
 If you maintain or lean on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal), I would like to see something like this land upstream, so the next person who needs to drive a session from a script finds it already there instead of scraping the glass like I did.
 
-## In its own voice
+## Nobody reads the glass
 
 The [pair of hands](/blog/a-pair-of-missing-hands/) an agent was missing is now a few hundred lines living inside Eternal Terminal, speaking machine in its own voice instead of miming it through glass. The handle did not just get faster. It stopped being a thing bolted on and became part of the thing it drives, which is why the reconnect and the durability came free. They were never mine to implement.
 

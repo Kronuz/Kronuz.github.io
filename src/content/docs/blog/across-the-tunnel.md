@@ -18,7 +18,7 @@ I do most of my real work on a remote machine, not on the laptop in front of me.
 
 The trouble with a room across a tunnel is that the tunnel keeps dropping. A plain `ssh` session is only alive as long as nothing moves. The laptop sleeps and the session dies. I leave the office and the laptop jumps from wifi to a phone hotspot, and the session dies. The VPN reconnects with a new IP and the session dies. I close the lid to go home and, of course, the session dies, taking whatever I was in the middle of with it. You learn to work in fear of the connection, and that's a bad way to live in a room.
 
-## The usual answers
+## The ones that almost fit
 
 This is an old problem with good, well-worn answers, and I tried the obvious ones first.
 
@@ -38,7 +38,7 @@ Better still, because `et` streams the terminal instead of redrawing it, the ter
 
 The part that still feels like a small magic trick is going home. I close the laptop in the office with a build running and a half-typed command sitting at the prompt. I open it the next morning at my desk at home, and there it is: the same shell, the same working directory, the same half-typed command, the build long since finished and waiting for me. Nothing reconnected, nothing re-ran. The session never noticed I left. For a machine you live on all day, that resilience is the whole game.
 
-## Getting it running
+## Both ends
 
 `et` is a client and a server, and you need both. On the Mac the client is one Homebrew formula away. I run my own build of EternalTerminal 7.0.0, for reasons that belong to a later part of this story:
 

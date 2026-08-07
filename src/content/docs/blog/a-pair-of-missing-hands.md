@@ -44,7 +44,7 @@ My favorite of the lot is the smallest. Someone's automated file copy kept break
 
 That's the wall, and it's been there thirty years. We even keep a shelf of tools that exist only because one corner of it, the dropped connection, hurt us enough to fix: [`Mosh`](https://mosh.org), [`autossh`](https://linux.die.net/man/1/autossh), and [Eternal Terminal](https://eternalterminal.dev/) itself, all built so a session can survive "network outages and IP roaming." We fixed the part that hurt the humans. The part that locks out everything *without* hands, we mostly just learned to live around.
 
-## A pair of hands
+## Built for a body
 
 I kept turning it over until it came clear. The problem in front of me wasn't a smarter agent. It was a pair of hands.
 
