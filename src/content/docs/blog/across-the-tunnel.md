@@ -46,11 +46,11 @@ The part that still feels like a small magic trick is going home. I close the la
 brew install Kronuz/tap/et      # et, at /opt/homebrew/bin/et
 ```
 
-The server is the other half. On a Linux box it's a single `dnf install` aimed straight at the release, self-contained enough to land on any x86_64 RPM distro with a reasonably current glibc (2.34 or newer):
+The server is the other half. On a Linux box it's a single `dnf install` aimed straight at the [latest release](https://github.com/Kronuz/homebrew-tap/releases/latest), self-contained enough to land on any x86_64 RPM distro with a reasonably current glibc (2.34 or newer):
 
 ```sh
 sudo dnf install -y \
-  https://github.com/Kronuz/homebrew-tap/releases/download/EternalTerminal-v7.0.0-etctl.7/et-7.0.0-etctl.7.x86_64.rpm
+  https://github.com/Kronuz/homebrew-tap/releases/latest/download/et-latest.x86_64.rpm
 ```
 
 Everything it links against is baked into that one package. It lays `etserver` and its siblings into `/usr/bin`, installs the systemd unit and a default `/etc/et.cfg`, and then, deliberately, does nothing else. You start it yourself:
