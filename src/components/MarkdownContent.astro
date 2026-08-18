@@ -22,7 +22,7 @@ const term = (entry?.id ?? '').replace(/\.mdx?$/, '');
 // isAnyBlogPostPage in libs/page.ts) and calls getBlogEntry(), which throws for a non-post
 // page we add under /blog/ (e.g. the /blog/all/ dashboard). List those reserved subpaths
 // here so we render them as a plain page instead of delegating to the blog post frame.
-const RESERVED_BLOG = new Set(['blog/all']);
+const RESERVED_BLOG = new Set(['blog/all', 'blog/series']);
 const isReservedBlogPage = RESERVED_BLOG.has(term);
 
 // The full series stepper lives in the right sidebar (the TableOfContents override).
@@ -69,6 +69,21 @@ const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 
 							<span class="series-group-text">Group</span>
 						</label>
 						<div class="series-grouped">
+							{series.looseParts && series.looseParts.length > 0 && (
+								<ol class="series-mobile-list series-mobile-intro">
+									{series.looseParts.map((p) => (
+										<li>
+											{p.current ? (
+												<span class="series-mobile-row is-current"><span>{p.title}</span></span>
+											) : p.reachable ? (
+												<a class:list={["series-mobile-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}><span>{p.title}</span></a>
+											) : (
+												<span class="series-mobile-row is-pending"><span>{p.title}</span></span>
+											)}
+										</li>
+									))}
+								</ol>
+							)}
 							{series.chapters.map((ch) => (
 								<div class="series-mobile-chapter">
 									<p class="series-mobile-chaptername">
@@ -233,6 +248,15 @@ const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 
 	/* Chapter grouping inside the mobile chip (mirrors the desktop stepper). */
 	.series-mobile-chapter + .series-mobile-chapter {
 		margin-top: 0.4rem;
+	}
+	/* A loose intro/index part above the chapters: bold, set off by a hairline. */
+	.series-mobile-intro {
+		margin: 0 0 0.5rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--sl-color-gray-6);
+	}
+	.series-mobile-intro .series-mobile-row {
+		font-weight: 600;
 	}
 	.series-mobile-chaptername {
 		display: flex;

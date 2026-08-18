@@ -21,7 +21,7 @@
 import Default from "@astrojs/starlight/components/Sidebar.astro";
 import { buildSidebar } from "../lib/sidebar.mjs";
 import { listSidebarProjects } from "../lib/projects.mjs";
-import { countBlogPosts } from "../lib/series.mjs";
+import { countBlogPosts, listAllSeries } from "../lib/series.mjs";
 import { BLOG_POST_COUNT, RECENT_POST_COUNT } from "../consts";
 
 const route = Astro.locals.starlightRoute;
@@ -85,6 +85,52 @@ if (onBlog) {
     }
     return e;
   });
+  // A "Series" group listing the article series, placed right after "Featured posts"
+  // (falling back to right under "Blog" when there is no featured group). Each entry
+  // links to a series' first part; the current series is lit. The list is capped at
+  // SERIES_SIDEBAR_COUNT, and only when it overflows does a trailing "All series…" link
+  // appear, jumping to /blog/series/ (mirrors how "Recent posts" appends "View more…").
+  const SERIES_SIDEBAR_COUNT = 10;
+  const featuredLabel = Astro.locals.t("starlightBlog.sidebar.featured");
+  const currentBlogSlug = pathname.replace(/^\/blog\//, "").replace(/\/$/, "") || null;
+  const allSeries = await listAllSeries(currentBlogSlug);
+  if (allSeries.length > 0) {
+    const onSeriesIndex = pathname.startsWith("/blog/series");
+    const seriesEntries = allSeries.slice(0, SERIES_SIDEBAR_COUNT).map((s) => ({
+      type: "link",
+      label: s.name,
+      href: `/blog/${s.landingSlug}/`,
+      isCurrent: s.isCurrent && !onSeriesIndex,
+      badge: undefined,
+      attrs: { "data-subnav": "" },
+    }));
+    if (allSeries.length > SERIES_SIDEBAR_COUNT) {
+      seriesEntries.push({
+        type: "link",
+        label: "All series\u2026",
+        href: "/blog/series/",
+        isCurrent: onSeriesIndex,
+        badge: undefined,
+        attrs: { "data-view-more": "" },
+      });
+    }
+    const seriesGroup = {
+      type: "group",
+      label: "Series",
+      collapsed: false,
+      badge: undefined,
+      entries: seriesEntries,
+    };
+    // After "Featured posts" when it exists; otherwise right under "Blog".
+    const featAt = extras.findIndex((e) => e.type === "group" && e.label === featuredLabel);
+    if (featAt >= 0) {
+      extras.splice(featAt + 1, 0, seriesGroup);
+    } else {
+      const at = extras.findIndex(isBlogRoot);
+      if (at >= 0) extras.splice(at + 1, 0, seriesGroup);
+      else extras.unshift(seriesGroup);
+    }
+  }
 } else if (onProjects) {
   // Expand the "Projects" entry in place: keep it as the (current) section link, then list
   // the featured + active projects right under it, the current one lit. Mirrors how the

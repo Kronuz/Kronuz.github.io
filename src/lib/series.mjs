@@ -68,15 +68,19 @@ export async function resolveSeries(term) {
 
 	// Group parts into chapters (frontmatter `chapter`), for the sidebar stepper only.
 	// Chapters are visual grouping: the linear path — parts[], prev/next, "Part N of M" —
-	// is untouched. They appear in first-appearance order (parts are already seriesOrder-
-	// sorted) with each chapter's parts in that same order. Only kicks in when every
-	// visible part is tagged and there's more than one distinct chapter; otherwise the
-	// stepper falls back to the flat list (`chapters` stays null).
+	// is untouched. Parts that carry a `chapter` are grouped, in first-appearance order; a
+	// part with NO chapter is "loose" and sits above the groups (an intro / index landing).
+	// Grouping kicks in when there's at least one chaptered part and either more than one
+	// chapter or a loose part to lift out; otherwise the stepper falls back to the flat list.
 	let chapters = null;
-	if (parts.every((p) => p.chapter) && new Set(parts.map((p) => p.chapter)).size > 1) {
+	let looseParts = null;
+	const chaptered = parts.filter((p) => p.chapter);
+	const loose = parts.filter((p) => !p.chapter);
+	if (chaptered.length > 0 && (new Set(chaptered.map((p) => p.chapter)).size > 1 || loose.length > 0)) {
+		looseParts = loose;
 		const byTitle = new Map();
 		chapters = [];
-		for (const p of parts) {
+		for (const p of chaptered) {
 			let ch = byTitle.get(p.chapter);
 			if (!ch) {
 				ch = {
@@ -104,6 +108,9 @@ export async function resolveSeries(term) {
 		parts,
 		// Chapter grouping for the sidebar stepper (null when not chapter-tagged).
 		chapters,
+		// Parts with no `chapter`, lifted above the chapter groups (an intro / index). Null
+		// unless chapters are in play; the flat view still lists them in seriesOrder.
+		looseParts,
 		// The pagers point at any reachable neighbor (published always; a draft only in
 		// `npm run dev`), carrying `pending` so the pager can grey a dev-only draft link the
 		// same way the stepper greys an is-pending item.
@@ -140,4 +147,60 @@ export async function countBlogPosts() {
 	return docs.filter(
 		(e) => e.data.date && (import.meta.env.MODE !== 'production' || e.data.draft !== true),
 	).length;
+}
+
+// Every article series, for the "Series" sidebar group and the /blog/series/ index.
+// A series is any set of blog posts sharing a `series:` name; its landing is the
+// lowest-`seriesOrder` part (which carries the series description). Visibility follows
+// the same rules as resolveSeries: published parts always count; a plain draft counts
+// only in dev (so the whole thing previews while writing); an `upcoming` draft always
+// counts (the greyed tease). A series with fewer than two visible parts isn't a series
+// yet, so it's omitted. Series are ordered by their most recent part's date (newest
+// activity first), matching the blog's reverse-chronological feel; `currentSlug` (a bare
+// post slug) marks the active series and its current part so the sidebar can light them.
+export async function listAllSeries(currentSlug = null) {
+	const isProd = import.meta.env.MODE === 'production';
+	const isPublished = (e) => e.data.draft !== true;
+	const isUpcoming = (e) => e.data.draft === true && e.data.upcoming === true;
+	const visible = (e) => isPublished(e) || isUpcoming(e) || !isProd;
+
+	const docs = await getCollection('docs');
+	const byName = new Map();
+	for (const e of docs) {
+		if (!e.data.date || !e.data.series || !visible(e)) continue;
+		const list = byName.get(e.data.series) ?? [];
+		list.push(e);
+		byName.set(e.data.series, list);
+	}
+
+	const series = [];
+	for (const [name, list] of byName) {
+		if (list.length < 2) continue; // a lone visible part isn't a series
+		const parts = list.sort(
+			(a, b) =>
+				(a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0) ||
+				(a.data.date?.getTime() ?? 0) - (b.data.date?.getTime() ?? 0) ||
+				a.data.title.localeCompare(b.data.title),
+		);
+		const landing = parts[0];
+		const latest = Math.max(...parts.map((e) => e.data.date?.getTime() ?? 0));
+		series.push({
+			name,
+			landingSlug: bareSlug(landing.id),
+			description: landing.data.subtitle ?? landing.data.excerpt ?? landing.data.description ?? '',
+			total: parts.length,
+			latest,
+			isCurrent: parts.some((e) => bareSlug(e.id) === currentSlug),
+			parts: parts.map((e) => ({
+				slug: bareSlug(e.id),
+				title: e.data.title,
+				current: bareSlug(e.id) === currentSlug,
+				// Reachable = has a built page to link to (published always; a draft only in dev).
+				reachable: isPublished(e) || !isProd,
+				pending: !isPublished(e),
+			})),
+		});
+	}
+	// Newest activity first.
+	return series.sort((a, b) => b.latest - a.latest || a.name.localeCompare(b.name));
 }

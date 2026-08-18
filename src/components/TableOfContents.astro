@@ -33,6 +33,21 @@ const showToc = tocHasHeadings(toc);
 						<span class="series-group-text">Group</span>
 					</label>
 					<div class="series-grouped">
+						{series.looseParts && series.looseParts.length > 0 && (
+							<ol class="series-aside-list series-aside-intro">
+								{series.looseParts.map((p) => (
+									<li>
+										{p.current ? (
+											<span class="series-aside-row is-current"><span class="series-aside-text">{p.title}</span></span>
+										) : p.reachable ? (
+											<a class:list={["series-aside-row", p.pending && "is-pending"]} href={`${series.base}/${p.slug}/`}><span class="series-aside-text">{p.title}</span></a>
+										) : (
+											<span class="series-aside-row is-pending"><span class="series-aside-text">{p.title}</span></span>
+										)}
+									</li>
+								))}
+							</ol>
+						)}
 						{series.chapters.map((ch) => (
 							<details class="series-chapter" open={ch.hasCurrent}>
 								<summary class:list={["series-chapter-head", ch.hasCurrent && "is-here"]}>
@@ -201,6 +216,17 @@ const showToc = tocHasHeadings(toc);
 	}
 
 	/* --- Chapter grouping (collapsible book-TOC for long series) --- */
+	/* A loose intro/index part sits above the chapters: no rail, no number, just the link. */
+	.series-aside-intro {
+		margin-bottom: 0.4rem;
+	}
+	.series-aside-intro::before {
+		display: none;
+	}
+	.series-aside-intro .series-aside-row {
+		padding-left: 0.35rem;
+		font-weight: 600;
+	}
 	.series-chapter {
 		margin: 0;
 	}

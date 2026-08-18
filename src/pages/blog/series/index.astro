@@ -1,0 +1,68 @@
+---
+/**
+ * /blog/series/ — the index of every article series (posts sharing a `series:` name).
+ *
+ * A companion to the /blog/ landing's "Featured posts" / "Recent posts" sections and to
+ * the sidebar "Series" group. Deliberately minimal, in the spirit of /blog/all/: a flat
+ * list, one row per series — the series title (linked to its first part) and how many
+ * parts it has. Nothing per-post; the series' own stepper carries the parts.
+ *
+ * Driven by listAllSeries() in ../../../lib/series.mjs, so visibility matches the rest of
+ * the series system — published series always show; a series that's still all-draft shows
+ * only in `npm run dev`. A listed, indexable navigation page (unlike /blog/all/, the
+ * private dashboard): it belongs in search and the sitemap so readers can find the series.
+ */
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { listAllSeries } from "../../../lib/series.mjs";
+
+const series = await listAllSeries();
+---
+
+<StarlightPage frontmatter={{ title: "Series", description: "Multi-part article series, each read in order.", tableOfContents: false }}>
+	<p class="series-summary not-content">{series.length} series</p>
+
+	{
+		series.length === 0 ? (
+			<p class="not-content">No series yet.</p>
+		) : (
+			<ul class="series-list not-content">
+				{series.map((s) => (
+					<li class="series-row">
+						<a class="series-name" href={`/blog/${s.landingSlug}/`}>{s.name}</a>
+						<span class="series-count">{s.total} parts</span>
+					</li>
+				))}
+			</ul>
+		)
+	}
+</StarlightPage>
+
+<style>
+	.series-summary {
+		color: var(--sl-color-gray-3);
+		font-size: var(--sl-text-sm);
+		margin: 0 0 1rem;
+	}
+	.series-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.series-row {
+		display: flex;
+		align-items: baseline;
+		gap: 0.75rem;
+		padding: 0.5rem 0;
+		border-bottom: 1px solid var(--sl-color-gray-6);
+	}
+	.series-name {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.series-count {
+		flex: 0 0 auto;
+		color: var(--sl-color-gray-3);
+		font-size: var(--sl-text-sm);
+		white-space: nowrap;
+	}
+</style>
