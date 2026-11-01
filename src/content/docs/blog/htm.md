@@ -3,8 +3,7 @@ title: "The Planet as a Prefix"
 subtitle: "Turning the whole Earth into search terms a plain text index can answer."
 description: "htm implements the Hierarchical Triangular Mesh: it tiles the sphere with nested triangles, gives every point a name and a 64-bit id, and makes nearby points share a name prefix so the name doubles as a spatial key. That is what lets a text search engine answer 'within 5 km of here' with no spatial database bolted on: you range a query region into a set of trixels or id intervals and hand them to the index as terms. Triangles instead of a lat/long grid because a grid melts at the poles, and the hard part is the ranging."
 excerpt: "'Find documents within 5 km of here' is not a text query, and you cannot scan your way to it. The trick Xapiand uses is to turn the surface of the Earth into a hierarchy of triangles, give every point a name whose prefix is its neighborhood, and let the text index do the rest. The fifth familiar tiles a planet so a search engine that only knows words can answer questions about space."
-date: 2026-07-10
-draft: true
+date: 2026-08-11
 series: "Familiars"
 seriesOrder: 5
 chapter: "Space"
@@ -32,7 +31,7 @@ The obvious tiling is a lat/long grid, and it is a trap. Lines of longitude conv
 
 ## The hard part is the ranging
 
-Naming a point is easy. The work is going the other way: given a query region, produce the *minimal* set of trixels that cover it. htm builds that on a `Constraint`, a spherical cap, a circular area cut off the sphere by a plane, and ranges a region by a recursive descent of the mesh. At each trixel it asks one of three questions: is this triangle **entirely inside** the region (emit its whole id range and stop, you have covered a huge area with one interval), **entirely outside** (drop it, and its whole subtree with it), or **partial** (recurse into its four children and decide again). Fully-inside and fully-outside are what keep the answer small; you only pay resolution along the *boundary* of the region, not its area. The set algebra on top, `trixel_union`, `trixel_intersection`, and their range equivalents, lets you build a polygon or an EWKT geometry out of caps and combine them into one term set.
+Naming a point is easy. The work is going the other way: given a query region, produce the *minimal* set of trixels that cover it. htm supplies the pieces for that, a `Constraint` (a spherical cap, a circular area cut off the sphere by a plane) and the tests between a cap and a trixel, and Xapiand's geometry layer ranges a region with them by a recursive descent of the mesh. At each trixel it asks one of three questions: is this triangle **entirely inside** the region (emit its whole id range and stop, you have covered a huge area with one interval), **entirely outside** (drop it, and its whole subtree with it), or **partial** (recurse into its four children and decide again). Fully-inside and fully-outside are what keep the answer small; you only pay resolution along the *boundary* of the region, not its area. The set algebra on top, `trixel_union`, `trixel_intersection`, and their range equivalents, lets Xapiand build a polygon or an EWKT geometry out of caps and combine them into one term set.
 
 That is the piece that let a *text* engine answer real geo queries, circles, polygons, arbitrary geometries, without a spatial index sitting beside it. It ships as two compiled units and leans on one sibling familiar, [cartesian](https://github.com/Kronuz/cartesian), for turning latitude and longitude into the unit-sphere vectors the mesh runs on.
 
