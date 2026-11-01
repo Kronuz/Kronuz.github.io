@@ -5,10 +5,8 @@ description: "KronuZSH's whole layout is deferred, so a few lines in ~/.zshrc.lo
 excerpt: "The serious case for a home-made prompt was speed and size. The fun one is this: because the whole layout is yours, the prompt can do impressions. Here it is as pure, as robbyrussell, as an agnoster ribbon, as a DOS box, the same engine under every face."
 series: "KronuZSH"
 seriesOrder: 5
-date: 2026-07-24
+date: 2026-07-30
 authors: kronuz
-draft: true
-upcoming: true
 tags:
   - tooling
   - shell
@@ -17,7 +15,7 @@ tags:
   - prompt
 ---
 
-[Part 4](/blog/prompt-worth-it/) made the serious case: a home-made prompt can paint as fast as the giants and carry a fiftieth of their code. This is the unserious case, and it is the one I enjoy most.
+[Part 4](/blog/prompt-worth-it/) made the serious case: a home-made prompt can paint as fast as the giants and carry a fraction of their code. This is the unserious case, and it is the one I enjoy most.
 
 Because the whole layout is a handful of lines I own, the prompt is not condemned to look like mine. It can do impressions. Here it is wearing [pure](https://github.com/sindresorhus/pure)'s two-line face:
 
@@ -50,7 +48,7 @@ Same engine under every one. The same ~7 ms paint, the same gitstatusd, the same
 
 For most of this project the layout was welded shut. `PROMPT` was assembled once, at startup, with the segments in the order I liked: an error dot, user at host, git, then a second line with the time, the path, the caret. To change the shape you opened the engine and edited it.
 
-That is fine while the shape is mine. It is useless if I want anyone else to reshape it without touching the file. So I lifted the layout out of the engine and into three variables you set from `~/.zshrc.local`:
+That is fine while the shape is mine. It is useless if I want anyone else to reshape it without touching the file. So I lifted the layout out of the engine and into variables you set from `~/.zshrc.local`, these three above all:
 
 - `KZ_PROMPT_PROMPT`, the live prompt (one line, or two).
 - `KZ_PROMPT_RPROMPT`, the right prompt.
@@ -71,7 +69,7 @@ The inner `${(e)}` resolves the layout string; the outer one resolves the `$kz[.
 
 ## A palette, and the trap in it
 
-A skin composes from two sets. The segment palette, `$kz[git]`, `$kz[pwd]`, `$kz[time]` and the rest, each a ready-made piece. And the colour palette, `$kz[FG.blue]` for a foreground, `$kz[BG.blue]` for a background. So *minimal*, the entire skin, is one line:
+A skin composes from two sets. The segment palette, `$kz[git]`, `$kz[pwd]`, `$kz[time]` and the rest, each a ready-made piece. And the color palette, `$kz[FG.blue]` for a foreground, `$kz[BG.blue]` for a background. So *minimal*'s whole layout is one line:
 
 ```zsh
 KZ_PROMPT_PROMPT='$kz[pwd]$kz[git] ${kz[FG.magenta]}${kz[GLYPH.caret]}${kz[RESET]} '
@@ -81,16 +79,16 @@ KZ_PROMPT_PROMPT='$kz[pwd]$kz[git] ${kz[FG.magenta]}${kz[GLYPH.caret]}${kz[RESET
 [38;2;255;255;255m~/project[0m[38;2;255;255;255m[24m[38;2;255;255;255m[27m[38;2;255;255;255m[39m[49m [90m[0m[90m[24m[90m[27m[90m[39m[49m [1m[38;2;255;255;255mmain[0m[38;2;255;255;255m[24m[38;2;255;255;255m[27m[38;2;255;255;255m[39m[49m [90m[0m[90m[24m[90m[27m[90m[39m[49m [38;2;255;255;255morigin/main[0m[38;2;255;255;255m[24m[38;2;255;255;255m[27m[38;2;255;255;255m[39m[49m[90m ([0m[90m[24m[90m[27m[90m[39m[49m[38;2;175;175;255m 1[0m[38;2;175;175;255m[24m[38;2;175;175;255m[27m[38;2;175;175;255m[39m[49m [38;2;135;95;0m✗[0m[38;2;135;95;0m[24m[38;2;135;95;0m[27m[38;2;135;95;0m[39m[49m [38;2;135;255;0m⇡1[0m[38;2;135;255;0m[24m[38;2;135;255;0m[27m[38;2;135;255;0m[39m[49m [38;2;215;95;0m 2[0m[38;2;215;95;0m[24m[38;2;215;95;0m[27m[38;2;215;95;0m[39m[49m [31m 1[0m[31m[24m[31m[27m[31m[39m[49m [90m⊖1[0m[90m[24m[90m[27m[90m[39m[49m[90m)[0m[90m[24m[90m[27m[90m[39m[49m [35m❯[0m[35m[24m[35m[27m[35m[39m[49m 
 ```
 
-You might ask why I reach for `${kz[FG.magenta]}` when zsh's own `%F{magenta}` is shorter and paints the same colour. I used to. It cost me an evening.
+You might ask why I reach for `${kz[FG.magenta]}` when zsh's own `%F{magenta}` is shorter and paints the same color. I used to. It cost me an evening.
 
-The moment a colour goes *inside* a conditional, `%F{}` turns on you. Say the branch should appear only when there is one:
+The moment a color goes *inside* a conditional, `%F{}` turns on you. Say the branch should appear only when there is one:
 
 ```zsh
 # looks right, renders as a truncated mess
 '${kz[git.branch]:+ %F{blue}(${kz[git.branch]})%f}'
 ```
 
-zsh reads `${name:+word}` by scanning for the brace that closes `word`. `%F{blue}` brought a brace of its own, and the `}` after `blue` is the first one zsh meets, so it decides the conditional ends *there*. Half the segment falls on the floor. `${kz[FG.blue]}` is a balanced `${...}`; zsh counts it right, and the segment stays whole. The palette earns its keep twice: once for theming a colour, and once for being a colour you can drop inside a conditional without it biting.
+zsh reads `${name:+word}` by scanning for the brace that closes `word`. `%F{blue}` brought a brace of its own, and the `}` after `blue` is the first one zsh meets, so it decides the conditional ends *there*. Half the segment falls on the floor. `${kz[FG.blue]}` is a balanced `${...}`; zsh counts it right, and the segment stays whole. The palette earns its keep twice: once for theming a color, and once for being a color you can drop inside a conditional without it biting.
 
 That is the whole reason the robbyrussell impression up top is only two lines, `git:(branch)` and all:
 
@@ -115,7 +113,7 @@ Or an all-emoji line: a folder, a plant for the branch, a small fire when the tr
 📁 [36m~/project[39m 🌿 [32mmain[0m[32m[24m[32m[27m[32m[39m[49m 🔥 ⚡ 
 ```
 
-The agnoster ribbon up top wanted one thing the rest did not: backgrounds. The palette is just colour codes now, layer-neutral, so the engine wraps each hue both ways: `${kz[FG.green]}` paints it as a foreground, `${kz[BG.green]}` the same code as a background. A powerline skin fills its blocks with the `BG.` side. Nerd Font separators, solid colour, the whole agnoster silhouette, out of the engine that a line ago was a DOS box.
+The agnoster ribbon up top wanted one thing the rest did not: backgrounds. The palette is just color codes now, layer-neutral, so the engine wraps each hue both ways: `${kz[FG.green]}` paints it as a foreground, `${kz[BG.green]}` the same code as a background. A powerline skin fills its blocks with the `BG.` side. Nerd Font separators, solid color, the whole agnoster silhouette, out of the engine that a line ago was a DOS box.
 
 ## The one thing a skin can't break
 
