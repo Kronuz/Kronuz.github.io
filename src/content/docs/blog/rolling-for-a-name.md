@@ -1,10 +1,9 @@
 ---
 title: "Rolling for a Name"
 subtitle: "The pattern-compiler behind every Xapiand node name."
-description: "Xapiand names its cluster nodes with a fantasy-name generator: a tiny pattern language that compiles a string like !<b<||v|V><||s|S|b>> into a tree of choose-and-concatenate nodes, one header, public domain, that can name 7.6 million nodes without repeating. How the compiler works, the trick where strings are generators, the name space it can count for itself, and the adjacent-string-literal footgun that was hiding in its word tables."
-excerpt: "Boot a Xapiand cluster and the nodes wake up with names like Manaugh, Chorurn, and Nielsion. They come from a fantasy-name generator I maintain: a pattern language that compiles into a tiny tree and can name seven and a half million nodes without repeating itself. The first familiar I pulled out of the engine."
-date: 2026-07-09
-draft: true
+description: "Xapiand names its cluster nodes with a fantasy-name generator: a tiny pattern language that compiles a string like !<b<||v|V><||s|S|b>> into a tree of choose-and-concatenate nodes, one header, public domain, that can spell up to 7.6 million names. How the compiler works, the trick where strings are generators, the name space it can count for itself, and the adjacent-string-literal footgun that was hiding in its word tables."
+excerpt: "Boot a Xapiand cluster and the nodes wake up with names like Manaugh, Chorurn, and Nielsion. They come from a fantasy-name generator I maintain: a pattern language that compiles into a tiny tree and can spell up to seven and a half million names. The first familiar I pulled out of the engine."
+date: 2026-08-01
 series: "Familiars"
 seriesOrder: 1
 chapter: "Little Languages"
@@ -18,11 +17,11 @@ tags:
 
 Boot a small Xapiand cluster and the nodes introduce themselves. Not `node-0`, `node-1`, `node-2`. They come up called **Manaugh**, **Chorurn**, **Nielsion**, **Cualei**. Kill one and a new one joins as **Dielque**. They read like a party sheet from a campaign nobody ran, and that is on purpose: a machine you have to think about for the next three years may as well have a name you can say out loud.
 
-The names are not a lookup table. There is no file of ten thousand fantasy words that Xapiand picks from. There is a **grammar**, and a tiny compiler that turns that grammar into a machine that can produce **7,654,050** distinct node names and never say the same one twice until it has to. That compiler is [fantasyname](https://github.com/Kronuz/fantasyname), and it is the first familiar I want to show you.
+The names are not a lookup table. There is no file of ten thousand fantasy words that Xapiand picks from. There is a **grammar**, and a tiny compiler that turns that grammar into a machine that can produce up to **7,654,050** node names. That compiler is [fantasyname](https://github.com/Kronuz/fantasyname), and it is the first familiar I want to show you.
 
 ## A string that is a program
 
-fantasyname is my C++ port and maintenance fork of the old [RinkWorks](http://www.rinkworks.com/namegen/) fantasy name generator. You hand it a **pattern**, a short string in a little language, and it hands you a generator that spits out a fresh name every time you ask.
+fantasyname is [Christopher Wellons's](https://github.com/skeeto/fantasyname) implementation of the old [RinkWorks](http://www.rinkworks.com/namegen/) fantasy name generator; I wrote its C++ port in 2015 and keep a maintenance fork. You hand it a **pattern**, a short string in a little language, and it hands you a generator that spits out a fresh name every time you ask.
 
 ```cpp
 NameGen::Generator generator("sV'i");
@@ -63,7 +62,7 @@ The naive way to build this is to walk the pattern string on every single call, 
 
 Two kinds of node do all the work. A **Sequence** holds children and concatenates them: its `toString()` is every child's `toString()` glued together, in order. A **Random** holds children and picks exactly one: its `toString()` is a single child's, chosen at random. Everything the grammar can express is some nesting of *concatenate these* and *choose one of these*. A symbol like `s` becomes a Random over the 115 words in the syllable list. A `|` becomes a Random over the alternatives. Plain letters between them become a Sequence.
 
-The leaves are the part I find quietly beautiful. In this design **a generator is anything with a `toString()`, and a bare string qualifies**. The literal `dim` in `s(dim)` is not wrapped in a special LiteralNode class; it is just the string `"dim"`, sitting in the tree as a generator whose `toString()` returns itself. And because the constructors collapse the trivial cases, a Random with one child is *replaced by that child*, a Sequence of one string *is* that string. The tree that survives compilation is the smallest one that still produces the right names.
+The leaves are the part I find quietly beautiful. The idea comes from Wellons's JavaScript original: **a generator is anything with a `toString()`, and a bare string qualifies**. The literal `dim` in `s(dim)` is not a special node there; it is just the string `"dim"`, sitting in the tree as a generator whose `toString()` returns itself, and the constructors collapse the trivial cases, a Random with one child *becomes that child*, a Sequence of one string *is* that string. C++ strings have no `toString()`, so my port wraps each one in a small `Literal` node and keeps the rest of the shape.
 
 ```d2 alt="The pattern sV'i compiles to a Sequence of four children stacked in order: a Random over 115 syllables, a Random over vowel combinations, the literal apostrophe string, and a Random over insult endings. Each Random picks one child at toString() time; the Sequence concatenates them into a name."
 direction: down
@@ -90,7 +89,7 @@ Because the tree is just *concatenate* and *choose*, it can measure the size of 
 | `sV'i` | the RinkWorks demo | **118,910** |
 | `!<b<\|\|v\|V><\|\|s\|S\|b>>` | a Xapiand node | **7,654,050** |
 
-Seven and a half million is not a number I picked. It is the tree counting itself: the product of the fragment list, the *empty-or-vowel* slot, and the *empty-or-syllable-or-fragment* slot, summed across the empty branches. It is also the answer to the only question that actually matters for node names, which is "how long until a collision is likely?" With 7.6 million names and the birthday bound, you are into even odds of two nodes rolling the same name at a few thousand nodes, and a real cluster is nowhere near that. The whimsy is free; the uniqueness is arithmetic.
+Seven and a half million is not a number I picked. It is the tree counting itself: the product of the fragment list, the *empty-or-vowel* slot, and the *empty-or-syllable-or-fragment* slot, summed across the empty branches. It is not, though, the answer to the question that matters for node names, which is "how long until a collision is likely?" The count is a ceiling, and the rolls are lopsided: every `|` picks evenly among its branches, so about one roll in five is a bare fragment, one of only 365. Rolled over and over, the node pattern repeats a name after about 110 rolls (the median of 2,000 runs), and a ten-node cluster draws a duplicate about once in two hundred tries. Xapiand does not leave that to chance: a node whose name is already taken hears so from the cluster and rolls again. The whimsy is free; the uniqueness is a retry.
 
 ## The two symbols I added
 
@@ -115,9 +114,9 @@ I only caught it by staring at the raw fragment list long enough for the two run
 
 ## Why keep a name generator in your toolbox
 
-It sounds like a toy, and for its first thirty years it mostly was one. But a compiled, self-counting generator of pronounceable strings turns out to be a genuinely useful small tool, and not only for cluster nodes:
+It sounds like a toy, and for its first quarter century it mostly was one. But a compiled, self-counting generator of pronounceable strings turns out to be a genuinely useful small tool, and not only for cluster nodes:
 
-- **Memorable identifiers for things humans have to talk about.** A node you name Chorurn is a node you can page a colleague about; `10.2.44.7:8880` is not.
+- **Memorable identifiers for things humans have to talk about.** A node you name Chorurn is a node you can page a colleague about; `192.0.2.7:8880` is not.
 - **Test fixtures that look like data.** Seeding a database with a thousand users named from `sV'i` reads far more like the real thing than `user_0001`, and it is one line.
 - **World-building on tap**, which is where it started, and where the D&D-shaped part of my brain is delighted it ended up again.
 
