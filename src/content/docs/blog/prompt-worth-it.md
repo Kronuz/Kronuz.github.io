@@ -5,10 +5,8 @@ description: "Is a ~1,800-line home-made zsh prompt any good next to Powerlevel1
 excerpt: "Rolling your own prompt sounds indulgent until you measure it. On a 60,000-file repo mine paints in the same 7.4 ms as Powerlevel10k, while the shell-out crowd waits 160 to 450, and it does it in a fraction of the lines."
 series: "KronuZSH"
 seriesOrder: 4
-date: 2026-07-23
+date: 2026-07-24
 authors: kronuz
-draft: true
-upcoming: true
 tags:
   - tooling
   - shell
@@ -40,7 +38,7 @@ Read the third column first, because it is the one you feel. Three prompts paint
 
 ## The line is async, not clever
 
-KronuZSH lands on the same ~7 ms per prompt as Powerlevel10k. Not near it. On it, a dead heat inside the run-to-run noise. That is not a coincidence and it is not me being clever, it is the same daemon and the same trick, because I took both from p10k. [gitstatusd](https://github.com/romkatv/gitstatus) is a small C process that keeps a warm, cached view of your repository and answers in microseconds. You ask it without blocking, paint the last-known answer right away, and repaint when it replies. [pure](https://github.com/sindresorhus/pure) does nearly as well at 7.6 ms with a different async design, a background worker instead of a daemon.
+KronuZSH lands on the same ~7 ms per prompt as Powerlevel10k. Not near it. On it, a dead heat inside the run-to-run noise. That is not a coincidence and it is not me being clever, it is the same daemon and the same trick, because I took both from p10k. [gitstatusd](https://github.com/romkatv/gitstatus) is a small C++ daemon that keeps a warm, cached view of your repository and answers without running `git`. You ask it without blocking, paint the last-known answer right away, and repaint when it replies. [pure](https://github.com/sindresorhus/pure) does nearly as well at 7.6 ms with a different async design, a background worker instead of a daemon.
 
 There is an easy way to flatter a home-made prompt, and I want to name it so you know I did not do it: time a blanked prompt, or skip the render and measure only the segment math. So I measured the whole paint, `PROMPT_SUBST` expanding the layout and every segment on each cycle, the way the shell actually draws it. Against p10k drawn the same way it is still a tie, a hair under if anything, and "a hair under" is me being generous to myself. Call it even.
 
@@ -60,7 +58,7 @@ Speed is a tie at the top, so the tiebreaker is what you carry to get it.
 | pure | ~1,970 lines | none |
 | Powerlevel10k | 13,700 lines | none, or oh-my-zsh |
 | agnoster | 380 lines | oh-my-zsh: 31,500 lines |
-| sorin | 190 lines | Prezto: 50,600 lines |
+| sorin | 190 lines | Prezto with its submodules: 50,600 lines |
 | starship | 9 MB binary | none |
 | oh-my-posh | 18 MB binary | none |
 
@@ -72,11 +70,11 @@ I would be lying if I stopped on the wins. This is where a home-made prompt give
 
 Powerlevel10k is the better choice for most people, and it is not close on breadth. It has a segment for everything: your node, python, and rust versions, your AWS profile, your kubernetes context, your battery. Its instant prompt makes startup feel free. Its wizard produces something beautiful in a minute. starship gives you that same breadth across bash, fish, and PowerShell, from a clean TOML file. oh-my-posh ships a gallery of themes prettier than anything I would hand-draw.
 
-KronuZSH has none of that. No language-version segments, no cloud, no kubernetes, no themes but the one I like, no wizard, no instant prompt. It shows the shell context I actually use and a git segment as detailed as any, and then it stops. It is narrow on purpose, and narrow is a real cost, not a humble-brag.
+KronuZSH has none of that. No language-version segments, no cloud, no kubernetes, no wizard, no instant prompt. It shows the shell context I actually use and a git segment as detailed as any, and then it stops. It is narrow on purpose, and narrow is a real cost, not a humble-brag.
 
 ## So, worth it?
 
-Here is the honest ledger. A home-made prompt will not out-feature p10k, out-theme oh-my-posh, or out-travel starship. It never will. What it does is land in the fastest tier there is, on the same daemon as the best of them, in a fiftieth of the code, doing exactly the things I use and nothing I do not, in a file I own from top to bottom.
+Here is the honest ledger. A home-made prompt will not out-feature p10k, out-theme oh-my-posh, or out-travel starship. It never will. What it does is land in the fastest tier there is, on the same daemon as the best of them, in a fraction of the code, doing exactly the things I use and nothing I do not, in a file I own from top to bottom.
 
 If that trade sounds indulgent, run p10k. It is superb and I recommend it without a caveat. But if you have ever wanted a prompt small enough to hold in your head and fast enough to disappear, the surprising part is that you do not have to choose: you can have both, and it costs about 1,800 lines. Mine is one of them. Yours could be too.
 
