@@ -3,8 +3,7 @@ title: "The Bag of Holding"
 subtitle: "The small, honest tools too little for a post of their own, and a look back at the whole party."
 description: "The closing of Familiars. A grab-bag of the smallest libraries carved out of Xapiand, the ones too little for a deep-dive on their own, tipped out and catalogued so none of them is lost: time helpers (times, time-point, epoch, nanosleep, datetime), string and byte tools (split, strings, static-string, stringified, escape, repr), digests (md5, sha256), number helpers (math, random, strict-stox), containers (lru-cache, bloom-filter, iterators, lazy), and the systems odds and ends (errno-names, located-exception, fs, allocators, scheduler, url-parser). Then a look back at what it means to take a whole system apart into small, standalone, honest tools."
 excerpt: "Not every tool earns its own chapter. This is the last of the campaign: the bag of small, honest libraries too little for a post apiece, tipped out onto the table so none of them is lost, and then a look back at the whole party we assembled from one search engine, and what it meant to take it apart."
-date: 2026-07-10
-draft: true
+date: 2026-10-13
 series: "Familiars"
 seriesOrder: 29
 chapter: "Trinkets"
@@ -35,19 +34,19 @@ Every adventuring party accumulates a bag of small things that never get their o
 
 - **[md5](https://github.com/Kronuz/md5)** and **[sha256](https://github.com/Kronuz/sha256)**: the two message digests, buffer in, fixed-size hash out, for checksums and content addressing (md5 for the non-adversarial cases, sha256 for the rest).
 - **[math](https://github.com/Kronuz/math)**: small integer-math helpers, the safe versions of the arithmetic you keep getting subtly wrong.
-- **[random](https://github.com/Kronuz/random)**: a dependency-free random-number helper, because the standard `<random>` is powerful and unpleasant to use, and most code just wants a number.
+- **[random](https://github.com/Kronuz/random)**: a dependency-free random-number helper, because the standard `<random>` is thorough and unpleasant to use, and most code just wants a number.
 - **[strict-stox](https://github.com/Kronuz/strict-stox)**: strict numeric parsing, the `stoi` that actually rejects `"12abc"` instead of quietly returning `12`, which the standard one does not.
 
 ## Containers and iteration
 
 - **[lru-cache](https://github.com/Kronuz/lru-cache)**: an intrusive LRU cache, a doubly-linked list threaded through the nodes themselves, so eviction is `O(1)` with no separate bookkeeping structure.
-- **[bloom-filter](https://github.com/Kronuz/bloom-filter)**: a header-only Bloom filter, the probabilistic set that answers "definitely not present" or "maybe present" in a few bits per element.
+- **[bloom-filter](https://github.com/Kronuz/bloom-filter)**: a header-only Bloom filter, the probabilistic set that answers "definitely not present" or "maybe present" in 32 bits per element.
 - **[iterators](https://github.com/Kronuz/iterators)** and **[lazy](https://github.com/Kronuz/lazy)**: lazy iteration adaptors and deferred-evaluation helpers, small pieces of the "compute it only if someone asks" habit that runs through the whole engine.
 
 ## Systems odds and ends
 
 - **[errno-names](https://github.com/Kronuz/errno-names)**: map an `errno` to its symbolic name and human description, so a failure logs as `EAGAIN` and a sentence, not `11`.
-- **[located-exception](https://github.com/Kronuz/located-exception)**: an exception base that remembers where it was thrown and formats itself with a stack trace, the connective tissue between an error and [the tracer](/blog/the-haunted-handler/) that can describe it.
+- **[located-exception](https://github.com/Kronuz/located-exception)**: an exception base that remembers where it was thrown (function, file and line) and formats its message with `std::format`. It records that one site, not the stack; the whole stack is [the tracer](/blog/the-haunted-handler/)'s job.
 - **[fs](https://github.com/Kronuz/fs)**: filesystem helpers, the path and directory operations that sit just above [io](/blog/io/).
 - **[allocators](https://github.com/Kronuz/allocators)**: an STL-compatible allocator toolkit, for the places where the default allocator is not the right one.
 - **[scheduler](https://github.com/Kronuz/scheduler)**: the timer-wheel scheduler and per-key debouncer built directly on [the wheel](/blog/the-sparse-wheel/), the layer between the raw lock-free structure and [the logger](/blog/logger/) that rides it. It half-earned its own post; you have already met its heart and its best client.
@@ -59,6 +58,6 @@ That is the whole bag, and with it, the whole party. Sixty-odd libraries, from a
 
 Here is what I actually take from having done it. A big system does not feel, from the inside, like a collection of small ideas. It feels like one large, tangled thing you hold in your head all at once, and are a little afraid to touch. But when you finally pull a piece out, give it its own repository, its own README, its own tests, and make it earn its keep alone, the piece turns out to be *smaller and clearer than it ever looked while it was load-bearing*. The lock-free wheel was never really about Xapiand. The perfect hash was never really about search. They were general ideas that happened to be born under pressure, and the pressure is exactly what made them sharp. Taking the engine apart was not demolition. It was finding out how many separate, reusable, understandable things I had actually built while I thought I was building one.
 
-That is the honest reason this series exists. Not to show off an engine, that story is [its own post](/blog/a-search-engine-from-scratch/), but because the tools were the better souvenir. Every familiar here is real, open, and on [github.com/Kronuz](https://github.com/Kronuz); most are MIT or public domain; the code in each post is the code that runs. Clone the ones that solve a problem you have. That is what they are for, and it is why I bothered to carve them out at all: a thing you build alone, and understand completely, you can hand to someone else.
+That is the honest reason this series exists. Not to show off an engine, that story is [its own post](/blog/a-search-engine-from-scratch/), but because the tools were the better souvenir. Every familiar here is real, open, and on [github.com/Kronuz](https://github.com/Kronuz); nearly all are MIT; the code in each post is the code that runs. Clone the ones that solve a problem you have. That is what they are for, and it is why I bothered to carve them out at all: a thing you build alone, and understand completely, you can hand to someone else.
 
 The campaign is over. The party is yours now.
