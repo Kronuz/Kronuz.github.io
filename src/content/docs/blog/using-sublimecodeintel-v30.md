@@ -3,7 +3,6 @@ title: "SublimeCodeIntel v3.0"
 description: "How to install and upgrade to SublimeCodeIntel v3.0 beta, now built on the standalone CodeIntel Python package (pip install codeintel)."
 excerpt: "SublimeCodeIntel v3.0 splits the engine into a standalone CodeIntel Python package. Here is how to install the pip package and upgrade Sublime Text to the v3.0 beta."
 date: 2015-04-16
-draft: true
 authors: kronuz
 tags:
   - codeintel
@@ -29,7 +28,7 @@ pip install -U --pre codeintel
 If it all goes well, congratulations, you can now upgrade to and use
 SublimeCodeIntel v3.0 beta.
 
-Having accepted than SublimeCodeIntel v3.0 is yet a beta release, and if
+Having accepted that SublimeCodeIntel v3.0 is yet a beta release, and if
 you are willing and ready to try it out, follow the next steps to
 upgrade:
 
