@@ -3,8 +3,7 @@ title: "The Forbidden Layer"
 subtitle: "Learning to read the machine you're told not to touch."
 description: "An honest, deliberately non-specific account of learning reverse engineering as a teenager in 1990s Mexico City: the zines, the BBS scene, the assembly I wrote, the viruses I never released, SoftICE and the disassemblers, and the run-disassemble-hypothesize-patch loop that is the root of everything I have built since. No targets, no how-to-do-harm."
 excerpt: "As a teenager I fell in love with the layer of the machine you are not supposed to touch: disassembly, SoftICE, the assembly I wrote and the viruses I never released. This is the honest version, the thrill of finding the parts that were not meant to be found, with the specific targets left where they belong, in the past."
-date: 2026-06-08
-draft: true
+date: 2026-06-24
 featured: true
 series: "Opening Boxes"
 seriesOrder: 1
@@ -14,7 +13,7 @@ tags:
   - reverse-engineering
 ---
 
-*Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This is the first box, the one underneath all the others. I am going to be careful here, and a little vague on purpose, for reasons I will explain.*
+*The first box from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/), the one underneath all the others. I am going to be careful here, and a little vague on purpose, for reasons I will explain.*
 
 This is the part of my story most easily misunderstood, so let me set the terms before I tell it. As a teenager in 1990s Mexico City I fell completely in love with the layer of the machine you are not supposed to touch. Not the language you write in. The machine code underneath it, the actual bytes the processor runs, and the system calls beneath *those*. I am going to tell you what that taught me and why it mattered, and I am deliberately **not** going to name specific targets or walk through anything whose only use is to do harm. The specifics stay in the past where they belong. The method, and the fascination, are the parts worth keeping.
 
@@ -50,7 +49,7 @@ test -> run: "loop until it makes sense"
 
 The tools made it physical. **SoftICE** was the holy grail, a debugger that lived *below* the operating system, so you could freeze the entire machine mid-instruction and read its mind. Alongside it, **W32Dasm** and **IDA** to lay a binary out as readable code, and **HIEW** and **BIEW** to edit the bytes of an executable directly. With those you could set a breakpoint exactly where a program made a decision, single-step until you found the precise instruction that checked something, and then **change one byte** to make it decide differently.
 
-That last step is the whole craft. A conditional jump is one byte; flip it and "if the check fails" becomes "if the check passes." Once, with SoftICE, I traced a game down to the instruction that enforced a hard limit on how many units you could select at a time and patched the cap away. Harmless, and a perfect miniature of the entire discipline: find the rule, find where it physically lives, change it. The reward was always the same small electric jolt, the thing this article is named for: **finding the parts that were not meant to be found.**
+That last step is the whole craft. A conditional jump is one byte; flip it and "if the check fails" becomes "if the check passes." Once, with SoftICE, I traced a game down to the instruction that enforced a hard limit on how many units you could select at a time and patched the cap away. Harmless, and a perfect miniature of the entire discipline: find the rule, find where it physically lives, change it. The reward was always the same small electric jolt, the thing I was really there for: **finding the parts that were not meant to be found.**
 
 ## The line, and why I keep it
 
@@ -66,8 +65,6 @@ If any of this made you curious about the actual texts, here is where they live.
 
 - **Phrack** is still online at [phrack.org](http://phrack.org/), issue by issue.
 - **2600: The Hacker Quarterly** is at [2600.com](https://www.2600.com/).
-- The virus-writing zines, **40Hex** and **29A**, are historical artifacts now, archived for study (text, not the live payloads) at places like [textfiles.com](http://textfiles.com/magazines/) and the [vx-underground](https://vx-underground.org/) archives.
+- The virus-writing zines, **40Hex** and **29A**, are historical artifacts now, archived for study (text, not the live payloads) at places like [textfiles.com](http://textfiles.com/magazines/).
 - **Raregazz** and the rest of the Latin American scene survive in scattered [e-zine archives](https://vault.0x705h.com/en/ezines).
 - **Ralf Brown's Interrupt List**, the reference I lived in, is mirrored at [Ralf Brown's pages](https://www.cs.cmu.edu/~ralf/files.html).
-
-*(I'd like to mirror the freely-redistributable text ones, Phrack and Raregazz, directly on this site behind a readable viewer. That viewer is the next thing I'm building, so for now these are links.)*
