@@ -137,15 +137,26 @@ function escapeAttr(str) {
     .replace(/"/g, "&quot;");
 }
 
-/** Render both themes into the `figure.diagram` HTML (light + dark images). */
+/**
+ * Render both themes into the `figure.diagram` HTML.
+ *
+ * The description is spoken and read once, however the page is consumed:
+ *  - Both images are decorative (`alt=""`); the description is one `<figcaption>`, hidden
+ *    visually (`sr-only`, Starlight's utility class) but present as text. The stylesheet
+ *    shows one image per theme, so alt text on both would be read twice by Reader view,
+ *    which ignores the stylesheet, and the figcaption stays whichever theme is active.
+ *  - The dark image carries `hidden`, which Reader honors, so Reader shows the light diagram
+ *    only; custom.css shows the dark one again in the dark theme (author CSS beats `hidden`).
+ */
 export function figureHtml(code, alt = "", pad = 24) {
   const light = renderD2(code, "light", pad);
   const dark = renderD2(code, "dark", pad);
   const a = escapeAttr(alt);
   return (
     `<figure class="diagram">` +
-    `<img class="diagram-light" src="${light}" alt="${a}" />` +
-    `<img class="diagram-dark" src="${dark}" alt="${a}" />` +
+    `<img class="diagram-light" src="${light}" alt="" />` +
+    `<img class="diagram-dark" src="${dark}" alt="" hidden />` +
+    (a ? `<figcaption class="diagram-description sr-only">${a}</figcaption>` : "") +
     `</figure>`
   );
 }

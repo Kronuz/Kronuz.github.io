@@ -61,7 +61,9 @@ Articles tell an honest arc (problem → struggle → payoff → what's left + c
 ## D2 diagrams: the recipe
 
 Fenced ```d2 blocks are rendered at build time by `src/plugins/remark-d2.mjs` →
-`src/lib/renderD2.mjs`, which shells out to the `d2` CLI. `\n` in a label = line break.
+`src/lib/renderD2.mjs`, which shells out to the `d2` CLI. `\n` in a label = line break. The fence's
+`alt="..."` is the diagram's description, read once by Reader view and screen readers (see "Reader
+view and listening"): write it as a sentence.
 
 **Keep diagrams visually balanced: width/height ratio ~0.6–1.2 (target ~1.0).** Avoid
 both extremes (wide chains and tall single-column chains read badly).
@@ -120,6 +122,9 @@ console.log(`${Math.round(+m[1])}x${Math.round(+m[2])} ratio=${(+m[1]/+m[2]).toF
 - **Drafts are excluded from `dist`.** `npm run build` does NOT render `draft: true` posts,
   so it does NOT exercise their D2 fences. Validate a draft's diagrams with the measure
   snippet above (or via the dev server), not the build.
+- **Rendered markdown is cached.** The content layer (`node_modules/.astro/`) reuses the rendered HTML
+  of unchanged posts, so editing a remark/rehype plugin or `figureHtml` does not re-render them: build
+  with `npm run build -- --force` (or delete `node_modules/.astro`) to see the new markup.
 - **The dev server caches D2 output.** After editing a `.md`, a running `npm run dev` may
   keep serving a stale diagram render. If a change "didn't take," restart the dev server
   (the markdown HMR doesn't always re-run the D2 render). Hard-refresh the browser too.
@@ -131,25 +136,38 @@ console.log(`${Math.round(+m[1])}x${Math.round(+m[2])} ratio=${(+m[1]/+m[2]).toF
 ## Reader view and listening
 
 Readers open posts in Reader view (Safari **aA**, Show Reader; Firefox Reader View), and some
-listen: Safari's Listen to Page reads the Reader extraction aloud, VoiceOver reads the page.
+listen: Safari's Listen to Page reads the Reader extraction aloud, VoiceOver reads the page. The
+templates give them the article and nothing else (fix regressions in the templates, not in posts):
 
-- Posts carry `og:type` `article` and a schema.org `BlogPosting` in JSON-LD (author,
-  `datePublished`); Mozilla Readability, the extractor behind Firefox's Reader View, finds every
-  post article-like and extracts title, byline and date.
-- The templates add text a listener should not hear (fix these in the templates, not in posts):
-  - the "Edit source" link, which sits inside the content area;
-  - the mobile series box (`details.series-mobile`), rendered inside the content before the first
-    paragraph, so a series post starts with its chapter list;
-  - each D2 diagram twice: a light and a dark `<img>` with the same alt text, one hidden by CSS,
-    which Reader view ignores;
-  - and the body is not wrapped in an `<article>`, with no `author` or `article:published_time`
-    meta for Reader's byline and date.
+- **The article.** On a post, `MarkdownContent.astro` wraps the body in
+  `<article class="kz-post" aria-labelledby="_top">`, named by the page `<h1>`. The series chip
+  (`details.series-mobile`), both pagers, the comments and the post footer are siblings outside it.
+  Starlight puts the title panel (`PageTitle.astro`: `<h1>`, subtitle, "Edit source") and the content
+  panel in separate siblings, so the title, subtitle and edit link sit above the article, and the date
+  and byline sit between them and the chip. Reader view starts at the first paragraph and takes the
+  title, byline and date from metadata.
+- **Metadata.** Posts carry `og:type` `article`, a schema.org `BlogPosting` in JSON-LD (author,
+  `datePublished`), and `<meta name="author">`, `article:author` and `article:published_time`.
+  `starlightRouteData.ts` adds the meta tags after `next()`, once starlight-blog's middleware has
+  resolved the post, so they match the rendered byline. Mozilla Readability, the extractor behind
+  Firefox's Reader View, reads byline and date from them when the JSON-LD is absent.
+- **D2 diagrams.** `figureHtml` (`lib/renderD2.mjs`) emits both theme images as decorative (`alt=""`),
+  the dark one with `hidden` (Readability drops it, so Firefox's Reader shows the light diagram only;
+  `custom.css` shows it again under `[data-theme='dark']`), and the fence's `alt="..."` as one
+  `figcaption.diagram-description.sr-only`. The description is text, so Reader and Listen to Page read
+  it once in either theme, and Chrome's accessibility tree exposes it once and no image. Hand-written
+  `<figure class="diagram">` HTML needs the same markup.
 - No speech markup works: browsers implement neither CSS `speak`/`speak-as` nor SSML, and
   schema.org `speakable` is read only by Google Assistant for news. `aria-hidden="true"` removes an
-  element from VoiceOver and from Readability: use it for duplicates and decoration, never content.
+  element from VoiceOver and from Readability, and so does `hidden`: use them for duplicates and
+  decoration, never content.
 - What a post's prose does for listeners (no bare hashes, a sentence before each table and code
   block, alt text as a sentence) is in the german-writing skill, `references/articles.md`,
   "Written to be read aloud".
+- **Checking a change.** Build, serve `dist`, save pages, and run Mozilla Readability over them
+  (jsdom plus `@mozilla/readability`): the text starts with the first paragraph, has no "Edit source"
+  or series list, shows each diagram description once, and has `byline` and `publishedTime`. Compare
+  element rects in headless Chrome before and after to show the layout did not move.
 
 ## Publishing a backlog
 
@@ -207,7 +225,8 @@ served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared 
 `renderSnippet.mjs`, the snippet pages, `PageTitle.astro`, `Sidebar.astro`, `ThemeSelect.astro`,
 `TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
 (`remark-ansi.mjs`, `remark-d2.mjs`, `remark-snippet.mjs`, `remark-snippet-link.mjs`,
-`remark-soft-blog-links.mjs`) plus `lib/normalizeAnsi.mjs`.
+`remark-soft-blog-links.mjs`) plus `lib/normalizeAnsi.mjs`, `lib/renderD2.mjs` and
+`starlightRouteData.ts`.
 After editing a shared file, copy it to the other repo and rebuild both. **Legitimately
 different:** content (posts, `about.md`, `index.mdx`, `projects.md`), `sidebar.mjs` (this side adds
 Projects), `content.config.ts`, `astro.config.mjs`, `consts.ts`, `SiteTitle.astro`, `Footer.astro`,

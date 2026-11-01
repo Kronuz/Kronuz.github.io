@@ -1,6 +1,14 @@
+import type { APIContext } from 'astro';
 import { defineRouteMiddleware } from '@astrojs/starlight/route-data';
 import { tocHasHeadings } from './lib/toc.mjs';
 import { resolveSeries } from './lib/series.mjs';
+
+export const onRequest = defineRouteMiddleware(async (context, next) => {
+	await fitTitleAndToc(context);
+	// starlight-blog's middleware resolves each post's authors and runs after this one.
+	await next();
+	addArticleMeta(context);
+});
 
 // Unify the right "On this page" column across the blog and the projects space: it should
 // appear only when there is something real to show. Starlight (and starlight-blog) leave a
@@ -12,7 +20,7 @@ import { resolveSeries } from './lib/series.mjs';
 // a series stepper will render in it: project pages hand their series in via
 // `Astro.locals.projectSeries` (set by src/pages/projects/[slug].astro before StarlightPage
 // runs this middleware); blog posts resolve their series from the entry id.
-export const onRequest = defineRouteMiddleware(async (context) => {
+async function fitTitleAndToc(context: APIContext) {
 	const route = context.locals.starlightRoute;
 	const toc = route?.toc;
 
@@ -33,4 +41,24 @@ export const onRequest = defineRouteMiddleware(async (context) => {
 	}
 
 	if (!hasStepper) route.toc = undefined;
-});
+}
+
+// Reader views and link previews read a post's byline and date from <meta> tags, under the
+// conventional names `author`, `article:author` and `article:published_time` (the JSON-LD
+// BlogPosting from starlight-blog carries the same facts for extractors that read it). The
+// author comes from starlight-blog's resolved post, so the tags match the byline on the page.
+function addArticleMeta(context: APIContext) {
+	const route = context.locals.starlightRoute;
+	const entry = route?.entry;
+	const date = entry?.data?.date as Date | undefined;
+	if (!date) return;
+
+	type BlogData = { posts: { entry: { id: string }; authors: { name: string }[] }[] };
+	const blogs = (context.locals as { starlightBlogs?: Map<string, BlogData> }).starlightBlogs;
+	const post = [...(blogs?.values() ?? [])].flatMap((blog) => blog.posts).find((p) => p.entry.id === entry.id);
+	const names = (post?.authors ?? []).map((author) => author.name);
+
+	if (names.length > 0) route.head.push({ tag: 'meta', attrs: { name: 'author', content: names.join(', ') } });
+	for (const name of names) route.head.push({ tag: 'meta', attrs: { property: 'article:author', content: name } });
+	route.head.push({ tag: 'meta', attrs: { property: 'article:published_time', content: date.toISOString() } });
+}

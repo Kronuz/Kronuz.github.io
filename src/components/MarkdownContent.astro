@@ -6,6 +6,10 @@
 // discussions. Gated on `entry.data.date` (blog posts have it; the splash and
 // About/Projects pages don't), so none of it appears on non-blog pages.
 //
+// The post body alone sits in an <article> (named by the page <h1>); the series chip, the
+// pagers and the comments are siblings outside it, so Reader view and listening get the
+// article and nothing else. The title and edit link live in PageTitle's panel above.
+//
 // Setting `components.MarkdownContent` makes starlight-blog log a one-line build WARN
 // ("you already have a MarkdownContent override") and skip its own registration.
 // That's expected: we re-import its override below, so the blog frame still renders.
@@ -142,7 +146,7 @@ const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 
 			</details>
 		)
 	}
-	<slot />
+	{isBlogPost ? <article class="kz-post" aria-labelledby="_top"><slot /></article> : <slot />}
 	{
 		(seriesPrev || seriesNext) && (
 			<div class="post-pagers post-pagers-series">
