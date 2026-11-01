@@ -3,8 +3,7 @@ title: "The Session Smith"
 subtitle: "One workbench for Claude, Codex, and Copilot"
 description: "AgentSmith is a local command-line workbench for finding, inspecting, resuming, exporting, moving, and cleaning sessions from Claude Code, Codex, and GitHub Copilot CLI."
 excerpt: "Coding agents remember plenty, each in a different place and shape. AgentSmith works those native stores into one directory-centered command line without flattening away where the work came from."
-date: 2026-07-24
-draft: true
+date: 2026-07-27
 authors: kronuz
 tags:
   - ai
@@ -96,7 +95,7 @@ asmith resume codex ~/code/KronuZSH
 asmith resume copilot ~/code/AgentSmith
 ```
 
-The optional shell integration goes one step further. Calling `claude`, `codex`, or `copilot` with no arguments resumes the current directory when possible, and starts normally when there is nothing to resume. Arguments pass straight through to the real CLI.
+The optional shell integration goes one step further. Calling `claude`, `codex`, or `copilot` with no arguments resumes the current directory when possible, and starts a new session when there is nothing to resume. Arguments pass straight through to the real CLI. Know one thing before you source it: the bare `codex` and `copilot` run with their approvals off (`--dangerously-bypass-approvals-and-sandbox`, `--yolo`), and so does `asmith resume` for those two.
 
 Directories become lightweight session names without creating another session database.
 
@@ -138,7 +137,7 @@ handoff=$(asmith merge . -o ~/imports/combined-history)
 asmith launch claude "$handoff"
 ```
 
-The prepared directory remains inspectable before launch. Project context stays with the project. Global instructions, hooks, skills, and configuration have their own `--global` export, so a user-wide rule is not copied into every project bundle.
+The prepared directory remains inspectable before launch, and worth inspecting: `launch` starts the agent with its approvals off. Project context stays with the project. Global instructions, hooks, skills, and configuration have their own `--global` export, so a user-wide rule is not copied into every project bundle.
 
 This is continuation with provenance. The source remains available, omissions are named, and the new agent owns the new session.
 
