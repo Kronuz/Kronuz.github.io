@@ -137,6 +137,8 @@ If you need the fastest big-number arithmetic there is, use GMP. It is faster at
 
 uinteger_t is for the other case: a number wider than 64 bits inside a C++ program that should not grow a dependency. It is one MIT-licensed header with no build step, where GMP is an LGPL library you build and link for every target. A value of up to 512 bits never touches the heap, and that is where its users live: base-x's keys and Xapiand's ids. It prints decimal faster than GMP from 256 to 4,096 bits, and it divides a 128-bit number by a 64-bit one in 2 nanoseconds, against GMP's 12, on the M1 Pro. And against the other header-only choice, Boost's `cpp_int`, it is 2 to 4 times faster at 256 bits, parsing decimal aside, and up to 118 times faster at a million.
 
+What it is not for is cryptography. My question about that came from my student days, when I learned how keys like RSA's work by building them with big integers: pick two large primes, multiply them, and raise numbers to huge powers modulo the result. A bignum library does all of that math, so I asked what uinteger_t would need to be decent at it. The answer was that it cannot be, not as it is built. Every operation's time depends on the values it touches: a carry here, a number trimmed shorter there, a shortcut in a comparison. Someone who can time those operations learns bits of the key. Cryptographic code works on numbers of a fixed width in constant time, never branching on a secret, and earns trust through its own reviews and timing tests. That would be a second type in its own header, so the README now says to keep keys out of uinteger_t. Modular arithmetic for public values would still fit the library, and whether to build it is my call.
+
 ## What is left
 
 Plenty, and each repository's OPEN-WORK.md says so ([uinteger_t](https://github.com/Kronuz/uinteger_t/blob/master/docs/OPEN-WORK.md), [base-x](https://github.com/Kronuz/base-x/blob/master/docs/OPEN-WORK.md)).
@@ -144,7 +146,6 @@ Plenty, and each repository's OPEN-WORK.md says so ([uinteger_t](https://github.
 - Addition still takes 0.43 ns per limb against GMP's 0.31. The last of that gap needs assembly.
 - A short quotient against a long divisor is slow: a 4-limb quotient by a 2,048-limb divisor takes 1.3 microseconds on the Intel laptop, against GMP's 0.09.
 - On the Intel, a `malloc` and `free` pair costs 37 ns, so the `std::string` that base-x returns is about a third of its encode time, and the digit-to-character map there is scalar.
-- When I asked what uinteger_t would need to be decent for cryptography, the answer was a second type. Every kernel branches on the values, so its timing leaks secrets, and the README now says to keep keys out of it. A constant-time fixed-width type would need its own header and its own review, while modular arithmetic for public values would fit the library as it is. Whether to build either is still my call.
 
 ## The part I did
 
