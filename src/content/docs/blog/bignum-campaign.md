@@ -80,7 +80,7 @@ Division got a ladder too: recursive division after Burnikel and Ziegler from 2,
 
 Then the two changes I like best. Both came from explorers, and both are tiny.
 
-At the bottom of every product sits a multiply-add, `x * y + a + c`, written as one 128-bit sum. The compiler added `a + c` first, which put three dependent operations on the carry chain of every limb. Adding the carry last leaves two:
+Below the transform, every product ends in the schoolbook loop, because Karatsuba and Toom recurse until their pieces are small enough for it. At the loop's core sits a multiply-add, `x * y + a + c`, written as one 128-bit sum. The compiler added `a + c` first, which put three dependent operations on the carry chain of every limb. Adding the carry last leaves two:
 
 ```diff
  // _multadd at 64-bit limbs, simplified from 5ee8586
