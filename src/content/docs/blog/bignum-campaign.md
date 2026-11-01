@@ -15,11 +15,11 @@ tags:
 
 "One fun task," I typed on a Friday evening. I pasted the link to [uinteger_t](https://github.com/Kronuz/uinteger_t) and asked: "Can it be substantially optimized?"
 
-uinteger_t is an arbitrary-precision unsigned integer in a single C++ header, a number with no ceiling that still reads like `a * b + c` (its [Familiars post](/blog/uinteger_t/) has the tour). [base-x](https://github.com/Kronuz/base-x), my base58 and base62 codec, does its math on it. I mostly wrote that monster back in 2017, growing it out of Jason Lee's `uint128_t`. Nothing was broken and nobody was waiting on it. It was a fun question for a Friday night.
+uinteger_t is an arbitrary-precision unsigned integer in a single C++ header, a number with no ceiling that still reads like `a * b + c` (its [Familiars post](/blog/uinteger_t/) has the tour). [base-x](https://github.com/Kronuz/base-x), my base58 and base62 codec, does its math on it. It started as Jason Lee's `uint128_t`, a fixed 128-bit type; in 2017 I turned it into the arbitrary-precision monster it is, and until this campaign most of its code was mine. Nothing was broken and nobody was waiting on it. It was a fun question for a Friday night.
 
 About twenty-three hours later the answer was yes. Printing a 262,144-bit number in decimal went from 1.5 seconds to under 3 milliseconds. uinteger_t now prints decimal faster than [GMP](https://gmplib.org/) 6.3 up to 4,096 bits, and most other operations take 1.2 to 2.3 times GMP's time. base-x encodes a 32-byte key in base58 in 74 nanoseconds, against 48.5 for [Firedancer](https://github.com/firedancer-io/firedancer)'s fixed-size codec.
 
-I did not write those kernels. A team of AI coding agents in [GitHub Copilot CLI](https://docs.github.com/en/copilot/concepts/agents/copilot-cli) did, in what I call a campaign: I set the goals and the rules, and I made the calls when asked. This post is about both halves, what it took to get a small header within striking distance of GMP, and what it was like to direct the work instead of doing it.
+I did not write the new kernels. A team of AI coding agents in [GitHub Copilot CLI](https://docs.github.com/en/copilot/concepts/agents/copilot-cli) did, in what I call a campaign: I set the goals and the rules, and I made the calls when asked. This post is about both halves, what it took to get a small header within striking distance of GMP, and what it was like to direct the work instead of doing it.
 
 ## The monster
 
@@ -142,6 +142,6 @@ Plenty, and each repository's OPEN-WORK.md says so ([uinteger_t](https://github.
 
 ## The part I did
 
-I wrote almost none of this code. Of everything I asked for, the two rules that paid for themselves were the plain ones: believe no speedup until it beats the noise on a quiet machine, and have someone who did not write a branch try to break it before it lands. The agents were fast. The reviewers are why I trust what they wrote.
+I wrote none of this campaign's code. The library it reworked is the one I built in 2017 on Jason Lee's `uint128_t`: the arbitrary-precision type, its operators and its base conversion. The campaign kept that shape and that API and replaced the arithmetic underneath. Of everything I asked for, the two rules that paid for themselves were the plain ones: believe no speedup until it beats the noise on a quiet machine, and have someone who did not write a branch try to break it before it lands. The agents were fast. The reviewers are why I trust what they wrote.
 
-Thanks to Jason Lee, whose `uint128_t` this grew from, and to the people whose papers did the heavy lifting: Bouvier and Zimmermann, Burnikel and Ziegler, Bodrato and Zanoni, Pollard, Montgomery, and Möller and Granlund. The code, the benchmarks, and the changelogs with every number and commit are on GitHub: [uinteger_t](https://github.com/Kronuz/uinteger_t/blob/master/CHANGELOG.md) and [base-x](https://github.com/Kronuz/base-x/blob/master/CHANGELOG.md).
+Thanks to Jason Lee, whose `uint128_t` I grew uinteger_t from, and to the people whose papers did the heavy lifting: Bouvier and Zimmermann, Burnikel and Ziegler, Bodrato and Zanoni, Pollard, Montgomery, and Möller and Granlund. The code, the benchmarks, and the changelogs with every number and commit are on GitHub: [uinteger_t](https://github.com/Kronuz/uinteger_t/blob/master/CHANGELOG.md) and [base-x](https://github.com/Kronuz/base-x/blob/master/CHANGELOG.md).
