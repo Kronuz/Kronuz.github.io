@@ -1,10 +1,9 @@
 ---
 title: "The Syscalls That Lie"
 subtitle: "The EINTR retry, the fsync that isn't, and the one call you must never retry."
-description: "io is an EINTR-safe POSIX file and socket layer extracted verbatim from Xapiand. Every function in the io:: namespace mirrors a syscall of the same name but adds the retry and short-count handling a real storage or network engine needs: read, write, send, recv, fsync and friends retry through EINTR, write and pread loop until the whole buffer moves, open refuses to hand back a descriptor below stderr and sets O_CLOEXEC, and durability is made portable (fdatasync on Linux, F_FULLFSYNC on macOS for real on-platter sync, fallocate with fallbacks). The one deliberate exception is close(), which never retries on EINTR, because retrying close can double-close a file descriptor another thread has already reused."
+description: "io is an EINTR-safe POSIX file and socket layer extracted from Xapiand. Every function in the io:: namespace mirrors a syscall of the same name but adds the retry and short-count handling a real storage or network engine needs: read, write, send, recv, fsync and friends retry through EINTR, write and pwrite loop until the whole buffer moves, open refuses to hand back a descriptor below stderr and sets O_CLOEXEC, and durability is made portable (fdatasync on Linux, F_FULLFSYNC on macOS for real on-platter sync, fallocate with fallbacks). The one deliberate exception is close(), which never retries on EINTR, because retrying close can double-close a file descriptor another thread has already reused."
 excerpt: "The POSIX calls at the bottom of every server are not as honest as they look. A read can be cut short by a signal and return having done nothing wrong. An fsync on macOS returns success without actually putting your data on the platter. And retrying a close() that was interrupted can silently destroy a file descriptor another thread just reused. The eighteenth familiar is the thin layer that knows all of this and does the boring, correct thing so the rest of the engine never has to."
-date: 2026-07-10
-draft: true
+date: 2026-09-14
 series: "Familiars"
 seriesOrder: 18
 chapter: "Forbidden Layer"
@@ -38,4 +37,4 @@ For good measure, `open()` also refuses to return any descriptor below `stderr +
 
 Reach for it whenever you do real file or socket IO in a long-running C++ process and want EINTR, short counts, safe descriptors, and honest durability handled for you, portably, with zero dependencies. Skip it only if you are already inside a runtime (an async framework, a database) that owns the syscalls for you. This is not a glamorous familiar. It is the one that makes the glamorous ones correct.
 
-The next familiar stays down here in the machine, on the same portability problem from the other side: reading how much memory and CPU the process and the host actually have, on operating systems that each keep the answer somewhere different.
+The next familiar stays down here in the machine, on the same portability problem from the other side: reading how many descriptors, how much memory and how much disk the process and the host actually have, on operating systems that each keep the answer somewhere different.
