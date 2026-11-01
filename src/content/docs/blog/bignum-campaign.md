@@ -141,6 +141,8 @@ uinteger_t is for the other case: a number wider than 64 bits inside a C++ progr
 
 This one is for anyone who, like me as a student, first met big integers through cryptography. Back then I learned how RSA works by writing it with big integers: pick two large primes, multiply them, and raise numbers to huge powers modulo the result. A bignum library does all of that math, so it is tempting to reach for one. But in uinteger_t every operation takes a time that depends on the values it touches: a carry here, a number trimmed shorter there, a shortcut in a comparison. Someone who can time those operations learns bits of the key. Cryptographic code works on numbers of a fixed width in constant time, never branching on a secret, and earns trust through its own reviews and timing tests. That would be a different type in its own header, and the README says to keep keys out of uinteger_t.
 
+Learning is another matter. The math RSA needs is all there: square-and-multiply is a loop of `*`, `%` and a shift, and a toy key built from two Mersenne primes, of 127 and 89 bits, encrypts and decrypts fine. Experiment with it as much as you like; just keep real keys out of it.
+
 ## What is left
 
 Plenty, and each repository's OPEN-WORK.md says so ([uinteger_t](https://github.com/Kronuz/uinteger_t/blob/master/docs/OPEN-WORK.md), [base-x](https://github.com/Kronuz/base-x/blob/master/docs/OPEN-WORK.md)).
