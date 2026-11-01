@@ -3,7 +3,6 @@ title: "Animated LICEcap GIFs, the Hard Way"
 description: "Recording the screen with LICEcap and turning its lossless LCF capture into a clean animated GIF, the hard way, using Jon Skinner's method."
 excerpt: "Jon Skinner, of Sublime Text, once shared the trick behind those silky screencasts: animated GIFs, the hard way. Here is how I record them now with LICEcap and turn the lossless capture into a clean GIF."
 date: 2015-04-23
-draft: true
 authors: kronuz
 tags:
   - screencast
@@ -44,10 +43,10 @@ packaged files. The following is an example produced by running
 
 <style>.anim_target { width: 100% !important; height: auto !important; }</style>
 <div id="anim_fallback" class="anim_target"><canvas id="anim_target" class="anim_target"></canvas></div>
-<script src="{{ 'js/anim.js' | relative_url }}"></script>
-<script src="{{ 'assets/example_anim.js' | relative_url }}"></script>
+<script src="/js/anim.js"></script>
+<script src="/assets/example_anim.js"></script>
 <script>
-  set_animation("{{ 'assets/example_packed.png' | relative_url }}", example_timeline, 'anim_target',
+  set_animation("/assets/example_packed.png", example_timeline, 'anim_target',
   'anim_fallback');
 </script>
 
