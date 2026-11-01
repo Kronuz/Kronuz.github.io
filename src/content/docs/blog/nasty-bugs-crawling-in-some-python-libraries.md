@@ -1,22 +1,16 @@
 ---
 title: "Catching a Monkeypatch"
 subtitle: "One comma in an except clause, and weeks of confusion."
-description: "A months-long bug hunt: requests.get() kept catching a KeyError where an Empty should have been. The fix was to replace a module in sys.modules with a write-protected proxy that raised the moment something tried to patch it, exposing a Python 2 except-syntax trap."
+description: "A weeks-long bug hunt: requests.get() kept catching a KeyError where an Empty should have been. The fix was to replace a module in sys.modules with a write-protected proxy that raised the moment something tried to patch it, exposing a Python 2 except-syntax trap."
 excerpt: "For weeks, requests.get() kept catching an exception nobody could explain, and the library was innocent. This is the hunt: replacing a module in sys.modules with a proxy that screams when something patches it, and the one-comma Python 2 bug it caught."
 date: 2016-03-08
-draft: true
 authors: kronuz
-series: "Opening Boxes"
-seriesOrder: 6
 tags:
-  - opening-boxes
   - python
   - monkeypatch
 ---
 
-*Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This one opens a box I did not want to open: someone else's monkeypatch, hiding in a dependency.*
-
-For many weeks, a codebase I worked on had a bug where a plain `requests.get()` would end up catching an exception nobody could explain. I want to be clear before I start, because the traceback points at it and the traceback is lying: there was never any bug in the excellent [`requests`](https://github.com/kennethreitz/requests/issues/2935) library. It was the messenger.
+For many weeks, a codebase I worked on had a bug where a plain `requests.get()` would end up catching an exception nobody could explain. I want to be clear before I start, because the traceback points at it and the traceback is lying: there was never any bug in the excellent [`requests`](https://github.com/psf/requests/issues/2935) library. It was the messenger.
 
 Here is the kind of exception we kept seeing:
 
@@ -133,4 +127,4 @@ except (KeyError, Queue.Empty):
 
 ## What it left me with
 
-Two things stuck. The first is a healthy paranoia: once I went looking, I found several installed libraries doing the same `except A, B:` thing, each one quietly capable of overriding an exception type at the worst possible moment. The second is the technique itself, which has earned its keep many times since. When you are certain *something* is patching a module but you cannot find what, do not keep grepping. Replace the module with a `Protected` proxy that refuses to be written to, run the program, and let the monkeypatch raise its own hand.
+Two things stuck. The first is a healthy paranoia: once I went looking, I found several installed libraries doing the same `except A, B:` thing, each one quietly capable of overriding an exception type at the worst possible moment. The second is the technique itself. When you are certain *something* is patching a module but you cannot find what, do not keep grepping. Replace the module with a `Protected` proxy that refuses to be written to, run the program, and let the monkeypatch raise its own hand.
