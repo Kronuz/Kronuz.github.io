@@ -153,9 +153,11 @@ listen: Safari's Listen to Page reads the Reader extraction aloud, VoiceOver rea
 
 ## Publishing a backlog
 
-`npm run publish -- <slug>` stamps today's date. To publish several drafts with realistic dates,
-do it by hand: set each post's `date:`, drop `draft: true` (and `upcoming: true`), commit each post
-as `Publish: <title>`, run `npm run build`, and push once (Actions deploys).
+`npm run publish -- <slug>` drops `draft: true` (and `upcoming: true`), sets `date:`, commits
+`Publish: <title>` and pushes; Actions deploys. `--date YYYY-MM-DD` (or an ISO date-time,
+`2026-08-06T09:30`) publishes a draft under the date it was written instead of today, and
+`--no-push` commits only, so a batch goes out in one `git push` after `npm run build`. The script
+refuses a post that is not a draft, a date that does not exist and a date after today.
 
 - A date is no earlier than the facts the post states (a library's behavior, a number, a release),
   the work it describes (the file's git history and the events in the text), its series intro and
