@@ -131,6 +131,12 @@ The final numbers are in the [README](https://github.com/Kronuz/uinteger_t/blob/
 
 base-x's final numbers are in [its README](https://github.com/Kronuz/base-x/blob/919698e/README.md#-performance): on the M1 Pro it encodes a 32-byte key in base58 in 74 ns (52 when it writes into a string it reuses), against 48.5 for Firedancer, and decodes it in 72 against 63. At 64 bytes it decodes in 98 ns, half of Firedancer's 198. [libbase58](https://github.com/bitcoin/libbase58) takes 7 to 200 times as long as base-x from 32 to 256 bytes. On the Intel laptop, base-x takes about twice Firedancer's time at 32 bytes and matches it decoding 64. Getting there took two steps: chunking made the 32-byte encode about ten times faster, and [the division-free kernels](https://github.com/Kronuz/base-x/commit/2c21ec4) then took it from 203 to 73 ns.
 
+## Why not just use GMP?
+
+If you need the fastest big-number arithmetic there is, use GMP. It is faster at almost everything, and the reason is not a better algorithm: [its manual](https://gmplib.org/manual/Binary-to-Radix) describes the same divide-and-conquer conversion that uinteger_t uses above 8,192 bits. GMP's edge is underneath, in division and multiplication kernels written in assembly for each CPU and tuned per machine. Big conversions are mostly big divisions, and uinteger_t's division takes about twice GMP's time, so above 4,096 bits its conversions fall behind, by up to about as much.
+
+uinteger_t is for the other case: a number wider than 64 bits inside a C++ program that should not grow a dependency. It is one MIT-licensed header with no build step, where GMP is an LGPL library you build and link for every target. A value of up to 512 bits never touches the heap, and that is where its users live: base-x's keys and Xapiand's ids. It prints decimal faster than GMP from 256 to 4,096 bits, and it divides a 128-bit number by a 64-bit one in 2 nanoseconds, against GMP's 12, on the M1 Pro. And against the other header-only choice, Boost's `cpp_int`, it is 2 to 4 times faster at 256 bits, parsing decimal aside, and up to 118 times faster at a million.
+
 ## What is left
 
 Plenty, and each repository's OPEN-WORK.md says so ([uinteger_t](https://github.com/Kronuz/uinteger_t/blob/master/docs/OPEN-WORK.md), [base-x](https://github.com/Kronuz/base-x/blob/master/docs/OPEN-WORK.md)).
