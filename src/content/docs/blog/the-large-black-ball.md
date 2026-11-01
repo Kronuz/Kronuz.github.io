@@ -3,22 +3,21 @@ title: "The Large, Black Ball"
 subtitle: "Making Python lazy, in the most dangerous part of the language."
 description: "The deep version of the Cinder Lazy Imports story: why Instagram Server's import graph was a solid black ball, how deferred objects defer module loading until first use, and why the mechanism had to live inside the dictionary internals. With the real numbers."
 excerpt: "Instagram Server loaded 28,000 modules just to start, and its dependency graph rendered as a solid black ball. The fix was to make Python lazy: import a thing only when you reach for it. Doing that safely meant going into the most dangerous part of the language."
-date: 2026-06-08
-draft: true
+date: 2026-08-20
 featured: true
 series: "Opening Boxes"
-seriesOrder: 7
+seriesOrder: 6
 tags:
   - opening-boxes
   - python
   - performance
 ---
 
-*Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This one opens the box I am still proudest of: making Python lazy. The original, shorter telling is the [Cinder blog post](https://developers.facebook.com/blog/post/2022/06/15/python-lazy-imports-with-cinder/); this is the longer, more technical one.*
+*The box from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/) I am still proudest of: making Python lazy. The original, shorter telling is the [Cinder blog post](https://developers.facebook.com/blog/post/2022/06/15/python-lazy-imports-with-cinder/); this is the longer, more technical one.*
 
-In late 2021 a server reload at Instagram took around fifty seconds on a good day, and up to a minute and a half on a bad one. Not the production server. The *development* server, the one an engineer restarts dozens of times a day to see whether the line they just changed did what they hoped. Fifty seconds, times every save, times every engineer. That is not latency. That is a tax on thinking.
+A server reload at Instagram took around fifty seconds on average, and by the end of 2021 some took as long as a minute and a half. Not the production server. The *development* server, the one an engineer restarts dozens of times a day to see whether the line they just changed did what they hoped. Fifty seconds, times every save, times every engineer. That is not latency. That is a tax on thinking.
 
-By early 2022 the same reload was about **70% faster at p50**, the codebase loaded roughly **12x fewer modules** at startup, and a class of error that engineers hit about **80 times a day** had dropped to **zero**. This is how, and more importantly *why* the how was so awkward.
+By early 2022 the same reload took about **70% less time at p50**, the codebase loaded roughly **12x fewer modules** at startup, and a class of error that engineers hit about **80 times a day** had dropped to **zero**. This is how, and more importantly *why* the how was so awkward.
 
 ## A graph that came back black
 
@@ -89,7 +88,7 @@ Dictionaries are the substrate of Python. A module's namespace is a dict. A clas
 
 The reason it is also *dangerous* to put laziness there is the same reason: the dict is the hottest, most heavily optimized data structure in CPython. Add a branch to the lookup path and you do not slow down imports, you slow down *the entire language*, every attribute access in every program. So the work was not "make it lazy," it was "make it lazy and prove the dict is exactly as fast as before when nothing is deferred." That second half is where most of the time went. There were many smaller obstacles too, including a genuine CPython bug in `TypedDict` ([bpo-41249](https://bugs.python.org/issue41249)) that I tripped over along the way.
 
-Eventually I had a build that was reliable, and that ran the open-source [`pyperformance`](https://pyperformance.readthedocs.io/) suite, three times over, performance-neutral when the patch was present but the feature was off. A perf-neutral patch is the price of admission for touching dict internals, and it took a while to earn.
+Eventually I had a build that was reliable, and performance-neutral in experiments on live servers with the patch present but the feature off. I also ran the open-source [`pyperformance`](https://pyperformance.readthedocs.io/) suite three times with the feature on. A perf-neutral patch is the price of admission for touching dict internals, and it took a while to earn.
 
 ## What it bought
 
@@ -121,7 +120,7 @@ None of these are fatal, and most are one-time cleanups, but a deep-dive that hi
 
 The most exciting thing about lazy imports was never the seconds it saved. It was that it made a class of problem, the entangled import graph, stop being load-bearing. Refactors that were impossible became routine. Things you could not do because "it would create a cycle" became fine.
 
-Which raised the obvious next question: if this is good for one company, why not give it to all of Python? I wrote it up as **PEP 690** and proposed it to the language itself. That is a different box, with a more painful and more interesting story, and it gets its own article in this series.
+Which raised the obvious next question: if this is good for one company, why not give it to all of Python? Carl Meyer and I wrote it up as **PEP 690** and proposed it to the language itself. That is a different box, with a more painful and more interesting story, and it gets its own article in this series.
 
 None of this opened alone. Joshua Lear is the reason we ever *saw* the ball; Benjamin Woodruff drew the graph that made it legible; Carl Meyer and Dino Viehland climbed down into the dictionary internals with me and talked me out of the design that leaked. Many more carried the rollout and the long tail of compatibility fixes. The [full list of names is in the original post](https://developers.facebook.com/blog/post/2022/06/15/python-lazy-imports-with-cinder/#thanks), and it is long for a reason.
 
