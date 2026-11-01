@@ -128,6 +128,45 @@ console.log(`${Math.round(+m[1])}x${Math.round(+m[2])} ratio=${(+m[1]/+m[2]).toF
 - D2 install in CI is a `curl | sh` step in `deploy.yml`; `renderD2.mjs` also falls back to
   `/opt/homebrew/bin/d2` and `/usr/local/bin/d2`, so local builds work without PATH fuss.
 
+## Reader view and listening
+
+Readers open posts in Reader view (Safari **aA**, Show Reader; Firefox Reader View), and some
+listen: Safari's Listen to Page reads the Reader extraction aloud, VoiceOver reads the page.
+
+- Posts carry `og:type` `article` and a schema.org `BlogPosting` in JSON-LD (author,
+  `datePublished`); Mozilla Readability, the extractor behind Firefox's Reader View, finds every
+  post article-like and extracts title, byline and date.
+- The templates add text a listener should not hear (fix these in the templates, not in posts):
+  - the "Edit source" link, which sits inside the content area;
+  - the mobile series box (`details.series-mobile`), rendered inside the content before the first
+    paragraph, so a series post starts with its chapter list;
+  - each D2 diagram twice: a light and a dark `<img>` with the same alt text, one hidden by CSS,
+    which Reader view ignores;
+  - and the body is not wrapped in an `<article>`, with no `author` or `article:published_time`
+    meta for Reader's byline and date.
+- No speech markup works: browsers implement neither CSS `speak`/`speak-as` nor SSML, and
+  schema.org `speakable` is read only by Google Assistant for news. `aria-hidden="true"` removes an
+  element from VoiceOver and from Readability: use it for duplicates and decoration, never content.
+- What a post's prose does for listeners (no bare hashes, a sentence before each table and code
+  block, alt text as a sentence) is in the german-writing skill, `references/articles.md`,
+  "Written to be read aloud".
+
+## Publishing a backlog
+
+`npm run publish -- <slug>` stamps today's date. To publish several drafts with realistic dates,
+do it by hand: set each post's `date:`, drop `draft: true` (and `upcoming: true`), commit each post
+as `Publish: <title>`, run `npm run build`, and push once (Actions deploys).
+
+- A date is no earlier than the facts the post states (a library's behavior, a number, a release),
+  the work it describes (the file's git history and the events in the text), its series intro and
+  the parts before it, and every post it links to.
+- Posts imported from the old blog keep their original dates; a post written for this blog dates
+  from 2026-06-08 on (the relaunch, "Goodbye, Dr. Jekyll", is 2026-06-07).
+- One post per day, interleaved around the published ones; series parts in `seriesOrder`, a few
+  days apart.
+- A draft that waited is re-checked against the current state of what it describes before it
+  publishes (the draft-blog-post skill, "If the draft waited").
+
 ## Commands
 
 ```bash
