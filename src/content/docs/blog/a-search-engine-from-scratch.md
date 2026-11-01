@@ -3,8 +3,7 @@ title: "A Search Engine from Scratch"
 subtitle: "A distributed search engine in C++, built on Xapian."
 description: "A tour of Xapiand's real internals: a libev async core, Raft for cluster and shard-primary election, a Haystack-style LZ4 log store, and HTM geospatial indexing. With links to the actual code."
 excerpt: "Dubalu needed search, so I wrote one in C++. Xapiand is not a new inverted index, it is the distributed, RESTful, storage-backed daemon I wrapped around Xapian: Raft consensus, a log-structured store, and a triangular mesh for the whole planet. Here is how it really fits together."
-date: 2026-06-08
-draft: true
+date: 2026-07-28
 featured: true
 series: "Opening Boxes"
 seriesOrder: 5
@@ -14,7 +13,7 @@ tags:
   - cpp
 ---
 
-*Part of the **Opening Boxes** series, technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This one opens [Xapiand](https://github.com/Kronuz/Xapiand).*
+*The [Xapiand](https://github.com/Kronuz/Xapiand) box from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/).*
 
 At [Dubalu](/blog/the-boy-who-kept-opening-the-box/), my company, we needed search. Not "grep over a column" search, real search: full-text relevance, faceting, geo queries, across a cluster, fast. The honest move would have been to run Elasticsearch and get on with the product.
 
@@ -45,13 +44,13 @@ cluster -> ev
 core -> ev
 ```
 
-Everything sits on a single-threaded-per-loop **libev** event core (the same family of event loop that backs nginx and Node), with thread pools behind it. Nothing in the hot path blocks. Let me take the three pieces I am proudest of.
+Everything sits on a single-threaded-per-loop **libev** event core (the event library early Node.js was built on), with thread pools behind it. Nothing in the hot path blocks. Let me take the three pieces I am proudest of.
 
 ## Clustering: Raft, twice
 
 A distributed search engine has to answer two questions constantly: *who is in charge of the cluster?* and *who owns this particular shard right now?* Both are consensus problems, and rather than invent a protocol (the classic way to introduce a subtle, unfixable bug), I implemented **Raft**.
 
-The whole state machine is in [`src/server/discovery.h`](https://github.com/Kronuz/Xapiand/blob/master/src/server/discovery.h), and it is textbook Raft, in the good sense:
+The whole state machine is in [`src/server/discovery.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/server/discovery.h), and it is textbook Raft, in the good sense (trimmed, comments mine):
 
 ```cpp
 enum class Role {
@@ -88,7 +87,7 @@ Two `libev` timers drive it: `raft_leader_election_timeout` (a follower that sto
 
 ## Storage: a small Haystack
 
-Search gives you back document IDs. Something still has to hold the *documents*, durably, and hand them back by the million without thrashing the disk. For that I wrote a log-structured store, in [`src/storage.h`](https://github.com/Kronuz/Xapiand/blob/master/src/storage.h), modeled on the ideas in Facebook's **Haystack** paper: append, do not seek; pack many small objects into large block-aligned volumes; compress.
+Search gives you back document IDs. Something still has to hold the *documents*, durably, and hand them back by the million without thrashing the disk. For that I wrote a log-structured store, in [`src/storage.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/storage.h), modeled on the ideas in Facebook's **Haystack** paper: append, do not seek; pack many small objects into large block-aligned volumes; compress.
 
 The on-disk format is deliberately boring, which is what you want from a format that holds your data:
 
@@ -108,11 +107,11 @@ A volume opens with a block-padded `StorageHeader` carrying `STORAGE_MAGIC`. Eac
 
 "Find me documents within 5 km of here" is not a text query, and you cannot answer it well by scanning. The standard trick is to turn the surface of the Earth into a hierarchy of cells, encode each cell as a number, and let the *text* index do the work on those numbers. Xapiand uses the **Hierarchical Triangular Mesh (HTM)**: start with an octahedron projected onto the sphere, then recursively split each spherical triangle into four. Every point on Earth becomes a path down that tree, a 64-bit trixel ID, and a region becomes a set of trixel ranges you can feed straight into Xapian as terms.
 
-That lives in [`src/geospatial/htm.h`](https://github.com/Kronuz/Xapiand/blob/master/src/geospatial/htm.h) and `cartesian.h` (lat/long to unit-sphere Cartesian and back). It is the piece that let a *text* search engine answer real geo queries, polygons, circles, EWKT geometries, without a separate spatial database bolted on the side.
+That lives in [`src/geospatial/htm.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/geospatial/htm.h) and `cartesian.h` (lat/long to unit-sphere Cartesian and back). It is the piece that let a *text* search engine answer real geo queries, polygons, circles, EWKT geometries, without a separate spatial database bolted on the side.
 
 ## What it cost, and what it was for
 
-I will not pretend this was free. Building your own distributed datastore is a decision you pay for in nights. But Xapiand was not a toy: it was **Dubalu's core data infrastructure** for years, the thing our product actually ran on. It is MIT-licensed, around 360 stars on GitHub, and I was still pushing commits to it in 2025, long after Dubalu, because some boxes you never fully close.
+I will not pretend this was free. Building your own distributed datastore is a decision you pay for in nights. But Xapiand was not a toy: it was **Dubalu's core data infrastructure** for years, the thing our product actually ran on. It is MIT-licensed, around 360 stars on GitHub, and I am still pushing commits to it, long after Dubalu, because some boxes you never fully close.
 
 There is a straight line from here to the rest of my career. The instinct that built Xapiand, *I want to understand the whole stack, down to the bytes on disk and the votes on the wire*, is the same one that, a few years later, had me elbow-deep in CPython's dictionary internals making imports lazy. If you want that story, it is in [the longer one](/blog/the-boy-who-kept-opening-the-box/). Xapiand is where I learned, for real, how much "make it distributed" actually asks of you.
 
@@ -120,4 +119,4 @@ Xapiand also turned out to be a quarry. Years after Dubalu I went back and cut i
 
 ---
 
-*Everything above is from the real source: [github.com/Kronuz/Xapiand](https://github.com/Kronuz/Xapiand), specifically [`server/discovery.h`](https://github.com/Kronuz/Xapiand/blob/master/src/server/discovery.h) (Raft), [`storage.h`](https://github.com/Kronuz/Xapiand/blob/master/src/storage.h) (the store), and [`geospatial/htm.h`](https://github.com/Kronuz/Xapiand/blob/master/src/geospatial/htm.h) (the mesh). Copyright Dubalu LLC, 2015-2019.*
+*Everything above is from the real source as of the last Dubalu-era release, [Xapiand v0.40.0](https://github.com/Kronuz/Xapiand/tree/v0.40.0), specifically [`server/discovery.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/server/discovery.h) (Raft), [`storage.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/storage.h) (the store), and [`geospatial/htm.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/geospatial/htm.h) (the mesh). Copyright Dubalu LLC, 2015-2019.*
