@@ -3,8 +3,7 @@ title: "CSS That Computes"
 subtitle: "Building a Sass compiler in Python."
 description: "A code-verified look at pyScss, the Sass compiler I wrote in Python: how Sass is really a small typed expression language, how Number carries units and cancels them like dimensional analysis, how Color does channel math, and why the scanner had to be rewritten in C. With links to the real source."
 excerpt: "Sass looks like CSS with variables, but it is really a small typed programming language: colors that add, numbers that carry units and cancel them. I rebuilt about 95% of it in Python. Here is how the compiler actually works, from the C scanner to the color math."
-date: 2026-06-08
-draft: true
+date: 2026-07-25
 series: "Opening Boxes"
 seriesOrder: 4
 tags:
@@ -13,9 +12,9 @@ tags:
   - compilers
 ---
 
-*Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This one opens [pyScss](https://github.com/Kronuz/pyScss). It is also the grown-up, legal version of [The Forbidden Layer](/blog/the-forbidden-layer/): take a tool someone built in another language, open it up, understand exactly how it works, and rebuild it in yours.*
+*The [pyScss](https://github.com/Kronuz/pyScss) box from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). It is also the grown-up, legal version of [The Forbidden Layer](/blog/the-forbidden-layer/): take a tool someone built in another language, open it up, understand exactly how it works, and rebuild it in yours.*
 
-[Sass](http://sass-lang.com/) was a Ruby tool. I wanted it in Python, so I wrote one, [pyScss](https://github.com/Kronuz/pyScss), which implements about **95% of Sass 3.2**. You install it with `pip install pyScss` and use it like this:
+[Sass](http://sass-lang.com/) was a Ruby tool. I wanted it in Python, so I wrote one, [pyScss](https://github.com/Kronuz/pyScss), which implements about **95% of Sass 3.2**. You install it with `pip install git+https://github.com/Kronuz/pyScss` (the last PyPI release, 1.4.0, fails on Python 3.11 and newer, see [issue #431](https://github.com/Kronuz/pyScss/issues/431)) and use it like this:
 
 ```python
 from scss import Compiler
@@ -47,7 +46,7 @@ def __init__(self, amount, unit=None, unit_numer=(), unit_denom=()):
     self.value = amount * (numer_factor / denom_factor)
 ```
 
-There is a precision subtlety hiding in there that I am still a little proud of. Unit conversions are ratios (96px to an inch, and so on), and doing them in floating point accumulates error. So the amount is stored as a Python `Fraction`, not a float, to keep conversions exact. The source even keeps my honest note next to it: *"this slowed the test suite down by about 10%, ha."* Correctness cost ten percent, and I paid it.
+There is a precision subtlety hiding in there, and it is not mine: Eevee (Lexy Munroe), who rewrote much of pyScss's type system from 2013 on, added it in 2016. Unit conversions are ratios (96px to an inch, and so on), and doing them in floating point accumulates error. So the amount is stored as a Python `Fraction`, not a float, to keep conversions exact. The source keeps the honest note that came with it: *"this slowed the test suite down by about 10%, ha."* Correctness cost ten percent, and Eevee paid it.
 
 ### Colors that do math
 
@@ -81,6 +80,8 @@ That instinct is the same one from every other box in this series: when a thing 
 ## What it was
 
 pyScss was, for a while, a widely used way to compile Sass without a Ruby dependency in the build, `pip install pyScss` and go. Implementing 95% of someone else's language teaches you that language more thoroughly than any amount of using it, because every corner you skipped as a user is a corner you now have to make behave. I came out the other side understanding Sass better than I understood most things I had merely used, which is the whole argument for opening the box instead of admiring it from outside.
+
+I did not get to 95% alone. Eevee (Lexy Munroe) made about five hundred commits to pyScss between 2012 and 2016, and most of the value types, the grammar, the `Calculator` and the compiler as they stand today are that work; the scanner and the C speedups are the parts that are still mostly mine.
 
 ---
 
