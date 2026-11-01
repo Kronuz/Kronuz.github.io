@@ -1,10 +1,9 @@
 ---
 title: "The Haunted Handler"
 subtitle: "Walking every thread's stack, portably, from inside a signal handler."
-description: "traceback, a whole-process crash dumper extracted from Xapiand, freezes every registered thread with SIGUSR2 and has each one photograph its own stack from inside the signal handler. Two unrelated hard parts meet there: walking a stack portably (the frame pointer is one idea spelled nine ways across Linux, macOS, and FreeBSD on x86-64 and AArch64, plus stack-growth direction and whether backtrace() even exists), and doing it where almost nothing is safe to call. Plus the bug where backtrace() itself lazily dlopens libgcc_s (a malloc) on its first call, inside the handler, which killed the TSAN build at startup until we warmed it one call early."
+description: "traceback, a whole-process crash dumper extracted from Xapiand, freezes every registered thread with SIGUSR2 and has each one photograph its own stack from inside the signal handler. Two unrelated hard parts meet there: walking a stack portably (the frame pointer is one idea spelled nine ways across Linux, macOS, and FreeBSD on i386, x86-64, and AArch64, plus stack-growth direction and whether backtrace() even exists), and doing it where almost nothing is safe to call. Plus the bug where backtrace() itself lazily dlopens libgcc_s (a malloc) on its first call, inside the handler, which killed the TSAN build at startup until we warmed it one call early."
 excerpt: "Sometimes the only useful question about a stuck server is 'what is every thread doing, right now?' traceback answers it by signalling every thread at once and having each photograph its own stack. The hard part is that the stack walk is one idea spelled nine different ways across Linux, macOS, and FreeBSD, run inside a signal handler where the wrong call deadlocks the process. The second familiar out of Xapiand, written half by reasoning and half by waiting for a red build on a machine I'll never log into."
-date: 2026-07-09
-draft: true
+date: 2026-08-03
 series: "Familiars"
 seriesOrder: 2
 chapter: "Forbidden Layer"
@@ -80,7 +79,7 @@ Two smaller potholes sit on the same road. A frame pointer is only safe to deref
 
 Symbolizing the addresses you collected has its own per-OS map. `dladdr` plus `abi::__cxa_demangle` turn an address into a demangled `symbol + offset` almost everywhere. But `file:line`, the part you actually want at three in the morning, has no portable source, so traceback earns it on macOS only, by shelling out to `atos` through a `forkpty`, and simply does without it elsewhere.
 
-The cruel part is that you cannot test most of this where you write it. I work on an arm64 Mac. The FreeBSD-on-AArch64 cell of that ladder is code I wrote **blind**, reasoning from a header I read in a browser tab, and the only thing that ever confirmed `mc_gpregs.gp_x[29]` was the right incantation was a CI runner on a machine I will never log into. Portable systems code like this is written half by reasoning and half by pushing a commit and waiting for a red build somewhere you have never been.
+The cruel part is that you cannot test most of this where you write it. I work on an arm64 Mac. The FreeBSD-on-AArch64 cell of that ladder is code I wrote **blind**, reasoning from a header I read in a browser tab, and nothing has confirmed `mc_gpregs.gp_x[29]` is the right incantation yet: CI builds FreeBSD on x86-64 only. Portable systems code like this is written half by reasoning and half by pushing a commit and waiting for a red build somewhere you have never been.
 
 ## The forbidden room
 
@@ -130,4 +129,4 @@ That is the part worth carrying out of the room. Async-signal-safety is not only
 
 traceback is that discipline made into a small library: a portable whole-process stack photographer you can point at a wedged server to see every thread at once, with the async-signal-safety worked out and the one nasty lazy path warmed for you. One header of API, a formatting box you can use on its own, and the crash dumper behind a flag when you want the whole picture.
 
-Next familiar is the one I would keep if I could keep only one. Somewhere in the running server a single thread sleeps, and every other thread keeps dropping timed work onto its schedule: log flushes, fsyncs, commits, replication triggers, a hundred thousand hand-offs a second. Not one of them is allowed to take a lock, and, harder than that, not one is allowed to *stall*. The strange little lock-free structure that makes both true at once is the best thing in the whole codebase.
+Next familiar is the one I would keep if I could keep only one. Somewhere in the running server a single thread sleeps, and every other thread keeps dropping timed work onto its schedule: log flushes, fsyncs, commits, replication triggers. Not one of them is allowed to take a lock, and, harder than that, not one is allowed to *stall*. The strange little lock-free structure that makes both true at once is the best thing in the whole codebase.
