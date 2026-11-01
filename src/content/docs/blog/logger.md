@@ -2,9 +2,8 @@
 title: "The Line You Usually Cancel"
 subtitle: "Arming a 'this is taking too long' log on every operation, and paying only for the one that fires."
 description: "logger is Xapiand's deferred, lock-free logging library, and the original reason the stash timer wheel exists. Many threads arm log lines without blocking each other, one thread drains and writes them in order, and a scheduled 'this operation is taking too long' line is cancelled with a single atomic when the operation finishes in time, so the common fast path logs nothing at all. The trick only pays because arming and cancelling are each one atomic on the lock-free wheel; on a locked scheduler you would add lock traffic to every fast path just to catch the rare slow one."
-excerpt: "You want to know which operations are slow, but logging every operation is noise you pay for on the hot path. So you invert it: arm a 'log this if it is still running in 200 ms' line on every single operation, and cancel it, free, the instant the operation finishes, which is almost always. The seventh familiar logs the exceptions by speculating on everything, and it is the reason the wheel two posts ago was built at all."
-date: 2026-07-10
-draft: true
+excerpt: "You want to know which operations are slow, but logging every operation is noise you pay for on the hot path. So you invert it: arm a 'log this if it is still running in 200 ms' line on every single operation, and cancel it, free, the instant the operation finishes, which is almost always. The seventh familiar logs the exceptions by speculating on everything, and it is the reason the sparse wheel was built at all."
+date: 2026-08-16
 series: "Familiars"
 seriesOrder: 7
 chapter: "Lock-Free"
@@ -14,7 +13,7 @@ tags:
   - concurrency
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one closes a loop: [logger](https://github.com/Kronuz/logger) is the original reason [the wheel](/blog/the-sparse-wheel/) two posts ago exists.*
+*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one closes a loop: [logger](https://github.com/Kronuz/logger) is the original reason [the sparse wheel](/blog/the-sparse-wheel/) exists.*
 
 Here is a thing you want and cannot easily have: to know which operations in a busy server were slow, without logging the ones that were fast. The fast ones are almost all of them, and they are on the hot path, so logging every operation to catch the rare slow one means paying for the common case to observe the exception. Most systems give up and sample, or log nothing, or log everything and drown.
 
@@ -34,7 +33,7 @@ Not every line is deferred. A log entry takes one of three routes, chosen by wha
 - **Routine lines are handed to a single LOG thread**, keyed at *now*, and written in order off the hot path. Many threads produce; one thread consumes and serializes; the producers never block each other.
 - **Deferred lines are keyed at *now + delay*** and fire only if nothing cancels them first. This is the slow-op line, the debounce, the "warn me if this is still stuck later."
 
-One consumer writing ordered output, many lock-free producers, and a deferred lane you arm and usually cancel. Everything host-specific, the exception formatting, the real backtraces (that is [another familiar](/blog/the-haunted-handler/)), the thread names, the timestamp format, comes in through hooks, so the core depends only on the scheduler beneath it.
+One consumer writing ordered output, many lock-free producers, and a deferred lane you arm and usually cancel. Everything host-specific, the exception formatting, the real backtraces (that is [another familiar](/blog/the-haunted-handler/)), the thread names, the timestamp format, comes in through hooks, so the core depends on little more than the scheduler beneath it.
 
 ## Where it fits
 
