@@ -3,8 +3,7 @@ title: "Interchangeable Parts"
 subtitle: "Three compression formats behind one interface, swapped by changing a single word."
 description: "compressors wraps three genuinely different compression backends, deflate (zlib), lz4, and zstd, behind one uniform C++20 shape: a CRTP block-streaming base, a matching Data/CompressData/DecompressData class family per backend, and free-function helpers that take a string_view and return a string. Because the shape is identical, you swap deflate for lz4 for zstd by changing the function name and nothing else, and pick the tradeoff you want: broad interop, raw speed, or best ratio. deflate and lz4 also stream to and from file descriptors with the library's own EINTR-safe IO; the round-trip is byte-for-byte for every backend, including empty and incompressible input."
 excerpt: "Compression is a set of tradeoffs, interop versus speed versus ratio, and the honest answer is 'it depends,' which is useless if switching backends means rewriting your call sites. The twelfth familiar puts three incompatible formats behind one identical shape, so choosing between deflate, lz4, and zstd is a matter of changing a single word in your code, and nothing else."
-date: 2026-07-10
-draft: true
+date: 2026-08-29
 series: "Familiars"
 seriesOrder: 12
 chapter: "Bytes"
@@ -33,9 +32,9 @@ Swap `zstd` for `lz4` in those two lines and you have changed your entire compre
 
 ## Genuinely different underneath
 
-The uniform surface hides three formats that share nothing. Each backend only decodes its own output, and the test cross-checks that the three encodings of one input are three distinct byte streams. zstd emits a standard zstd frame that records the content size. deflate emits raw deflate, or gzip when you ask. lz4 uses its own framing, a sequence of `[uint16 length][LZ4 block]` records, ring-buffer streamed, because the raw lz4 block format does not carry its own length and something has to. deflate and lz4 additionally ship file-streaming variants that read and write file descriptors directly, using the library's own **EINTR-safe** IO helpers rather than any external layer, so a compressed copy from one fd to another is a first-class operation and not something you bolt on with a buffer in the middle; zstd is buffer-only.
+The uniform surface hides three formats that share nothing. Each backend only decodes its own output, and the test cross-checks that the three encodings of one input are three distinct byte streams. zstd emits a standard zstd frame that records the content size. deflate emits a zlib stream, or gzip when you ask. lz4 uses its own framing, a sequence of `[uint16 length][LZ4 block]` records, ring-buffer streamed, because the raw lz4 block format does not carry its own length and something has to. deflate and lz4 additionally ship file-streaming variants that read and write file descriptors directly, using the library's own **EINTR-safe** IO helpers rather than any external layer, so a compressed copy from one fd to another is a first-class operation and not something you bolt on with a buffer in the middle; zstd is buffer-only.
 
-The interchangeability is exactly why the design matters in Xapiand. The data store used deflate and lz4 for years, and when zstd earned its place as the default, adding it was a matter of writing one more backend of the same shape and changing a name at the call sites, not reworking the storage layer around a new API.
+The interchangeability is exactly why the design matters in Xapiand. The data store used lz4 for years, and when zstd earned its place as the default, adding it was a matter of writing one more backend of the same shape and changing a name at the call sites, not reworking the storage layer around a new API.
 
 ## Where it fits
 
