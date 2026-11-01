@@ -76,7 +76,7 @@ export default defineConfig({
 			title: SITE_TITLE,
 			description: SITE_DESCRIPTION,
 			logo: {
-				src: './src/assets/logo.png',
+				src: './src/assets/logo.svg',
 				alt: 'Kronuz',
 			},
 			// Icons come from src/assets/logo.svg via `npm run icons`: the SVG for any

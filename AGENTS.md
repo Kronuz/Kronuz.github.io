@@ -221,21 +221,25 @@ durable rules:
 
 ## Site icons
 
-Every icon derives from the vector logo `src/assets/logo.svg`. `npm run icons` regenerates them
-into `public/`, rasterizing each PNG once at its exact size so nothing is resampled:
+The page logo and every icon derive from the vector master `src/assets/logo.svg`.
+`npm run icons` regenerates them, rasterizing each PNG once at its exact size so nothing is
+resampled:
 
+- The header renders the master directly; the splash hero, whose image is frontmatter HTML,
+  uses its copy at `public/img/logo.svg`.
 - `favicon.svg` serves tabs at any DPR; `favicon.ico` (16 to 256 px frames) is the fallback.
 - `apple-touch-icon.png` (180 px), `-167` and `-152` serve iOS; `icon-192.png` and `icon-512.png`
   serve Android through `src/pages/manifest.webmanifest.ts`.
 - Touch and manifest icons are opaque tiles, because iOS (home screen, Listen to Page, share
-  sheets) and Android flatten a transparent icon onto white. The live set puts the brand-gray
-  tracks on the dark page color `#1a1a1a`. `npm run icons -- --variant green-gray --out DIR`
-  renders the alternative: the first favicon's `#465c56` tracks on the light page color.
+  sheets) and Android flatten a transparent icon onto white.
+- Two icon variants exist. `gray` (live) puts the brand-gray tracks on the dark page color
+  `#1a1a1a`; `green-gray` puts the first favicon's `#465c56` tracks on the light page color. The
+  live set goes to `public/` and the other to `brand/variants/<name>/` with a recolored
+  `logo.svg`; `npm run icons -- --live green-gray` swaps them.
 - The 16, 32 and 48 px frames get stem darkening (a gamma on alpha) to keep thin strokes firm.
 - `logo.svg` is a potrace trace of the original 1920×2180 brand PNG (the internal repo's
   `brand/README.md` has the recipe). Rendered back at full size it matches the PNG at IoU 0.993.
 - iOS caches touch icons; clear the site's Safari website data to see a new one.
-
 ## Cross-repo sync
 
 This repo and the **internal** mirror (`~/code/KronuzBlog/gmendezb-pages`, branch `main`,
