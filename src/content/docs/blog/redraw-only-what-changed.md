@@ -3,9 +3,8 @@ title: "Redraw Only What Changed"
 subtitle: "A DOSBox scaler experiment that went much further than expected."
 description: "In 2005 I proposed teaching DOSBox's scalers to skip unchanged pixels. I remember being told it probably would not matter. The patch reached 96x in one benchmark and helped shape the change-detecting renderer that replaced it."
 excerpt: "DOSBox redrew the whole screen every frame, even when almost nothing moved. I remember being told that detecting changes at the scaler layer probably would not matter. So I measured it."
-date: 2026-06-08
+date: 2026-07-16
 authors: kronuz
-draft: true
 featured: true
 series: "Opening Boxes"
 seriesOrder: 3
@@ -15,7 +14,7 @@ tags:
   - performance
 ---
 
-*Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This one opens the [DOSBox](https://www.dosbox.com) box.*
+*The [DOSBox](https://www.dosbox.com) box from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/).*
 
 Sometime in 2005, I brought an idea to the DOSBox developers.
 
@@ -216,7 +215,7 @@ My patch did not go into DOSBox CVS. DOSBox later gained similar functionality t
 
 In 2026 I went back through the forum, the SourceForge ticket, and an [unofficial Git mirror of the DOSBox history](https://github.com/jwilk-mirrors/dosbox).
 
-On January 30, 2006, at 09:54 UTC, Sjoerd van den Berg, **Harekiet**, committed SVN revision 2442.
+On January 30, 2006, at 09:54 UTC, Sjoerd van der Berg, **Harekiet**, committed SVN revision 2442.
 
 The title was:
 
