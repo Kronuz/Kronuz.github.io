@@ -1,10 +1,9 @@
 ---
 title: "Down the Flume"
 subtitle: "Streaming a whole database over a wire, compressed and checked, without holding it in memory."
-description: "flume carries a file, or any fd-backed byte source, downstream over a byte channel: compressed, framed, integrity-checked, in bounded memory. It is the transport-layer counterpart to the compressors buffer codecs: compressors squeezes an in-memory buffer, flume owns the fd reading, the on-wire framing, and the end-to-end integrity check, and delegates the per-block squeeze to a codec policy. It defaults to Zstandard level 6, the ratio knee for bulk transfer (about 48% fewer bytes than LZ4 at 379 MB/s on one core), and treats the level as a knob rather than a wire-format decision, since a self-describing zstd frame decodes at any level regardless of what the other end used."
+description: "flume carries a file, or any fd-backed byte source, downstream over a byte channel: compressed, framed, integrity-checked, in bounded memory. It is the transport-layer counterpart to the compressors buffer codecs: compressors squeezes an in-memory buffer, flume owns the fd reading, the on-wire framing, and the end-to-end integrity check, and delegates the per-block squeeze to a codec policy. It defaults to Zstandard level 6, the ratio knee for bulk transfer (about 48% fewer bytes than LZ4), and treats the level as a knob rather than a wire-format decision, since a self-describing zstd frame decodes at any level regardless of what the other end used."
 excerpt: "Replicating a database means moving a file bigger than memory across a link, and doing it so that it arrives smaller, intact, and without ever loading the whole thing into RAM at either end. The seventeenth familiar is named after the wooden channel that floats logs downstream: you feed a file in one end and it comes out the other, compressed and checked, in bounded memory, at a ratio that turns bandwidth into headroom."
-date: 2026-07-10
-draft: true
+date: 2026-09-11
 series: "Familiars"
 seriesOrder: 17
 chapter: "Bytes"
@@ -22,16 +21,16 @@ It is the transport-layer counterpart to the [compressors](/blog/compressors/) b
 
 ## The ratio is the bandwidth
 
-For a whole-database transfer, the compression ratio is not a nicety, it *is* the bandwidth: every byte you do not send is a byte the link does not carry. So flume's default is tuned for exactly that case. Measured on a 32 MB replication-like corpus in 256 KB blocks:
+For a whole-database transfer, the compression ratio is not a nicety, it *is* the bandwidth: every byte you do not send is a byte the link does not carry. So flume's default is tuned for exactly that case. Measured on a 32 MiB replication-like corpus in 256 KB blocks:
 
-| codec | ratio | compress | decompress |
-| --- | --- | --- | --- |
-| lz4 (classic) | 7.90x | 1671 MB/s | 3346 MB/s |
-| zstd L3 (zstd's default) | 12.63x | 1467 MB/s | 3231 MB/s |
-| **zstd L6 (flume default)** | **15.14x** | **379 MB/s** | **3796 MB/s** |
-| zstd L9 | 15.79x | 209 MB/s | 3928 MB/s |
+| codec | ratio | on the wire |
+| --- | --- | --- |
+| lz4 (classic) | 7.90x | 4.25 MB |
+| zstd L3 (zstd's default) | 12.63x | 2.66 MB |
+| **zstd L6 (flume default)** | **15.14x** | **2.22 MB** |
+| zstd L9 | 15.79x | 2.13 MB |
 
-flume defaults to Zstandard at **level 6**, above zstd's own default of 3, because L6 is the knee of the curve for bulk data: about **48% fewer bytes than LZ4** (2.22 MB versus 4.25 MB for the 32 MB corpus) while still compressing at 379 MB/s, which saturates any normal link on a single core. Push higher and the ratio barely improves while compression speed collapses; the classic LZ4 default was leaving nearly half the bandwidth on the table. And notice decompression gets *faster* at higher levels, not slower, because there is simply less encoded data to read back.
+flume defaults to Zstandard at **level 6**, above zstd's own default of 3, because L6 is the knee of the curve for bulk data: about **48% fewer bytes than LZ4** (2.22 MB versus 4.25 MB for the 32 MiB corpus) and 17% fewer than level 3, for four to five times its compression time on one core. Push higher and the ratio barely improves while compression keeps slowing down; the classic LZ4 default was leaving nearly half the bandwidth on the table. And decompression does not slow down at higher levels, since there is less encoded data to read back.
 
 ## The level is a knob, the codec is the wire
 
