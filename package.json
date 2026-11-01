@@ -12,7 +12,8 @@
     "preview": "TZ=UTC astro preview",
     "astro": "astro",
     "publish": "node scripts/publish-post.mjs",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "icons": "node scripts/build-icons.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.3",

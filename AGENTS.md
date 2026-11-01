@@ -193,6 +193,7 @@ refuses a post that is not a draft, a date that does not exist and a date after 
 npm run dev       # dev server (renders drafts), http://localhost:4321
 npm run build     # build to dist/ (drafts excluded)
 npm run preview   # serve built dist/
+npm run icons     # regenerate every icon from src/assets/logo.svg (see "Site icons")
 ```
 
 Do not add the `Co-authored-by: Copilot` trailer to commits.
@@ -218,6 +219,23 @@ durable rules:
 - **Hero icon-first:** `attrs.class: kz-icon-first` on a hero action renders its icon before the
   text (the Projects and About actions use it).
 
+## Site icons
+
+Every icon derives from the vector logo `src/assets/logo.svg`. `npm run icons` regenerates them
+into `public/`, rasterizing each PNG once at its exact size so nothing is resampled:
+
+- `favicon.svg` serves tabs at any DPR; `favicon.ico` (16 to 256 px frames) is the fallback.
+- `apple-touch-icon.png` (180 px), `-167` and `-152` serve iOS; `icon-192.png` and `icon-512.png`
+  serve Android through `src/pages/manifest.webmanifest.ts`.
+- Touch and manifest icons are opaque tiles, because iOS (home screen, Listen to Page, share
+  sheets) and Android flatten a transparent icon onto white. The live set puts the brand-gray
+  tracks on the dark page color `#1a1a1a`. `npm run icons -- --variant green-gray --out DIR`
+  renders the alternative: the first favicon's `#465c56` tracks on the light page color.
+- The 16, 32 and 48 px frames get stem darkening (a gamma on alpha) to keep thin strokes firm.
+- `logo.svg` is a potrace trace of the original 1920×2180 brand PNG (the internal repo's
+  `brand/README.md` has the recipe). Rendered back at full size it matches the PNG at IoU 0.993.
+- iOS caches touch icons; clear the site's Safari website data to see a new one.
+
 ## Cross-repo sync
 
 This repo and the **internal** mirror (`~/code/KronuzBlog/gmendezb-pages`, branch `main`,
@@ -226,7 +244,8 @@ served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared 
 `TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
 (`remark-ansi.mjs`, `remark-d2.mjs`, `remark-snippet.mjs`, `remark-snippet-link.mjs`,
 `remark-soft-blog-links.mjs`) plus `lib/normalizeAnsi.mjs`, `lib/renderD2.mjs` and
-`starlightRouteData.ts`.
+`starlightRouteData.ts`, plus the icon pipeline (`scripts/build-icons.mjs`, `src/assets/logo.svg`,
+`src/pages/manifest.webmanifest.ts`).
 After editing a shared file, copy it to the other repo and rebuild both. **Legitimately
 different:** content (posts, `about.md`, `index.mdx`, `projects.md`), `sidebar.mjs` (this side adds
 Projects), `content.config.ts`, `astro.config.mjs`, `consts.ts`, `SiteTitle.astro`, `Footer.astro`,
