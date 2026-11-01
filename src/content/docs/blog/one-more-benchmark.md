@@ -3,9 +3,8 @@ title: "One More Benchmark"
 subtitle: "A field guide to working with me, for humans and machines alike."
 description: "Why I ask for the number instead of the adjective, why I follow a task past the sign that says stop, and why the real wins live in the tenth 'wait, actually'. A field guide for whoever builds with me next, human or machine."
 excerpt: "You just made it work. Then the huddle comes: 'wait, actually...'. If you have ever built anything with me, you know that message. This is the field guide: why I don't believe 'faster', why I follow the thread past the trapdoor, and why the win is never in the first draft."
-date: 2026-07-18
+date: 2026-07-11
 authors: kronuz
-draft: true
 tags:
   - meta
   - engineering
@@ -21,7 +20,7 @@ I am that person. Let me explain, mostly so you can forgive me, and a little so 
 
 ## I don't believe "faster"
 
-Tell me the new version is faster and I will not argue. I will ask for the number. Not because I doubt you, but because "faster" is a feeling and a nanosecond is a fact, and only one of them survives contact with a graph. A word-at-a-time hash I adopted this season was supposed to be an obvious win. It was. But I did not know *by how much*, or on which machine, or whether it moved anything end to end, until it sat in a table next to the thing it replaced. It came out 18 to 51% faster at the hash, and a rounding error in production. Both are true, and I needed both.
+Tell me the new version is faster and I will not argue. I will ask for the number. Not because I doubt you, but because "faster" is a feeling and a nanosecond is a fact, and only one of them survives contact with a graph. A word-at-a-time hash I adopted this season was supposed to be an obvious win. It was. But I did not know *by how much*, or on which machine, or whether it moved anything end to end, until it sat in a table next to the thing it replaced. It came out 18 to 51% faster at the hash, and a rounding error end to end. Both are true, and I needed both.
 
 So the "wait, actually" is often just: *show me*. Adjectives are where bugs and wishful thinking hide. A benchmark on the real key set, on the real box, is where they go to die.
 
