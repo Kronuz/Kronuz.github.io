@@ -3,8 +3,7 @@ title: "Before the Program Runs"
 subtitle: "Switching on a string, classifying a character, and coloring a terminal, all resolved at compile time."
 description: "Three tiny header-only C++20 libraries that move work to compile time. hashes gives constexpr hash functions (FNV-1a, djb2, a constexpr xxHash-64) and user-defined literals, so you can write a switch over strings whose case labels are hashes computed by the compiler, the string switch C++ does not have. char-classify is table-driven constexpr character classification with no <cctype> and no locale, so classifying a byte is a masked lookup, correct and locale-independent. term-color expands a named color into stacked ANSI escapes (16-color, 256-color, truecolor, worst first) so one compile-time constant renders at the best tier any terminal supports."
 excerpt: "The cheapest work is the work you do before the program starts. This is the compile-time chapter, and it opens with three small libraries that each move a runtime cost to zero: a way to switch on a string, a way to classify a character without the standard library's locale baggage, and a way to color a terminal with a single portable constant. All of it resolved by the compiler, none of it paid at runtime."
-date: 2026-07-10
-draft: true
+date: 2026-10-05
 series: "Familiars"
 seriesOrder: 26
 chapter: "Compile-Time"
@@ -23,14 +22,14 @@ The fastest code is the code that never runs, and the closest thing to that in C
 C++ lets you `switch` on an integer and, pointedly, not on a string. The idiomatic workarounds are an `if`/`else if` ladder of `==` comparisons, which is `O(cases)` and ugly, or building a `std::map` at startup, which allocates and is `O(log n)`. [hashes](https://github.com/Kronuz/hashes) offers the third way: a header of `constexpr` hash functions, FNV-1a, djb2, a `constexpr` xxHash-64, integer mixers, jump-consistent hashing, plus `_fnv1a` and `_xx` user-defined literals. Because the hash of a string literal is a compile-time constant, you can hash the input once and `switch` on it, with case labels like `"commit"_fnv1a` that the compiler folds to integers:
 
 ```cpp
-switch (hash(verb)) {
+switch (fnv1ah32::hash(verb)) {
     case "commit"_fnv1a:  return do_commit();
     case "search"_fnv1a:  return do_search();
     // ...
 }
 ```
 
-That is a real jump table over strings, `O(1)`, no allocation, the case labels checked at compile time. It is the trick that turns a request verb or a token into a branch without a map or a ladder, and it is exactly how a search engine dispatches its dozens of operation names.
+That is a `switch` over strings with no allocation and no string compares, the case labels checked at compile time. Hash values are sparse, so the compiler builds a binary search rather than a jump table; the [next post](/blog/perfect-hash/) makes them dense. It is the trick that turns a request verb or a token into a branch without a map or a ladder, and it is exactly how a search engine dispatches its dozens of operation names.
 
 ## A character table with no locale
 
@@ -49,7 +48,6 @@ These three are one corner of a larger idea, and the chapter they open is the re
 - **Character classification.** [char-classify](https://github.com/Kronuz/char-classify): the locale-free `constexpr` byte tables above, `is_digit` and its siblings with nothing behind them but a masked array read.
 - **Enum reflection.** [enum-reflection](https://github.com/Kronuz/enum-reflection), with [utype](https://github.com/Kronuz/utype): turn an `enum` value back into the name you wrote it with, and the name back into the value, both resolved at compile time. Its [post](/blog/enum-reflection/) closes the chapter.
 - **Terminal color.** [term-color](https://github.com/Kronuz/term-color): the worst-first stacked ANSI constant above, portable across terminals with no runtime detection.
-- **Wide-integer arithmetic.** [uinteger_t](https://github.com/Kronuz/uinteger_t): arbitrary-width unsigned integers with `constexpr` arithmetic, so a 256-bit constant is folded by the compiler instead of computed at startup. Its post is [The Long Division](/blog/uinteger_t/).
 
 Different jobs, one habit: the answer is a constant the compiler already worked out.
 
