@@ -26,7 +26,7 @@ Before a perfect hash, you reach for what the language hands you. Say you are di
 
 An `if`-ladder is a linear scan: on average it tests half the cases before it hits, and every test is a branch the predictor can miss. A `switch` *looks* like it should become a jump table, but a jump table needs dense labels, and hashes are the opposite of dense. Handed a few hundred scattered 32-bit values, the compiler does the only thing it can and turns the `switch` into a **binary search** of comparisons: `O(log n)` branches, still branching, still growing. The reflexive escape, a [`std::unordered_map`](https://en.cppreference.com/w/cpp/container/unordered_map), trades the branches for a hash, a probe, a pointer chase, and a likely cache miss.
 
-Here is what each costs per lookup as the set grows, on a fixed set of sparse keys (the hashes you actually dispatch on), on x86_64 with GCC 11 at `-O3`:
+Here is what each costs per lookup, in nanoseconds, as the set grows, on a fixed set of sparse keys (the hashes you actually dispatch on), on x86_64 with GCC 11 at `-O3`:
 
 | keys | `if`-ladder | `switch` (binary search) | `unordered_map` | `phf` |
 | ---: | ---: | ---: | ---: | ---: |
@@ -35,7 +35,7 @@ Here is what each costs per lookup as the set grows, on a fixed set of sparse ke
 | 192 | 38 | 26 | 3.1 | 1.2 |
 | 1000 | 162 | 40 | 3.2 | 1.3 |
 
-The ladder is fine at six keys and hopeless at a thousand, where it spends 160 nanoseconds walking comparisons. The `switch` grows with the logarithm and never stops branching, past 40 nanoseconds by the time the set is large. The map flattens out around three nanoseconds but never gets cheaper than that, because a hash-plus-probe-plus-indirection has a floor. Only the perfect hash is **flat and low**: the same ~1.2 nanoseconds at a thousand keys as at six, because it runs the same fixed arithmetic every time. Its worst case is its best case. The next section is why.
+The ladder is fine at six keys and hopeless at a thousand, where it spends 160 nanoseconds walking comparisons. The `switch` grows with the logarithm and never stops branching, past 40 nanoseconds by the time the set is large. The map flattens out around three nanoseconds but never gets cheaper than that, because a hash-plus-probe-plus-indirection has a floor. Only the perfect hash is **flat and low**: about the same 1.2 nanoseconds at a thousand keys as at six, because it runs the same fixed arithmetic every time. Its worst case is its best case. The next section is why.
 
 ## What the lookup costs
 

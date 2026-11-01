@@ -42,7 +42,7 @@ packaged files. The following is an example produced by running
 `./anim_encoder.py example.lcf`:
 
 <style>.anim_target { width: 100% !important; height: auto !important; }</style>
-<div id="anim_fallback" class="anim_target"><canvas id="anim_target" class="anim_target"></canvas></div>
+<div id="anim_fallback" class="anim_target"><canvas id="anim_target" class="anim_target" role="img" aria-label="A short screencast, recorded with LICEcap and packed by anim_encoder, of typing the description of the GitHub pull request that added LCF support."></canvas></div>
 <script src="/js/anim.js"></script>
 <script src="/assets/example_anim.js"></script>
 <script>

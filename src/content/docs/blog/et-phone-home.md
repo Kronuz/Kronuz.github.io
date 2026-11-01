@@ -30,7 +30,7 @@ Eternal Terminal abstracts the local terminal behind a small interface it calls 
 
 On top of that swap, `et --ctl --name main user@host` backgrounds the client with no terminal attached and has it listen on a per-user unix socket at `~/.et/ctl/main.sock`. A small native CLI, `etctl`, talks to that socket. That is the whole shape.
 
-```d2 alt="etctl sends input to and reads output from a backgrounded 'et --ctl' client over a local unix socket; that client maintains the normal encrypted Eternal Terminal session down to etserver, etterminal, and the remote shell."
+```d2 alt="An agent or script with no terminal drives etctl, which talks over a private local socket to a backgrounded et client, and that client keeps the normal encrypted Eternal Terminal session to the server and the remote shell."
 direction: down
 agent: "agent or script (no tty)"
 etctl: "etctl, the native CLI"
@@ -48,6 +48,8 @@ All of it, the control mode, the socket, the cursored scrollback, the CLI, came 
 
 The verbs are the ones the prototype had already settled, because that vocabulary was right: `run` for a command that finishes (clean output, a real exit code, and a multi-line body that runs as one unit), `write` and `writeln` and `expect` and `read` for a prompt that waits, `key` for the named keys and signals, `sniff` to tap the live exchange, `observe` and `attach` to take the wheel by hand. What changed is everything underneath. There is no prompt to neutralize, no ANSI to strip, no resync, no line-cap chunking, and no Python process per call. It reads `et`'s native byte stream over a local socket, locked to my user (`0700` directory, `0600` socket, and the daemon checks the peer's uid). The hacks did not get better. They became unnecessary.
 
+From a script, you open the session once and then `run` against it as often as you like:
+
 ```bash
 H=you@devbox
 etctl open main $H                      # background (or reuse) the 'main' session
@@ -63,7 +65,7 @@ Something had been happening to me for years, every now and then, always the sam
 
 An agent does it constantly, so within a day of driving sessions with `etctl`, the wedge stopped being folklore and became a reproducible bug: paste past roughly one pty buffer, about 1 KB on macOS and 8 to 10 KB on Linux, and the session dies **every single time**.
 
-With a reproduction, the cause was plain, and it was a deadlock four steps deep. The per-session terminal pump on the server, `UserTerminalHandler::runUserTerminal`, is a single-threaded `select` loop, and it wrote client input to the pty master with a **blocking** write.
+With a reproduction, the cause was plain, and it was a deadlock four steps deep. The per-session terminal pump on the server, `runUserTerminal` in `UserTerminalHandler`, is a single-threaded `select` loop, and it wrote client input to the pty master with a **blocking** write.
 
 1. The input echoes back and fills the pty's output buffer.
 2. With its output buffer full, the shell stalls and stops reading input.
@@ -76,7 +78,7 @@ The existing tests had never caught it because they all drove a socket pair inst
 
 ## The numbers
 
-Median wall-clock, driving a real host over a real network, lower is better.
+The median wall-clock times below come from driving a real host over a real network (lower is better), and only the cold connection takes seconds.
 
 | Task | Median |
 | --- | ---: |
@@ -91,7 +93,7 @@ The first row is not something `etctl` charges you. It is what reaching a remote
 
 `etctl` pays it once. Every command after the first lands in about **200 milliseconds**, so keeping one session open is worth roughly **fifty times** the connect-per-command path. That is the difference between an agent that feels like it is thinking and one that feels like it is dialing up, and it is why the first rule in the skill file is to open a session and keep it for the whole task.
 
-Cold start is also the one number that refuses to sit still, because it is dominated by the connection handshake and therefore tracks the link you are on. I have measured the same path at **3.8 s** on a good day and **9.5 s** on a slower one. Everything below it reproduced within a few percent across both.
+Cold start is also the one number that refuses to sit still, because it is dominated by the connection handshake and therefore tracks the link you are on. I have measured the same path at **3.8 seconds** on a good day and **9.5 seconds** on a slower one. Everything below it reproduced within a few percent across both.
 
 The rest of the table is network-bound and pleasantly boring. Every steady-state run sits near **200 milliseconds**, which is the round-trip and almost nothing else, and streaming three thousand lines costs no more than printing one, so the cursored scrollback adds no measurable tax on bulk reads.
 

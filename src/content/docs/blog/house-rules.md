@@ -33,7 +33,7 @@ A comment box at the bottom of every post. You sign in with GitHub, and it learn
 
 The moving parts are small.
 
-```d2
+```d2 alt="The comment widget in your browser signs you in with GitHub and sends comments, reactions and previews to a Cloudflare Worker, which reads and writes them in D1, a SQLite database at the edge."
 direction: down
 reader: Your browser {
   widget: Comment widget
@@ -73,4 +73,4 @@ The house has a front porch now, and it is mine down to the boards. Which means,
 
 There is a comment box at the bottom of this very page. Pull up a chair and use it. Tell me where I am wrong, or just say hello.
 
-Roll for initiative. 🎲
+Roll for initiative.

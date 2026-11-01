@@ -21,7 +21,7 @@ There is a question you eventually need to ask a server that has stopped answeri
 
 ## The easy half: reading one stack
 
-The bottom layer is ordinary. Give traceback nothing and it captures the current stack and symbolizes it: `backtrace()` for the return addresses, then `dladdr` plus `abi::__cxa_demangle` to turn each address into a demangled `symbol + offset`, with an optional `atos` pass for `file:line` on macOS.
+The bottom layer is ordinary. Give traceback nothing and it captures the current stack and symbolizes it: `backtrace()` for the return addresses, then `dladdr` plus `abi::__cxa_demangle` to turn each address into a demangled `symbol + offset`, with an optional `atos` pass for `file:line` on macOS. One call returns the formatted stack as a string:
 
 ```cpp
 std::string tb = traceback::format(std::source_location::current());

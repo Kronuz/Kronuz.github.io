@@ -1,7 +1,7 @@
 ---
 title: "The Fork in the Path"
 subtitle: "Matching a URL to one of a thousand routes in time that ignores how many there are."
-description: "radix-router maps /-separated path patterns to values through a compressed prefix trie, so a lookup costs O(path length) instead of O(routes): flat no matter how many endpoints you register, 200x faster than a linear scan at a thousand routes, 440x on a miss. The catch is the params and catch-alls, which turn the tree into a maze with forks, and matching them needs backtracking that stays bounded instead of blowing up on the one path an attacker sends on purpose."
+description: "radix-router maps /-separated path patterns to values through a compressed prefix trie, so a lookup costs O(path length) instead of O(routes): flat no matter how many endpoints you register, 200 times faster than a linear scan at a thousand routes, 440x on a miss. The catch is the params and catch-alls, which turn the tree into a maze with forks, and matching them needs backtracking that stays bounded instead of blowing up on the one path an attacker sends on purpose."
 excerpt: "Every request that reaches a server is a URL, and something has to decide which of a thousand handlers owns it before any real work starts. The obvious router gets slower with every endpoint you add. A radix tree does not: it walks the path, not the table, and stays flat at a thousand routes. The fourth familiar, and the forks in its tree are where it gets interesting."
 date: 2026-08-08
 series: "Familiars"
@@ -21,7 +21,7 @@ A request arrives as a URL, and before anything real can happen, something has t
 
 The first router anyone writes is a list. Register each pattern, and on every request walk the list comparing until one matches. It is fine at ten routes. It is `O(routes)`: every endpoint you add makes every lookup a little slower, and a **miss**, a URL that matches nothing, is the worst case, because it has to check the entire table before it can say no. A mature service has hundreds of endpoints. You built more features and made the router slower, and the slowest path is the 404 an attacker can send you a million times.
 
-[radix-router](https://github.com/Kronuz/radix-router) is the structure that breaks that coupling. It stores the routes in a **radix tree**, a prefix trie with the single-child chains compressed out, so a lookup walks the shared prefixes of the *path* rather than scanning the *table*. The cost is `O(path length)`, and path length does not grow when you add routes. Flat. On the same pattern language, against the linear scan, across growing tables:
+[radix-router](https://github.com/Kronuz/radix-router) is the structure that breaks that coupling. It stores the routes in a **radix tree**, a prefix trie with the single-child chains compressed out, so a lookup walks the shared prefixes of the *path* rather than scanning the *table*. The cost is `O(path length)`, and path length does not grow when you add routes. Flat. On the same pattern language, here is each lookup's cost in nanoseconds against the linear scan, across growing tables:
 
 | routes | linear ns/op | radix ns/op | speedup |
 | --- | --- | --- | --- |
@@ -30,7 +30,7 @@ The first router anyone writes is a list. Register each pattern, and on every re
 | 1024 | 5048.6 | 24.7 | **204x** |
 | 1024 (miss) | 10587.9 | 24.0 | **440x** |
 
-The radix line barely moves, 11 ns to 24 ns, and only because a deeper tree touches more cache lines. The linear line just tracks the route count. This is the structure `httprouter` popularized and that Gin and Echo are built on; radix-router is the same idea in header C++.
+The radix line barely moves, 11 to 24 nanoseconds, and only because a deeper tree touches more cache lines. The linear line just tracks the route count. This is the structure `httprouter` popularized and that Gin and Echo are built on; radix-router is the same idea in header C++.
 
 ## The forks
 

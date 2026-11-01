@@ -17,7 +17,7 @@ tags:
 
 A `shared_ptr` is thread-safe in exactly one respect: the reference count. Two threads can copy and destroy their own copies of one `shared_ptr` concurrently and the count stays correct. What is *not* safe is two threads racing on the pointer itself, one reading it while another reassigns it, which is exactly what you need to do to publish a new version of some shared state without a lock of your own: build the new thing, then atomically swap the pointer so readers either see the whole old value or the whole new one, never a torn half. That atomic swap is the primitive under a lot of lock-free design, the read-copy-update pattern, a config you hot-reload, the head of a lock-free list, and a plain `shared_ptr` cannot do it.
 
-[atomic-shared-ptr](https://github.com/Kronuz/atomic-shared-ptr) provides it: `atomic_shared_ptr<T>`, with the same member API as `std::atomic`, `load`, `store`, `exchange`, `compare_exchange_weak` and `_strong`, `is_lock_free`, so your code reads and CAS-swaps a shared pointer the same way it would an integer.
+[atomic-shared-ptr](https://github.com/Kronuz/atomic-shared-ptr) provides it: `atomic_shared_ptr<T>`, with the same member API as `std::atomic`, `load`, `store`, `exchange`, `compare_exchange_weak` and `_strong`, `is_lock_free`, so your code reads and CAS-swaps a shared pointer the same way it would an integer. The usual retry loop that swaps in a new head looks like this:
 
 ```cpp
 atomic_shared_ptr<Node> head{std::make_shared<Node>()};

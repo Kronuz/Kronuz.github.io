@@ -81,7 +81,7 @@ Generating a name is then dirt cheap: descend the tree, and at every Random roll
 
 ## It can count its own names
 
-Because the tree is just *concatenate* and *choose*, it can measure the size of the world it can produce, exactly, without generating anything. Sequences **multiply** their children's counts (every combination of the parts), Random nodes **add** theirs (this alternative or that one). One recursive pass:
+Because the tree is just *concatenate* and *choose*, it can measure the size of the world it can produce, exactly, without generating anything. Sequences **multiply** their children's counts (every combination of the parts), Random nodes **add** theirs (this alternative or that one). One recursive pass, and the tree reports how many names each pattern can produce:
 
 | pattern | what it is | possible names |
 | --- | --- | --- |

@@ -23,9 +23,9 @@ A lock-free hand-off is the easy half of the story, though, and on its own it wo
 
 ## The one thing it does that nothing else does
 
-A lock is slow occasionally, and badly. Put fourteen threads on one mutex and most acquisitions cost next to nothing: in the run below, the median insert into a mutex-guarded heap holding 1,024 timers took **83 ns**. But every so often a producer arrives just as the holder is preempted, and then it waits out a whole scheduler quantum. The 99th percentile of that same run is **151 µs**, nearly two thousand times the median. On a path every thread in the process touches, that stall does not stay local. The thread that hit it is now late with whatever it was carrying, and the lateness fans out. So the number that decides whether a scheduler can sit on the hot path is its worst insert under load. The average hardly matters.
+A lock is slow occasionally, and badly. Put fourteen threads on one mutex and most acquisitions cost next to nothing: in the run below, the median insert into a mutex-guarded heap holding 1,024 timers took **83 nanoseconds**. But every so often a producer arrives just as the holder is preempted, and then it waits out a whole scheduler quantum. The 99th percentile of that same run is **151 microseconds**, nearly two thousand times the median. On a path every thread in the process touches, that stall does not stay local. The thread that hit it is now late with whatever it was carrying, and the lateness fans out. So the number that decides whether a scheduler can sit on the hot path is its worst insert under load. The average hardly matters.
 
-That is the one thing stash does that nothing else I know of does at once: **its insert never waits on another insert, so the tail stays flat under contention, and it still answers "what is due now?"** Hold a realistic backlog, arm it from fourteen threads while one thread drains, and the 99th-percentile insert looks like this (Apple M4 Pro, the run recorded in the repo at [`a42e173`](https://github.com/Kronuz/stash/blob/a42e173/bench/RESULTS.md)):
+That is the one thing stash does that nothing else I know of does at once: **its insert never waits on another insert, so the tail stays flat under contention, and it still answers "what is due now?"** Hold a realistic backlog, arm it from fourteen threads while one thread drains, and the 99th-percentile insert looks like this (Apple M4 Pro, [the run recorded in the repo](https://github.com/Kronuz/stash/blob/a42e173/bench/RESULTS.md)):
 
 | pending depth | stash p99 | heap + mutex p99 | Asio timer p99 |
 | --- | --- | --- | --- |
@@ -92,12 +92,17 @@ slot -> lose
 
 ## Stacking it into a wheel
 
-`Stash` is only the sparse store. To make a timer wheel you nest it. `StashSlots<T, Size, Div, Mod>` is a keyed level: a key maps to slot `(key / Div) % Mod`, and each slot holds the next, finer level, so levels stack from coarse to fine. At the bottom, `StashValues` is an append-only leaf, where a producer claims the next slot with one atomic fetch-add on the leaf's write cursor. Xapiand keys on nanoseconds of the steady clock and stacks four `StashSlots` over one `StashValues`:
+`Stash` is only the sparse store. To make a timer wheel you nest it. `StashSlots<T, Size, Div, Mod>` is a keyed level: a key maps to slot `(key / Div) % Mod`, and each slot holds the next, finer level, so levels stack from coarse to fine. At the bottom, `StashValues` is an append-only leaf, where a producer claims the next slot with one atomic fetch-add on the leaf's write cursor. Xapiand keys on nanoseconds of the steady clock and stacks four `StashSlots` over one `StashValues`, coarse to fine:
 
-```text
-key (ns)  ─►  4800 × 18s  ─►  36 × 500ms  ─►  10 × 50ms  ─►  50 × 1ms  ─►  task list
-              └─ 4800 × 18s = 86,400s = exactly 24 h, addressed all the way down to 1 ms
-```
+| Level | Slots | Each slot spans |
+|---|---:|---:|
+| 1 | 4,800 | 18 seconds |
+| 2 | 36 | 500 milliseconds |
+| 3 | 10 | 50 milliseconds |
+| 4 | 50 | 1 millisecond |
+| Leaf | | the task list |
+
+The top level's 4,800 slots of 18 seconds make 86,400 seconds, exactly a day, addressed all the way down to one millisecond.
 
 A task due in three minutes lands in the right 18-second slot, then the right 500 ms, 50 ms and 1 ms slots, then onto the leaf. Only the path it touches gets allocated. The wheel is twenty-four hours wide and almost entirely made of nothing. A key past its far edge is refused.
 
@@ -119,7 +124,7 @@ Both doors arm from many threads and fire from one, which is the shape the wheel
 
 ## How it compares
 
-The bones first, because the columns are what decide it. `n` is live tasks, `p` concurrent producers, `range/res` the wheel's span over its resolution (24 h at 1 ms is about 86 million).
+The bones first, because the columns are what decide it: this table sets each design's cost per operation, and its memory, side by side. `n` is live tasks, `p` concurrent producers, `range/res` the wheel's span over its resolution (24 hours at 1 ms is about 86 million).
 
 | | insert, 1 producer | insert, p producers | drain due | live memory | time order |
 | --- | --- | --- | --- | --- | --- |
@@ -129,7 +134,7 @@ The bones first, because the columns are what decide it. `n` is live tasks, `p` 
 | lock-free queue | `O(1)` | `O(1)`, near-linear | n/a (no *when*) | `O(n)` | **none** |
 | `asio::steady_timer` | `O(log n)` | serialized on `io_context` | `O(log n)` | `O(n)` + per-timer | exact |
 
-The asymptotics barely separate them; two columns do. *Insert under many producers*: the heap's `O(p·log n)` of waiting behind one lock is the tail from the top of the post, and stash's is a non-blocking `O(1)`. *Memory*: stash is `O(n)` in what is live where a flat wheel preallocates the whole continent, and that single trade is what makes a 24-hour millisecond wheel affordable at all. The repo's [`test/longevity.cc`](https://github.com/Kronuz/stash/blob/main/test/longevity.cc) shows it over time: without `clean` the structure grows without bound, and with it memory stays bounded.
+The asymptotics barely separate them; two columns do. *Insert under many producers*: the heap's `O(p·log n)` of waiting behind one lock is the tail from the top of the post, and stash's is a non-blocking `O(1)`. *Memory*: stash is `O(n)` in what is live where a flat wheel preallocates the whole continent, and that single trade is what makes a 24-hour millisecond wheel affordable at all. The repo's [longevity test](https://github.com/Kronuz/stash/blob/main/test/longevity.cc) shows it over time: without `clean` the structure grows without bound, and with it memory stays bounded.
 
 The cost is in a column the table doesn't have: **code**. A heap behind a mutex is a dozen lines and obviously correct; you can read it and believe it. stash is a header of lock-free machinery with a contract you have to honor. For most schedules the heap is the right call precisely because it is boring. stash earns its keep only when the tail under many writers is the thing that breaks.
 
@@ -154,6 +159,8 @@ It **moves contention somewhere cheaper**. Inserts still share a few hot words, 
 ## Where it fits, and where it doesn't
 
 The shape stash wants is specific: an integer key, usually a clock tick; many threads inserting; one thread draining in key order; pointer-like values; and **most entries firing rather than being cancelled**. That last one is the cancel catch turned into advice. Arming is one non-blocking insert and cancelling is one compare-and-swap, but a cancelled entry stays until its slot drains, so a timer that is usually cancelled pays for its whole delay anyway.
+
+Three jobs have that shape, and here is why stash fits each one:
 
 | fits | why stash |
 | --- | --- |
@@ -186,6 +193,6 @@ So stash is the one familiar I could not swap for something better known, and it
 
 ## How this was measured
 
-The harness in [`bench/`](https://github.com/Kronuz/stash/tree/main/bench) builds the real `stash.h` wheel in Xapiand's four-level configuration and races it against a mutex-guarded binary heap and Asio's `steady_timer` (one timer per arm, the only way to ask Asio to "run this at time T"), with one consumer draining the whole time. The table at the top is `bench_steady`, which holds the pending set near a fixed depth and times every insert. It is the run recorded at [`a42e173`](https://github.com/Kronuz/stash/blob/a42e173/bench/RESULTS.md): Apple M4 Pro (10 performance and 4 efficiency cores), AppleClang 17, `-O3 -DNDEBUG`, best of two. The repo's throughput panels let the pending set grow to millions, which inflates the heap's `O(log n)` far past anything a real scheduler sees, so trust them for the shape of the tail only. Your numbers will differ; the latest run lives in [`bench/RESULTS.md`](https://github.com/Kronuz/stash/blob/main/bench/RESULTS.md).
+The [benchmark harness](https://github.com/Kronuz/stash/tree/main/bench) builds the real `stash.h` wheel in Xapiand's four-level configuration and races it against a mutex-guarded binary heap and Asio's `steady_timer` (one timer per arm, the only way to ask Asio to "run this at time T"), with one consumer draining the whole time. The table at the top is `bench_steady`, which holds the pending set near a fixed depth and times every insert. It is [the recorded run](https://github.com/Kronuz/stash/blob/a42e173/bench/RESULTS.md): Apple M4 Pro (10 performance and 4 efficiency cores), AppleClang 17, `-O3 -DNDEBUG`, best of two. The repo's throughput panels let the pending set grow to millions, which inflates the heap's `O(log n)` far past anything a real scheduler sees, so trust them for the shape of the tail only. Your numbers will differ; the latest run lives in the repo's [benchmark results](https://github.com/Kronuz/stash/blob/main/bench/RESULTS.md).
 
 That is the familiar I would keep if I could keep only one: a lock-free slot store that also knows what time it is. The next one lives closer to the door and meets every request before anything else does. It is the router, and its whole job is to decide, in the time it takes to read a URL, which of a thousand handlers a request belongs to, without ever walking the whole tree to find out, and without falling apart on the one input an attacker would send on purpose.

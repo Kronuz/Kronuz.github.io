@@ -21,7 +21,7 @@ It is the transport-layer counterpart to the [compressors](/blog/compressors/) b
 
 ## The ratio is the bandwidth
 
-For a whole-database transfer, the compression ratio is not a nicety, it *is* the bandwidth: every byte you do not send is a byte the link does not carry. So flume's default is tuned for exactly that case. Measured on a 32 MiB replication-like corpus in 256 KB blocks:
+For a whole-database transfer, the compression ratio is not a nicety, it *is* the bandwidth: every byte you do not send is a byte the link does not carry. So flume's default is tuned for exactly that case. Here are the ratio and the bytes on the wire for each codec, measured on a 32 MiB replication-like corpus in 256 KB blocks:
 
 | codec | ratio | on the wire |
 | --- | --- | --- |

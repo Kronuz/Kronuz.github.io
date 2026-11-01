@@ -15,13 +15,13 @@ tags:
   - terminal
 ---
 
-Rolling your own prompt is easy to mock. A fast, free, genuinely gorgeous one is a `git clone` away in [Powerlevel10k](https://github.com/romkatv/powerlevel10k). [starship](https://starship.rs/) gives you much the same across every shell, in Rust. A dozen frameworks hand you a good-enough prompt in a single line. Writing your own in ~1,800 lines of zsh, to do a job three downloads already do, is exactly the kind of thing that looks like productivity and smells like procrastination.
+Rolling your own prompt is easy to mock. A fast, free, genuinely gorgeous one is a `git clone` away in [Powerlevel10k](https://github.com/romkatv/powerlevel10k). [starship](https://starship.rs/) gives you much the same across every shell, in Rust. A dozen frameworks hand you a good-enough prompt in a single line. Writing your own in about 1,800 lines of zsh, to do a job three downloads already do, is exactly the kind of thing that looks like productivity and smells like procrastination.
 
 So before I get too attached to it, the fair question. Is [KronuZSH](https://github.com/Kronuz/KronuZSH) actually good, or just mine? I put it on a scale next to the ones people actually use.
 
 ## The test
 
-I made a repository with 60,000 files, the size where the way a prompt reads git stops being a rounding error, and measured every prompt I could install the same way, in that repo. Two numbers matter. **Cold start**: how long from launching zsh to a usable shell. **Per prompt**: the wall time of one prompt cycle, which is what you pay after every single command. Medians, zsh 5.9, an Apple Silicon Mac.
+I made a repository with 60,000 files, the size where the way a prompt reads git stops being a rounding error, and measured every prompt I could install the same way, in that repo. Two numbers matter. **Cold start**: how long from launching zsh to a usable shell. **Per prompt**: the wall time of one prompt cycle, which is what you pay after every single command. Here are the medians for each, on zsh 5.9 and an Apple Silicon Mac:
 
 | prompt | cold start | per prompt | how it reads git |
 | --- | ---: | ---: | --- |
@@ -38,7 +38,7 @@ Read the third column first, because it is the one you feel. Three prompts paint
 
 ## The line is async, not clever
 
-KronuZSH lands on the same ~7 ms per prompt as Powerlevel10k. Not near it. On it, a dead heat inside the run-to-run noise. That is not a coincidence and it is not me being clever, it is the same daemon and the same trick, because I took both from p10k. [gitstatusd](https://github.com/romkatv/gitstatus) is a small C++ daemon that keeps a warm, cached view of your repository and answers without running `git`. You ask it without blocking, paint the last-known answer right away, and repaint when it replies. [pure](https://github.com/sindresorhus/pure) does nearly as well at 7.6 ms with a different async design, a background worker instead of a daemon.
+KronuZSH lands on the same per-prompt time as Powerlevel10k, about 7 ms. Not near it. On it, a dead heat inside the run-to-run noise. That is not a coincidence and it is not me being clever, it is the same daemon and the same trick, because I took both from p10k. [gitstatusd](https://github.com/romkatv/gitstatus) is a small C++ daemon that keeps a warm, cached view of your repository and answers without running `git`. You ask it without blocking, paint the last-known answer right away, and repaint when it replies. [pure](https://github.com/sindresorhus/pure) does nearly as well at 7.6 ms with a different async design, a background worker instead of a daemon.
 
 There is an easy way to flatter a home-made prompt, and I want to name it so you know I did not do it: time a blanked prompt, or skip the render and measure only the segment math. So I measured the whole paint, `PROMPT_SUBST` expanding the layout and every segment on each cycle, the way the shell actually draws it. Against p10k drawn the same way it is still a tie, a hair under if anything, and "a hair under" is me being generous to myself. Call it even.
 

@@ -18,7 +18,7 @@ One honest caveat before anything else. The source for this project is **gone**.
 
 ## What it was
 
-**Emu6802** was an emulator for the Motorola 6802, an 8-bit microprocessor introduced in 1977 (a member of Motorola's 6800 family, which dates to 1974) and clocked at 1 MHz. I wrote it as a student in C, compiled with the Watcom C/C++ v11.0 compiler and the **PMODE/W** DOS extender so the host program could run in 32-bit protected mode under plain DOS. It gave the emulated chip a full **64K of RAM**, **two ports redirected to the PC's LPT1** parallel port, and a small text display, and it shipped with a **built-in assembler**, **single-step code tracing**, memory editing, and save/load of memory images.
+**Emu6802** was an emulator for the Motorola 6802, an 8-bit microprocessor introduced in 1977 (a member of Motorola's 6800 family, which dates to 1974) and clocked at 1 MHz. I wrote it as a student in C, compiled with the Watcom C/C++ v11.0 compiler and the **PMODE/W** DOS extender so the host program could run in 32-bit protected mode under plain DOS. It gave the emulated chip a full **64K of RAM**, **two ports redirected to the PC's LPT1** parallel port, and a small text display, and it shipped with a **built-in assembler**, **single-step code tracing**, memory editing, and saving and loading memory images.
 
 It outlived me at the school. From 1999 it was adopted as a teaching tool at the Instituto Tecnológico de Morelia, and over the following seven semesters more than **a thousand students** across two degree programs used it in their Computer Architecture and Digital Systems courses. For years it taught people how a processor actually works, and most of them had no idea a classmate had written it.
 

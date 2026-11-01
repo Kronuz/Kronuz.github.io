@@ -20,7 +20,7 @@ I wanted the prompt to be useful while I was typing and quiet after I pressed En
 
 ## A quieter history
 
-Here is the intended before and after. This is one session, first with every full prompt preserved, then with previous prompts collapsed. The last prompt stays full because it is still live:
+Here is the intended before and after, one session shown twice. First, with every full prompt preserved:
 
 ```ansi title="before"
 [0;90m[7:13:00][0m [0;38:2:1:0:175:255m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0;38:2:1:204:120:51mcd[0m [0;4m~/code/KronuZSH[0m[0m
@@ -35,6 +35,8 @@ Hello world[0m
 [0;32m●[0m [0;38:2:1:255:255:255;1mkronuz[0m at [0;34mmacbook[0m [0;90m(10.0.0.101)[0m [0;90m⎇[0m [0;38:2:1:255:255:255;1mmain[0m [0;90m⇅[0m [0;38:2:1:255:255:255morigin/main[0;90m ([0;38:2:1:95:255:95m✔[0;90m)[0m[0m
 [0;90m[7:13:00][0m [0;38:2:1:0:175:255m~/code/KronuZSH[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
+
+Then the same session with previous prompts collapsed. The last prompt stays full because it is still live:
 
 ```ansi title="after"
 [0;38:2:1:0:122:178m~[0m [0;38:2:1:178:178:178;1m❯[0m [0;38:2:1:142:84:35mcd[0m [0;4m~/code/KronuZSH[0m[0m
@@ -59,7 +61,7 @@ If the terminal will not dim a color for me, I will dim it myself. Take each col
 
 Not a little wrong. The greens went olive, the blues went muddy. I lowered the factor to almost nothing, 0.99, barely a fade at all, and the hue *still* shifted. The math was not the problem. The math was halving numbers. The problem was which numbers.
 
-The syntax highlighter does not color a command with hex codes. It uses names: a command is `fg=green`, a string is `fg=yellow`, a path is `fg=magenta`. To darken green I first had to turn the word "green" into red, green, blue, and that is where the ground opened up. There is no such thing as the RGB of "green." There is only what *your terminal* has decided green looks like.
+The syntax highlighter does not color a command with hex codes. It uses names: a command is `fg=green`, a string is `fg=yellow`, a path is `fg=magenta`. To darken green I first had to turn the word "green" into red, green, blue, and that is where the ground opened up. There is no such thing as the RGB of "green." There is only what *your terminal* has decided green looks like. Here are three places that define it, three different ways:
 
 | Where "green" gets defined | RGB |
 | --- | --- |
@@ -87,7 +89,7 @@ That solved the visible part. The historical command now kept the palette I was 
 
 ## The highlighter that called itself
 
-I shipped the dimming, felt good about it, and a day later saw this sitting on top of a window I was not even typing in:
+I shipped the dimming, felt good about it, and a day later saw this error sitting on top of a window I was not even typing in:
 
 ```text
 azhw:zle-line-finish:3: maximum nested function level reached; increase FUNCNEST?
@@ -97,7 +99,7 @@ azhw:zle-line-finish:3: maximum nested function level reached; increase FUNCNEST
 
 To re-dim the command after the syntax highlighter painted it, I had hooked the moment the line finishes, `zle-line-finish`. Reasonable. The trouble is that [fast-syntax-highlighting](https://github.com/zdharma-continuum/fast-syntax-highlighting), which does the painting, *also* wraps that same widget, and it re-wraps it fresh on every prompt. My hook and its wrapper got tangled: the dispatcher zsh builds to hold multiple hooks ended up, after fsh rebuilt itself, calling back through the very wrapper it was supposed to sit beside.
 
-```d2 alt="The recursion cycle: a restyle hook on zle-line-finish, fast-syntax-highlighting re-wrapping that same widget every prompt, and the saved original calling back through the wrapper, looping until zsh aborts with a nesting error"
+```d2 alt="My restyle hook on zle-line-finish, fast-syntax-highlighting re-wrapping that same widget on every prompt, and the saved original calling back through the wrapper form a loop that runs until zsh aborts with a nesting error."
 direction: down
 hook: "restyle hook on zle-line-finish"
 fsh: "fsh re-wraps the widget"
@@ -127,7 +129,7 @@ Suppose I run a command that prints one line and fails. I captured this from the
   [0;90m[7:13:00][0m [0;38:2:1:0:175:255m~[0m [0;31;1m❯[0;33;1m❯[0;32;1m❯[0m [0m
 ```
 
-The full prompt at the bottom is unmarked. If I type a second command there and press Enter, `reset-prompt` erases those live lines and replaces them with the next collapsed history line. This time the command succeeds. Keeping the first command above it, the cumulative history is:
+The live full prompt at the end of the capture is unmarked. If I type a second command there and press Enter, `reset-prompt` erases those live lines and replaces them with the next collapsed history line. This time the command succeeds. Keeping the first command above it, the cumulative history is:
 
 ```ansi title="iTerm2"
 [31m▶[0m [1;35m\e]133;A\a[0m[0;38:2:1:0:122:178m~[0m [0;38:2:1:178:178:178;1m❯[0m [1;36m\e]133;B\a[0m[0;38:2:1:162:133:74msh[0m -c '[0;38:2:1:142:84:35mprintf[0m [0;38:2:1:115:135:67m"nope\n"[0m; [0;38:2:1:142:84:35mexit[0m 1'[0m[2m\n[0m
@@ -187,7 +189,7 @@ zle .reset-prompt
 zle .accept-line
 ```
 
-`status_prefix` is the dimmed `⏎ 1` or running time from the command that just finished. It sits before `A`, so it survives in history without moving the next blue triangle away from the collapsed `path ❯`. An empty Enter takes the same A/B path, but runs no command, so no C/D pair follows. That gives the empty prompt its own triangle and its own Command-Shift-Up stop instead of folding it into the previous command.
+`status_prefix` is the dimmed `⏎ 1` or running time from the command that just finished. It sits before `A`, so it survives in history without moving the next blue triangle away from the collapsed `path ❯`. An empty Enter takes the same `A` and `B` path, but runs no command, so no `C` and `D` pair follows. That gives the empty prompt its own triangle and its own Command-Shift-Up stop instead of folding it into the previous command.
 
 There is one consequence I only found by trying **Select Output of Last Command**. iTerm does not end that selection at `D`. [Its source computes the range](https://github.com/gnachman/iTerm2/blob/9272e49d03728e4f56dc18c93a7d2f20bcb3aa73/sources/VT100Screen/VT100ScreenState.m#L1039-L1065) from the command's output coordinate to the start of the next prompt mark. The status is deliberately between those two points, so copied output includes `⏎ 1`. Moving `A` before the status would exclude it, but would also put the gutter triangle beside the status again. I kept the useful result metadata in copied output and kept the triangle on the command line. The alternative was another cursor-positioning trick in code I had just made less patchy.
 

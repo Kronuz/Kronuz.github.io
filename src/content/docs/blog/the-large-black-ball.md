@@ -17,7 +17,7 @@ tags:
 
 A server reload at Instagram took around fifty seconds on average, and by the end of 2021 some took as long as a minute and a half. Not the production server. The *development* server, the one an engineer restarts dozens of times a day to see whether the line they just changed did what they hoped. Fifty seconds, times every save, times every engineer. That is not latency. That is a tax on thinking.
 
-By early 2022 the same reload took about **70% less time at p50**, the codebase loaded roughly **12x fewer modules** at startup, and a class of error that engineers hit about **80 times a day** had dropped to **zero**. This is how, and more importantly *why* the how was so awkward.
+By early 2022 the same reload took about **70% less time at the median**, the codebase loaded roughly **12 times fewer modules** at startup, and a class of error that engineers hit about **80 times a day** had dropped to **zero**. This is how, and more importantly *why* the how was so awkward.
 
 ## A graph that came back black
 
@@ -60,6 +60,8 @@ lazy: "Lazy import" {
 
 At Instagram this was a global switch: turn it on and *every* import in the program, including the standard library and third-party packages, becomes lazy automatically. No keyword, no per-line annotation. You import the world, and the world stays folded up until you reach into it.
 
+With the switch on, a single import looks like this:
+
 ```python
 # With Lazy Imports enabled, this line loads and executes nothing:
 import json              # binds the name "json" to a deferred object
@@ -78,7 +80,7 @@ The first design kept the deferred objects as ordinary Python objects. That work
 
 After some very good conversations with Carl Meyer and Dino Viehland, I made a decision that still sounds slightly insane when I say it out loud: move the whole mechanism *down*, into the **dictionary internals**.
 
-Dictionaries are the substrate of Python. A module's namespace is a dict. A class body is a dict. Instance attributes, globals, keyword arguments, almost everything is a dict underneath. The reason to put laziness there is that *every* name access already goes through a dict lookup, so if the dict itself knows how to resolve a deferred value on the way out, resolution becomes automatic and invisible everywhere, with no placeholder ever escaping. Roughly:
+Dictionaries are the substrate of Python. A module's namespace is a dict. A class body is a dict. Instance attributes, globals, keyword arguments, almost everything is a dict underneath. The reason to put laziness there is that *every* name access already goes through a dict lookup, so if the dict itself knows how to resolve a deferred value on the way out, resolution becomes automatic and invisible everywhere, with no placeholder ever escaping. In the module's namespace, roughly:
 
 ```python
 # What the module namespace holds right after `import json`:
@@ -86,13 +88,13 @@ Dictionaries are the substrate of Python. A module's namespace is a dict. A clas
 #   lazy:   {"json": <deferred 'json'>}   # a value that resolves on first lookup
 ```
 
-The reason it is also *dangerous* to put laziness there is the same reason: the dict is the hottest, most heavily optimized data structure in CPython. Add a branch to the lookup path and you do not slow down imports, you slow down *the entire language*, every attribute access in every program. So the work was not "make it lazy," it was "make it lazy and prove the dict is exactly as fast as before when nothing is deferred." That second half is where most of the time went. There were many smaller obstacles too, including a genuine CPython bug in `TypedDict` ([bpo-41249](https://bugs.python.org/issue41249)) that I tripped over along the way.
+The reason it is also *dangerous* to put laziness there is the same reason: the dict is the hottest, most heavily optimized data structure in CPython. Add a branch to the lookup path and you do not slow down imports, you slow down *the entire language*, every attribute access in every program. So the work was not "make it lazy," it was "make it lazy and prove the dict is exactly as fast as before when nothing is deferred." That second half is where most of the time went. There were many smaller obstacles too, including [a genuine CPython bug in `TypedDict`](https://bugs.python.org/issue41249) that I tripped over along the way.
 
 Eventually I had a build that was reliable, and performance-neutral in experiments on live servers with the patch present but the feature off. I also ran the open-source [`pyperformance`](https://pyperformance.readthedocs.io/) suite three times with the feature on. A perf-neutral patch is the price of admission for touching dict internals, and it took a while to earn.
 
 ## What it bought
 
-I enabled lazy imports across tens of thousands of Instagram Server modules and rolled it out, in early 2022, to thousands of development and production hosts. The graphs moved the day it went live.
+I enabled lazy imports across tens of thousands of Instagram Server modules and rolled it out, in early 2022, to thousands of development and production hosts. The graphs moved the day it went live. These are the results of that rollout:
 
 | Metric | Result |
 | --- | --- |
@@ -103,7 +105,7 @@ I enabled lazy imports across tens of thousands of Instagram Server modules and 
 | Memory usage | **20–40% lower** |
 | Import-cycle errors at Instagram | **~80/day to 0** |
 
-That last row is the one I love most. Lazy imports does not forbid circular imports, it *defuses* them. A cycle that only mattered because both sides ran eagerly at import time mostly stops mattering when neither side runs until first use. We went from ~80 import-cycle errors a day to none, and refactoring the ball became possible for the first time in years.
+That last row is the one I love most. Lazy imports does not forbid circular imports, it *defuses* them. A cycle that only mattered because both sides ran eagerly at import time mostly stops mattering when neither side runs until first use. We went from about 80 import-cycle errors a day to none, and refactoring the ball became possible for the first time in years.
 
 ## What it is not
 

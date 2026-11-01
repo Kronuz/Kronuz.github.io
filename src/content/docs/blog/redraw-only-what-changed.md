@@ -32,7 +32,7 @@ The answer felt a little cocky, which was probably part of why it stuck with me.
 
 ## Remember the last frame
 
-Hq2x looked good for the same reason it was expensive. Instead of simply turning one source pixel into a larger square, it examined a 3x3 neighborhood and used the pattern around the pixel to decide how to blend the enlarged output.
+Hq2x looked good for the same reason it was expensive. Instead of simply turning one source pixel into a larger square, it examined a 3-by-3 neighborhood and used the pattern around the pixel to decide how to blend the enlarged output.
 
 On my Pentium 4 at 3 GHz, Hq2x took about **10,480** of my timing units over roughly 5,000 frames. DOSBox's simple `Normal` scaler took **127.3**.
 
@@ -160,11 +160,11 @@ if (*((Bit32u*)&cache[xx]) != *((Bit32u*)&src[xx]) ||
 
 Same index, different color meant the pixel was dirty.
 
-Hq2x found another hole. Its answer depends on a 3x3 neighborhood, so an unchanged pixel may still need recalculation when a neighbor moves. The question was no longer whether a pixel changed, but whether anything that could affect its output had changed.
+Hq2x found another hole. Its answer depends on a 3-by-3 neighborhood, so an unchanged pixel may still need recalculation when a neighbor moves. The question was no longer whether a pixel changed, but whether anything that could affect its output had changed.
 
 Palette changes, neighborhood dependencies, fullscreen transitions, double buffering, different output backends: each made "redraw only what changed" less simple than the sentence.
 
-## 96x
+## 96 times
 
 The version 4 numbers looked like this. These were low-action platform games, timed over roughly 5,000 frames. Lower is better.
 
@@ -177,19 +177,19 @@ The version 4 numbers looked like this. These were low-action platform games, ti
 | AdvMame3x | 1,665 | 77 | **21.62x** | **95.4%** |
 | **Hq2x** | **10,480** | **109** | **96.15x** | **98.96%** |
 
-The Hq2x result was a **96.15x speedup**, or a **98.96% reduction in scaler execution time**. The optimized path took just 1.04% of the time used by the original one.
+The Hq2x result was a speedup of **96.15 times**, or a **98.96% reduction in scaler execution time**. The optimized path took just 1.04% of the time used by the original one.
 
 In 2005 I reported that as **9,515% faster** and helpfully added that "a 100% improvement is equivalent to twice the speed." The arithmetic was consistent with the formula I was using, but it was an unorthodox way to present a performance result. I would report the speedup ratio and execution-time reduction today.
 
-Also, 96x is quite enough.
+Also, 96 times is quite enough.
 
-The speedup column tells only half the story. Before the patch, the timings ranged from 127.3 for `Normal` to 10,480 for Hq2x, an 82x spread. After the patch, they ranged from 67 to 109.
+The speedup column tells only half the story. Before the patch, the timings ranged from 127.3 for `Normal` to 10,480 for Hq2x, an 82-fold spread. After the patch, they ranged from 67 to 109.
 
 On these mostly static frames, I had almost flattened the cost of the scaler.
 
 Hq2x was still vastly more expensive when it actually ran. It simply spent most of its time not running.
 
-That is why `Normal` is the result I find more interesting now. It was already cheap, close to a copy, and the patch still made it **1.90x faster**. The change scan had a roughly fixed cost, so with `Normal` it consumed much of the gain. With Hq2x, every skipped pixel avoided a lookup-heavy neighborhood analysis.
+That is why `Normal` is the result I find more interesting now. It was already cheap, close to a copy, and the patch still made it **1.90 times faster**. The change scan had a roughly fixed cost, so with `Normal` it consumed much of the gain. With Hq2x, every skipped pixel avoided a lookup-heavy neighborhood analysis.
 
 The same detector sat in front of both. As the scaler became more expensive, not calling it became more valuable, until the scaler's own complexity was almost irrelevant on a mostly static frame.
 
@@ -227,7 +227,7 @@ The commit message included:
 
 Four minutes later, revision 2444 landed with the same title. That was the large renderer implementation, with **1,415 additions and 810 deletions** across the scaler and rendering code.
 
-The mirror preserves the revisions as [`b24a1fb`](https://github.com/jwilk-mirrors/dosbox/commit/b24a1fb72f8fb51a6390f2392eab0887d2cf6df5) and [`7623888`](https://github.com/jwilk-mirrors/dosbox/commit/762388813c5c5cb2b7d5502bb84d6f7ad8c75b19).
+The mirror preserves [revision 2442](https://github.com/jwilk-mirrors/dosbox/commit/b24a1fb72f8fb51a6390f2392eab0887d2cf6df5) and [revision 2444](https://github.com/jwilk-mirrors/dosbox/commit/762388813c5c5cb2b7d5502bb84d6f7ad8c75b19) as Git commits.
 
 The new renderer had `scalerSourceCache`, `scalerChangeCache`, and `Scaler_ChangedLines`. It cached source data, detected changed blocks, avoided recalculating unchanged output, handled neighborhood effects, and passed changed-line information to SDL.
 
@@ -331,4 +331,4 @@ I am still learning to notice what gets lost.
 
 ---
 
-*Sources and artifacts: [DOSBox patch #142, "Scalers performance boost"](https://sourceforge.net/p/dosbox/patches/142/) was created on November 23, 2005 and preserves the patch revisions and Qbix's February 12, 2006 closing comment. The public engineering discussion is the VOGONS thread ["Graphics performance boost"](https://www.vogons.org/viewtopic.php?t=10594), beginning with [my first post](https://www.vogons.org/viewtopic.php?p=71665#p71665). The patch dissected here is [`dosbox-optscalers-20051213.diff`](https://www.vogons.org/download/file.php?id=2413), version 11b. The January 30 upstream work is preserved in the historical Git mirror as [`b24a1fb`](https://github.com/jwilk-mirrors/dosbox/commit/b24a1fb72f8fb51a6390f2392eab0887d2cf6df5), SVN r2442, and [`7623888`](https://github.com/jwilk-mirrors/dosbox/commit/762388813c5c5cb2b7d5502bb84d6f7ad8c75b19), SVN r2444. The DOSBox changelog credits my later scaler work, and the earlier [Hq2x patch #54](https://sourceforge.net/p/dosbox/patches/54/) is preserved in SourceForge.*
+*Sources and artifacts: [DOSBox patch #142, "Scalers performance boost"](https://sourceforge.net/p/dosbox/patches/142/) was created on November 23, 2005 and preserves the patch revisions and Qbix's February 12, 2006 closing comment. The public engineering discussion is the VOGONS thread ["Graphics performance boost"](https://www.vogons.org/viewtopic.php?t=10594), beginning with [my first post](https://www.vogons.org/viewtopic.php?p=71665#p71665). The patch dissected here is [version 11b](https://www.vogons.org/download/file.php?id=2413), the `dosbox-optscalers` diff stamped December 13, 2005. The January 30 upstream work is preserved in the historical Git mirror as [the commit for SVN r2442](https://github.com/jwilk-mirrors/dosbox/commit/b24a1fb72f8fb51a6390f2392eab0887d2cf6df5) and [the commit for SVN r2444](https://github.com/jwilk-mirrors/dosbox/commit/762388813c5c5cb2b7d5502bb84d6f7ad8c75b19). The DOSBox changelog credits my later scaler work, and the earlier [Hq2x patch #54](https://sourceforge.net/p/dosbox/patches/54/) is preserved in SourceForge.*

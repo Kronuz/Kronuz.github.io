@@ -18,6 +18,8 @@ That last part is the one I care about.
 
 I do not wake up thinking, "I should resume session `019c7390-55cc-7e83-9537-e7534558d473`." I think, "I was working on AgentSmith." The repository is what I remember. The session ID is bookkeeping.
 
+So I start from the repository and resume what ran there:
+
 ```sh
 cd ~/code/AgentSmith
 asmith ls --here
@@ -32,7 +34,7 @@ The three agents all preserve useful history. They simply disagree on its shape.
 
 Claude Code keeps project-scoped JSONL conversations, including adjacent subagent material. Codex combines rollout files with a SQLite thread index. Copilot CLI has session-state files, an index, usage data, and its own rules for which records can still be resumed. Their token accounting does not line up either. Cache reads, cache writes, reasoning tokens, child agents, and Copilot's AIU belong to different ledgers.
 
-None of this is bad design. Each store serves its own agent. It becomes awkward when one repository has been touched by all three.
+None of this is bad design. Each store serves its own agent. It becomes awkward when one repository has been touched by all three. Listing one such repository puts them side by side:
 
 ```console
 $ asmith ls --here
@@ -43,7 +45,7 @@ $ asmith ls --here
 
 The source label stays visible because normalization should not become laundering. A Codex turn remains a Codex turn. A Copilot AIU does not quietly turn into a Claude token. AgentSmith works each native store through a backend, then exposes the pieces that can be compared honestly: identity, directory, timestamps, messages, touched files, resumability, and usage.
 
-```d2 alt="AgentSmith normalizes three native session stores around a working directory"
+```d2 alt="AgentSmith takes the working directory and the Claude, Codex, and Copilot session stores and builds one normalized view that every command, from list to merge, works on."
 direction: down
 
 directory: "working directory" { style.bold: true }
@@ -149,7 +151,7 @@ There is good prior art around this problem.
 
 [Agent Capsule](https://github.com/z2z23n0/agent-capsule) focuses on sharing a complete Codex or Claude conversation and continuing it as a native local session. [codex-claude-transfer](https://github.com/ahmojo/codex-claude-transfer) goes directly after translation, portable bundles, sync, and native import between those two agents. [agent-session-resume](https://github.com/hacktivist123/agent-session-resume) approaches continuation as a reusable skill that reconstructs context for the next agent.
 
-AgentSmith sits a little lower and wider in the toolbox. It is a scriptable CLI for three local stores, organized around directories, with inspection, cross-agent search, usage accounting, export/import, global and project context, cleanup, and shell-level resume in one place. Its transfer path deliberately favors a visible handoff over writing translated history into another vendor's private store.
+AgentSmith sits a little lower and wider in the toolbox. It is a scriptable CLI for three local stores, organized around directories, with inspection, cross-agent search, usage accounting, export and import, global and project context, cleanup, and shell-level resume in one place. Its transfer path deliberately favors a visible handoff over writing translated history into another vendor's private store.
 
 Different jobs want different tradeoffs. If you want a macOS session browser, use the good macOS session browser. If you want direct native translation between Claude and Codex, use a tool built for that. I wanted something I could pipe, audit, and teach to my shell.
 

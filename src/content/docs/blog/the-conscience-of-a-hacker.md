@@ -22,6 +22,8 @@ The line everybody remembers is the closing one, about how you might stop one of
 
 It still lands.
 
+Here it is, in full, as Phrack ran it.
+
 ---
 
 <style>

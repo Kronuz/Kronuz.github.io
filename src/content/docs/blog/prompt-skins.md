@@ -42,7 +42,7 @@ Because the whole layout is a handful of lines I own, the prompt is not condemne
 [1m[32mC:\project\>[39m[0m 
 ```
 
-Same engine under every one. The same ~7 ms paint, the same gitstatusd, the same shell-integration marks. Only the costume changes. Here is how the costume comes off.
+Same engine under every one. The same paint in about 7 milliseconds, the same gitstatusd, the same shell-integration marks. Only the costume changes. Here is how the costume comes off.
 
 ## The layout came loose
 
@@ -74,6 +74,8 @@ A skin composes from two sets. The segment palette, `$kz[git]`, `$kz[pwd]`, `$kz
 ```zsh
 KZ_PROMPT_PROMPT='$kz[pwd]$kz[git] ${kz[FG.magenta]}${kz[GLYPH.caret]}${kz[RESET]} '
 ```
+
+Rendered in a repository with some work in flight, it looks like this:
 
 ```ansi
 [38;2;255;255;255m~/project[0m[38;2;255;255;255m[24m[38;2;255;255;255m[27m[38;2;255;255;255m[39m[49m [90m[0m[90m[24m[90m[27m[90m[39m[49m [1m[38;2;255;255;255mmain[0m[38;2;255;255;255m[24m[38;2;255;255;255m[27m[38;2;255;255;255m[39m[49m [90m[0m[90m[24m[90m[27m[90m[39m[49m [38;2;255;255;255morigin/main[0m[38;2;255;255;255m[24m[38;2;255;255;255m[27m[38;2;255;255;255m[39m[49m[90m ([0m[90m[24m[90m[27m[90m[39m[49m[38;2;175;175;255m 1[0m[38;2;175;175;255m[24m[38;2;175;175;255m[27m[38;2;175;175;255m[39m[49m [38;2;135;95;0m✗[0m[38;2;135;95;0m[24m[38;2;135;95;0m[27m[38;2;135;95;0m[39m[49m [38;2;135;255;0m⇡1[0m[38;2;135;255;0m[24m[38;2;135;255;0m[27m[38;2;135;255;0m[39m[49m [38;2;215;95;0m 2[0m[38;2;215;95;0m[24m[38;2;215;95;0m[27m[38;2;215;95;0m[39m[49m [31m 1[0m[31m[24m[31m[27m[31m[39m[49m [90m⊖1[0m[90m[24m[90m[27m[90m[39m[49m[90m)[0m[90m[24m[90m[27m[90m[39m[49m [35m❯[0m[35m[24m[35m[27m[35m[39m[49m 

@@ -14,7 +14,7 @@ tags:
 
 *The [pyScss](https://github.com/Kronuz/pyScss) box from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). It is also the grown-up, legal version of [The Forbidden Layer](/blog/the-forbidden-layer/): take a tool someone built in another language, open it up, understand exactly how it works, and rebuild it in yours.*
 
-[Sass](http://sass-lang.com/) was a Ruby tool. I wanted it in Python, so I wrote one, [pyScss](https://github.com/Kronuz/pyScss), which implements about **95% of Sass 3.2**. You install it with `pip install git+https://github.com/Kronuz/pyScss` (the last PyPI release, 1.4.0, fails on Python 3.11 and newer, see [issue #431](https://github.com/Kronuz/pyScss/issues/431)) and use it like this:
+[Sass](http://sass-lang.com/) was a Ruby tool. I wanted it in Python, so I wrote one, [pyScss](https://github.com/Kronuz/pyScss), which implements about **95% of Sass 3.2**. You install it from GitHub with `pip install git+https://github.com/Kronuz/pyScss` (the last PyPI release, 1.4.0, fails on Python 3.11 and newer, see [issue #431](https://github.com/Kronuz/pyScss/issues/431)) and use it like this:
 
 ```python
 from scss import Compiler
@@ -27,11 +27,11 @@ Look closely at that input. `color: red + green`. You are *adding two colors*. T
 
 The mistake is to think Sass is CSS with variables pasted in. It is not. Sass is a small, **typed expression language** that happens to emit CSS. `red + green` is not string concatenation; it is an operation on two values of type `Color`, and it produces a third `Color`. `10px * 2` is arithmetic on a value of type `Number` that carries a unit. To compile Sass you have to actually evaluate these expressions, which means you need real value types, with real arithmetic, and a real evaluator.
 
-pyScss has exactly that. The value types live in [`scss/types.py`](https://github.com/Kronuz/pyScss/blob/master/scss/types.py): `Number`, `Color`, `String`, `Boolean`, `List`, `Map`, `Null`, and a few more, each a subclass of a common `Value`. Two of them are worth opening up.
+pyScss has exactly that. The value types live in [`types.py`](https://github.com/Kronuz/pyScss/blob/master/scss/types.py): `Number`, `Color`, `String`, `Boolean`, `List`, `Map`, `Null`, and a few more, each a subclass of a common `Value`. Two of them are worth opening up.
 
 ### Numbers that know their units
 
-In Sass, `10px`, `2em`, and `50%` are not strings with a suffix. They are numbers with **dimensions**, and they obey dimensional analysis. Multiply `10px` by a unitless `2` and you get `20px`. Divide `10px` by `2px` and the units cancel to a plain `5`. pyScss's `Number` implements this literally: it stores units as separate numerator and denominator tuples and cancels the ones that appear on both sides, exactly like reducing a fraction.
+In Sass, `10px`, `2em`, and `50%` are not strings with a suffix. They are numbers with **dimensions**, and they obey dimensional analysis. Multiply `10px` by a unitless `2` and you get `20px`. Divide `10px` by `2px` and the units cancel to a plain `5`. pyScss's `Number` implements this literally, in its constructor: it stores units as separate numerator and denominator tuples and cancels the ones that appear on both sides, exactly like reducing a fraction.
 
 ```python
 # from scss/types.py: a Number carries its units as numer/denom tuples
@@ -46,7 +46,7 @@ def __init__(self, amount, unit=None, unit_numer=(), unit_denom=()):
     self.value = amount * (numer_factor / denom_factor)
 ```
 
-There is a precision subtlety hiding in there, and it is not mine: Eevee (Lexy Munroe), who rewrote much of pyScss's type system from 2013 on, added it in 2016. Unit conversions are ratios (96px to an inch, and so on), and doing them in floating point accumulates error. So the amount is stored as a Python `Fraction`, not a float, to keep conversions exact. The source keeps the honest note that came with it: *"this slowed the test suite down by about 10%, ha."* Correctness cost ten percent, and Eevee paid it.
+There is a precision subtlety hiding in there, and it is not mine: Eevee (Lexy Munroe), who rewrote much of pyScss's type system from 2013 on, added it in 2016. Unit conversions are ratios (96 pixels to an inch, and so on), and doing them in floating point accumulates error. So the amount is stored as a Python `Fraction`, not a float, to keep conversions exact. The source keeps the honest note that came with it: *"this slowed the test suite down by about 10%, ha."* Correctness cost ten percent, and Eevee paid it.
 
 ### Colors that do math
 
@@ -69,11 +69,11 @@ calc -> types: "operates on"
 calc -> css
 ```
 
-The grammar for the expression language is a real grammar, written for the `yapps2` parser generator in [`scss/grammar/expression.g`](https://github.com/Kronuz/pyScss/blob/master/scss/grammar) and compiled to a scanner and parser. The [`Calculator`](https://github.com/Kronuz/pyScss/blob/master/scss/calculator.py), whose docstring is simply *"Expression evaluator,"* walks the resulting AST and evaluates it against a `Namespace` that holds the variables, mixins, and functions in scope, caching parsed ASTs along the way. Selectors get parsed and the nesting flattened. Out the other end comes plain CSS.
+The grammar for the expression language is a real grammar, written for the `yapps2` parser generator in [`expression.g`](https://github.com/Kronuz/pyScss/blob/master/scss/grammar) and compiled to a scanner and parser. The [`Calculator`](https://github.com/Kronuz/pyScss/blob/master/scss/calculator.py), whose docstring is simply *"Expression evaluator,"* walks the resulting AST and evaluates it against a `Namespace` that holds the variables, mixins, and functions in scope, caching parsed ASTs along the way. Selectors get parsed and the nesting flattened. Out the other end comes plain CSS.
 
 ## Why there is C in a Python project
 
-If you look in the repository you will find [`scss/src/scanner.c`](https://github.com/Kronuz/pyScss/blob/master/scss/src/scanner.c), along with `_speedups.c`, `block_locator.c`, and a small `hashtable.c`. A Sass compiler written in pure Python spends an enormous fraction of its time in the **scanner**, character by character, and that is exactly the kind of tight loop CPython is slowest at. So the hot path got a hand-written C scanner, with a pure-Python scanner kept as a fallback so the library still installs and runs anywhere, PyPy included.
+If you look in the repository you will find [`scanner.c`](https://github.com/Kronuz/pyScss/blob/master/scss/src/scanner.c), along with `_speedups.c`, `block_locator.c`, and a small `hashtable.c`. A Sass compiler written in pure Python spends an enormous fraction of its time in the **scanner**, character by character, and that is exactly the kind of tight loop CPython is slowest at. So the hot path got a hand-written C scanner, with a pure-Python scanner kept as a fallback so the library still installs and runs anywhere, PyPy included.
 
 That instinct is the same one from every other box in this series: when a thing is slow, open it, find the loop that actually costs, and rewrite just that. In DOSBox it was the scaler. Here it was the tokenizer. The shape of the fix never changes.
 

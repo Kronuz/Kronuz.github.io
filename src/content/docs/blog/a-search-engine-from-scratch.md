@@ -23,7 +23,7 @@ I want to be precise about what that means, because "wrote my own search engine"
 
 ## The shape of it
 
-```d2 alt="Xapiand's layered architecture: clients talk REST or a binary protocol, into a Xapian-backed query/index core, with a log-structured store, a Raft-based cluster layer, all on a libev async core"
+```d2 alt="Xapiand wraps a query and index core built on Xapian: clients reach it over REST or a binary protocol, and the core uses a log-structured store, an HTM geo index and a Raft cluster layer, all on a libev async core."
 direction: down
 clients: "Clients"
 rest: "HTTP / REST\n(JSON, MessagePack)"
@@ -50,7 +50,7 @@ Everything sits on a single-threaded-per-loop **libev** event core (the event li
 
 A distributed search engine has to answer two questions constantly: *who is in charge of the cluster?* and *who owns this particular shard right now?* Both are consensus problems, and rather than invent a protocol (the classic way to introduce a subtle, unfixable bug), I implemented **Raft**.
 
-The whole state machine is in [`src/server/discovery.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/server/discovery.h), and it is textbook Raft, in the good sense (trimmed, comments mine):
+The whole state machine is in [`discovery.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/server/discovery.h), and it is textbook Raft, in the good sense (trimmed, comments mine):
 
 ```cpp
 enum class Role {
@@ -70,7 +70,7 @@ enum class Message {
 };
 ```
 
-```d2 alt="Raft state machine: follower times out to candidate, wins a majority to become leader, leader sends heartbeats and can call ELECT_PRIMARY to promote a primary shard"
+```d2 alt="A Raft follower whose election timeout fires becomes a candidate, a candidate with a majority of votes becomes the leader (or falls back when it sees a higher term), and the leader sends heartbeats and promotes a primary shard with ELECT_PRIMARY."
 direction: down
 f: "Follower"
 c: "Candidate"
@@ -87,7 +87,7 @@ Two `libev` timers drive it: `raft_leader_election_timeout` (a follower that sto
 
 ## Storage: a small Haystack
 
-Search gives you back document IDs. Something still has to hold the *documents*, durably, and hand them back by the million without thrashing the disk. For that I wrote a log-structured store, in [`src/storage.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/storage.h), modeled on the ideas in Facebook's **Haystack** paper: append, do not seek; pack many small objects into large block-aligned volumes; compress.
+Search gives you back document IDs. Something still has to hold the *documents*, durably, and hand them back by the million without thrashing the disk. For that I wrote a [log-structured store](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/storage.h), modeled on the ideas in Facebook's **Haystack** paper: append, do not seek; pack many small objects into large block-aligned volumes; compress.
 
 The on-disk format is deliberately boring, which is what you want from a format that holds your data:
 
@@ -101,13 +101,13 @@ constexpr int STORAGE_FLAG_COMPRESSED = 0x01;
 constexpr int STORAGE_FLAG_DELETED    = 0x02;  // tombstone
 ```
 
-A volume opens with a block-padded `StorageHeader` carrying `STORAGE_MAGIC`. Each object ("bin") is wrapped in a header/footer pair with their own magic bytes so corruption is caught at read time, compressed with **LZ4** when it is larger than 100 bytes (small things are not worth the CPU), and deletes are **tombstones**, a flag flip, not a seek-and-rewrite. Writes stay sequential; the engine appends and moves on.
+A volume opens with a block-padded `StorageHeader` carrying `STORAGE_MAGIC`. Each object ("bin") is wrapped in a header and footer pair with their own magic bytes so corruption is caught at read time, compressed with **LZ4** when it is larger than 100 bytes (small things are not worth the CPU), and deletes are **tombstones**, a flag flip, not a seek-and-rewrite. Writes stay sequential; the engine appends and moves on.
 
 ## Geometry: a triangular mesh for the planet
 
 "Find me documents within 5 km of here" is not a text query, and you cannot answer it well by scanning. The standard trick is to turn the surface of the Earth into a hierarchy of cells, encode each cell as a number, and let the *text* index do the work on those numbers. Xapiand uses the **Hierarchical Triangular Mesh (HTM)**: start with an octahedron projected onto the sphere, then recursively split each spherical triangle into four. Every point on Earth becomes a path down that tree, a 64-bit trixel ID, and a region becomes a set of trixel ranges you can feed straight into Xapian as terms.
 
-That lives in [`src/geospatial/htm.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/geospatial/htm.h) and `cartesian.h` (lat/long to unit-sphere Cartesian and back). It is the piece that let a *text* search engine answer real geo queries, polygons, circles, EWKT geometries, without a separate spatial database bolted on the side.
+That lives in [`htm.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/geospatial/htm.h) and `cartesian.h` (latitude and longitude to unit-sphere Cartesian and back). It is the piece that let a *text* search engine answer real geo queries, polygons, circles, EWKT geometries, without a separate spatial database bolted on the side.
 
 ## What it cost, and what it was for
 
@@ -119,4 +119,4 @@ Xapiand also turned out to be a quarry. Years after Dubalu I went back and cut i
 
 ---
 
-*Everything above is from the real source as of the last Dubalu-era release, [Xapiand v0.40.0](https://github.com/Kronuz/Xapiand/tree/v0.40.0), specifically [`server/discovery.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/server/discovery.h) (Raft), [`storage.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/storage.h) (the store), and [`geospatial/htm.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/geospatial/htm.h) (the mesh). Copyright Dubalu LLC, 2015-2019.*
+*Everything above is from the real source as of the last Dubalu-era release, [Xapiand v0.40.0](https://github.com/Kronuz/Xapiand/tree/v0.40.0), specifically [`server/discovery.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/server/discovery.h) (Raft), [`storage.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/storage.h) (the store), and [`geospatial/htm.h`](https://github.com/Kronuz/Xapiand/blob/v0.40.0/src/geospatial/htm.h) (the mesh). Copyright Dubalu LLC, 2015 to 2019.*
