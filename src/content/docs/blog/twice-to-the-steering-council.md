@@ -3,20 +3,19 @@ title: "Twice to the Steering Council"
 subtitle: "Rejected as PEP 690, accepted as PEP 810."
 description: "The standardization story behind lazy imports: PEP 690 proposed a global switch and was rejected by the Python Steering Council in 2022; PEP 810 proposed an explicit `lazy import` keyword and was accepted in 2025 for Python 3.15. Why the second attempt deliberately threw away the dict-internals trick."
 excerpt: "I tried to give lazy imports to all of Python. The Steering Council said no, for a good reason. So we did it again, properly: explicit, opt-in, and pointedly not touching the dictionary internals I had been so proud of. The second time, they said yes."
-date: 2026-06-08
-draft: true
+date: 2026-09-17
 featured: true
 series: "Opening Boxes"
-seriesOrder: 8
+seriesOrder: 7
 tags:
   - opening-boxes
   - python
   - cpython
 ---
 
-*Part of the **Opening Boxes** series, a set of technical deep-dives into the boxes from [The Boy Who Opened Boxes](/blog/the-boy-who-kept-opening-the-box/). This one is the sequel to [The Large, Black Ball](/blog/the-large-black-ball/): what happened when I tried to give lazy imports to the whole language.*
+*The sequel to [The Large, Black Ball](/blog/the-large-black-ball/): what happened when I tried to give lazy imports to the whole language.*
 
-The previous article ended on a single sentence: *I wrote it up as PEP 690 and proposed it to Python itself.* This is what happened next. The language said **no**, in December 2022. Then it said **yes**, in November 2025, to a different proposal that kept the idea and discarded the implementation detail I loved most. The feature is slated for **Python 3.15**.
+The previous article ended with PEP 690, the proposal Carl Meyer and I wrote to give lazy imports to Python itself. This is what happened next. The language said **no**, in December 2022. Then it said **yes**, in November 2025, to a different proposal that kept the idea and discarded the implementation detail I loved most. The feature is slated for **Python 3.15**.
 
 It took knocking twice. Here is what changed between the knocks.
 
@@ -55,7 +54,7 @@ Here is the twist I did not see coming, and the reason this is its own article r
 
 PEP 810 **deliberately does not touch the dictionary internals**. The thing I was proudest of in the original implementation, the lazy object living inside the dict and resolving on lookup, is explicitly listed in PEP 810's *Rejected Ideas*. The reasoning is sound, and it is a little humbling to read:
 
-> The dictionary is the foundational data structure in Python. Adding any kind of hook or special behavior to dicts to support lazy imports would prevent critical interpreter optimizations including future JIT compilation, add complexity to a data structure that must remain simple and fast, affect every part of Python, not just import behavior, and violate separation of concerns: the hash table shouldn't know about the import system.
+> The dictionary is the foundational data structure in Python. [...] Adding any kind of hook or special behavior to dicts to support lazy imports would: Prevent critical interpreter optimizations including future JIT compilation. Add complexity to a data structure that must remain simple and fast. Affect every part of Python, not just import behavior. Violate separation of concerns – the hash table shouldn't know about the import system.
 
 Instead, PEP 810 uses a `LazyImportType` **proxy object**. A lazy import binds the name to a proxy; the first time the name resolves, the proxy is replaced by the real value. No hook in the dict lookup path, so the JIT and every future dict optimization stay unobstructed. The PEP even works through why the proxy has to be a real replaceable object rather than something transformed in place: `lazy from foo import bar` can bind `bar` to *any* object, a function, a class, a constant, so there is no single memory layout to mutate into. A uniform proxy is the only thing that works for both `lazy import x` and `lazy from x import y`.
 
