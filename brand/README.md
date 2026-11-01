@@ -4,5 +4,6 @@
 it with `npm run icons` (see AGENTS.md, "Site icons"). It is a trace of the original 1920×2180
 PNG, kept in the internal blog's `brand/`.
 
-`variants/<name>/` holds the icon sets that are not live, regenerated with the live one:
-favicon.svg, favicon.ico, the iOS and Android tiles, and logo.svg in that variant's colors.
+`variants/<name>/` holds every icon variant side by side (`light-gray` is live, `green-gray`
+the alternative): favicon.svg, favicon.ico, the iOS and Android tiles, and logo.svg in that
+variant's colors.

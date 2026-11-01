@@ -232,10 +232,10 @@ resampled:
   serve Android through `src/pages/manifest.webmanifest.ts`.
 - Touch and manifest icons are opaque tiles, because iOS (home screen, Listen to Page, share
   sheets) and Android flatten a transparent icon onto white.
-- Two icon variants exist. `gray` (live) puts the brand-gray tracks on the dark page color
-  `#1a1a1a`; `green-gray` puts the first favicon's `#465c56` tracks on the light page color. The
-  live set goes to `public/` and the other to `brand/variants/<name>/` with a recolored
-  `logo.svg`; `npm run icons -- --live green-gray` swaps them.
+- Two variants sit side by side in `brand/variants/<name>/`, each with its icons and a recolored
+  `logo.svg`. `light-gray` (live) puts the master's tracks on the dark page color `#1a1a1a`;
+  `green-gray` puts the first favicon's `#465c56` tracks on the light page color. The live set is
+  also copied to `public/`; `npm run icons -- --live green-gray` swaps which one is live.
 - The 16, 32 and 48 px frames get stem darkening (a gamma on alpha) to keep thin strokes firm.
 - `logo.svg` is a potrace trace of the original 1920×2180 brand PNG (the internal repo's
   `brand/README.md` has the recipe). Rendered back at full size it matches the PNG at IoU 0.993.
