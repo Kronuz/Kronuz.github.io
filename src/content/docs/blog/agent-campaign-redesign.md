@@ -12,7 +12,7 @@ tags:
 
 Four days ago I wrote [One Fun Task](/blog/bignum-campaign/), about a day in which a campaign of AI coding agents rebuilt the insides of my old bignum. The campaign is a method I keep as a skill, a set of instructions every agent in it reads, and in about three weeks it had grown to **fifteen roles**, **fourteen agent types**, **25,142 words** of instructions, a status index and ledgers kept by hand, and a rule that two agents should always be busy while quota remained.
 
-It worked. It also cost a lot, and the logs of my other campaigns said exactly where. So I had it rebuilt. Campaign 2.0 has four roles and two agent types, its instructions are less than half the length, and the rules that matter most are no longer sentences an agent has to remember. A small tool enforces them, and both the skill and the tool are on GitHub as [agent-campaign](https://github.com/Kronuz/agent-campaign). Nothing was broken: 1.x shipped real work. It was heavy, and this is the story of making it lighter without losing what made it trustworthy.
+It worked. It also cost a lot, and the logs of my other campaigns said exactly where. So I had it rebuilt. Campaign 2.0 has four roles and two agent types, its instructions are less than half the length, and the rules that matter most are no longer sentences an agent has to remember. A small tool enforces them, and both the skill and the tool are on GitHub as [agent-campaign](https://github.com/Kronuz/agent-campaign). This is the story of making it lighter without losing what made it trustworthy.
 
 ## Where the tokens went
 
@@ -69,7 +69,7 @@ adv -> pal: branch
 
 Fifteen roles became four, and fourteen agent types became two, the adventurer and the paladin. What used to be a separate role is now how the agent works. An adventurer can be a Sage (architecture and design), a Wizard (rarely, when the mechanism itself is the limit), an Artificer (performance), a Scout, a Bard (documentation in my voice) or a Squire (mechanical changes), and the class picks its method and its model. A paladin carries a lens: correctness, security, durability, design or the whole system. A low-risk quest lands on green checks with no paladin at all; a critical one gets a paladin from another model family.
 
-I worried the theme would make the instructions vaguer. One test agent ran a whole campaign on the themed skill and was asked exactly that. The role names were clear, it said, but two words collided: "class" also named a column in the review table, and "risk" was both a quest's risk and a kind of finding. The column is called Kind now.
+I worried the theme would make the instructions vaguer. A test agent that ran a whole campaign on the themed skill found the role names clear and one real collision: "class" also named a column in the review table. The column is called Kind now.
 
 ## One quest, start to finish
 
@@ -107,7 +107,7 @@ The paladin reads the quest file and the branch for itself. It reuses the advent
 
 ## Rules became a tool
 
-The old skill said "never edit your own done criteria", "rebase before landing" and "one writer per file set". An agent can forget a sentence. So 2.0 has a tool, `campaign`, about 2,500 lines of Python with no dependencies, and those sentences became its behavior.
+The old skill said "never edit your own done criteria", "rebase before landing" and "one writer per file set". An agent can forget a sentence. So 2.0 has a tool, `campaign`, about 3,000 lines of Python with no dependencies, and those sentences became its behavior.
 
 The quest file holds the criteria, and landing refuses a branch that edits it. The campaign's state lives in one JSON file that only the tool writes, from one checkout, under a lock. And `campaign land` refuses to move `main` unless every check passed on the exact code being landed and every review the risk calls for was accepted for that exact content.
 
@@ -139,7 +139,7 @@ That diagram also shows the rule I care most about now: **the direct path first*
 
 ## Nobody waits
 
-Builds, tests and benchmarks are **jobs** now. An agent submits one with its commit and command, writes the job's id in its journal, and ends its turn. A single worker per machine runs the queue for every campaign, in priority order; each attempt gets a runner that leads its own process session, writes a heartbeat every 15 seconds, and kills anything the command left behind. If a runner dies, the worker notices the stale heartbeat and retries or marks the job interrupted. The game master waits on all of it with one background command, which costs no tokens until it returns.
+Builds, tests and benchmarks are **jobs** now, and a single worker per machine runs the queue for every campaign, in priority order; each attempt gets a runner that leads its own process session, writes a heartbeat every 15 seconds, and kills anything the command left behind. If a runner dies, the worker notices the stale heartbeat and retries or marks the job interrupted. The game master waits on all of it with one background command, which costs no tokens until it returns.
 
 ```d2 alt="Agents submit jobs and end their turn; one queue for every campaign feeds the worker and runners, which run under quiet and report back to the game master's single background wait."
 direction: down
@@ -152,13 +152,13 @@ agents -> queue -> runner -> quiet
 runner -> gm: done
 ```
 
-Underneath sits `quiet`, the small script that shares one machine between every agent on it. Light holds are builds and tests, a few at a time, at the lowest priority. A strict hold is a measurement on its own cores, and an exclusive hold runs alone. 2.0 caps a measurement at 30 minutes and stops it at its deadline, because a benchmark that overran its isolation is not a result. A build that has waited ten minutes now goes ahead of new measurements, so a stream of benchmarks can no longer starve the builds behind them.
+Underneath sits `quiet`, the small tool that shares one machine between every agent on it. Light holds are builds and tests, a few at a time, at the lowest priority. A strict hold is a measurement on its own cores, and an exclusive hold runs alone. 2.0 caps a measurement at 30 minutes and stops it at its deadline, because a benchmark that overran its isolation is not a result. A build that has waited ten minutes now goes ahead of new measurements, so a stream of benchmarks can no longer starve the builds behind them.
 
 ## Proving it
 
 The tool comes with a full test suite, run on Python 3.9 and 3.15 at the same time on a machine other agents were using. Then the mechanisms were broken on purpose, one at a time, to see whether a test noticed: the reaper, attempt fencing, evidence keyed by code, landing recovery, starvation fairness, the deferred checks, and more. Of 33 planted bugs, four got past the tests at first. Two exposed weak tests, and one of those was hiding a real bug, below. One was a guard no real prompt could reach, so the guard went. The last was a path no test exercised, so it got a test.
 
-Testing under real load found bugs a quiet machine would not have. Under CPU load, `quiet` reported **13 of 16** trivial jobs as past their deadline: a timer, terminated just after it started, could still mark the hold expired. It is decided by the clock now. A runner skipped its heartbeat while cleaning up, and the reaper killed a live job. A starving build announced itself only after winning a lock that the busy measurement held most of the time, so fairness depended on timing; the real code passed the test one time in three. The last turned up on the day I published this: a job meant to run after one job could be handed an identical job queued after a different one, and inherit its skip when that one failed. Only a worker slowed by a busy machine left the first job waiting long enough to be found.
+Testing under real load found bugs a quiet machine would not have. Under CPU load, `quiet` reported **13 of 16** trivial jobs as past their deadline: a timer, terminated just after it started, could still mark the hold expired. It is decided by the clock now. A runner skipped its heartbeat while cleaning up, and the reaper killed a live job. A starving build announced itself only after winning a lock that the busy measurement held most of the time, so fairness depended on timing; the real code passed the test one time in three. The last turned up the day I published this: a job meant to run after one job could be handed an identical one queued after another, and inherit its skip when that one failed.
 
 Then fresh agents, given nothing but a prompt and the skill, ran it on throwaway repositories. One got a half-finished quest, an uncommitted test and a job whose runner had been killed, and was asked to resume. It worked out where things stood in **8 tool calls**, kept the half-written test, did not rerun the killed job (the reaper had already retried it), and left the decision that was mine for me. Another ran a campaign from scratch: three quests landed in a little under 12 minutes, with one review. A third ran the themed skill on a toy library with a quadratic `unique()`: 49.34 seconds became 5.72 milliseconds at 200,000 items, measured on an exclusive hold against a control run of the same code that agreed within 0.1%, after a paladin compared 5,029 cases with the old code.
 
@@ -168,7 +168,11 @@ The real trial was a live campaign on Detent, running in [Codex](https://github.
 
 Then, about ten minutes after it resumed the campaign, it used up its five-hour window.
 
-Nothing in the skill could see that coming. The quota helper read Claude Code and Copilot but not Codex, and the campaign had no record of what each agent cost. 1.x had that record, the exploration log I built the whole audit from, and 2.0 had dropped it with the other clerical work. So it came back, without a clerk: `campaign usage` reads the logs the harness already writes and attributes every agent run to a quest, a role, a class, a model and an effort, from the first line of the prompt that launched it. On the themed test, it showed the Artificer at 2.0 million tokens, the paladin at 2.1 million, and two fresh resumes at 1.9 million together, which cost more than the build itself in Copilot's own units. That test's game master could not message an agent that was not running in the background, so every resume started from scratch. Its jobs waited 26 minutes and ran 20, on a machine at a load of 81. My guess for Codex is the lead plus two or three agents on its strongest model at high effort, all at once. That is a guess until its logs say so.
+Nothing in the skill could see that coming. The quota helper read Claude Code and Copilot but not Codex, and the campaign had no record of what each agent cost. 1.x had that record, the exploration log I built the whole audit from, and 2.0 had dropped it with the other clerical work. So it came back, without a clerk: `campaign usage` reads the logs the harness already writes and attributes every agent run to a quest, a role, a class, a model and an effort, from the first line of the prompt that launched it. On the themed test, it showed the Artificer at 2.0 million tokens, the paladin at 2.1 million, and two fresh resumes at 1.9 million together, which cost more than the build itself in Copilot's own units.
+
+Once it read Codex's logs too, the ten minutes before that window ran out came to 10.3 million tokens: **51.5%** in the lead, nearly all of it rereading its own context, and the rest in three agents on Astra, Codex's strongest model, at high effort. Nothing showed Astra doing the ordinary work better, and the logs can't say what a token costs against the quota, so the lead and most classes now start on Sol at medium effort, and Astra is kept for a mechanism nobody has cracked.
+
+Codex had one more surprise. A finished agent's result waits in a mailbox and wakes nobody, so one night the campaign simply stopped, with the results sitting there. The lead now blocks on Codex's own agent wait whenever agents are out.
 
 ## Several campaigns, one machine
 
@@ -180,7 +184,7 @@ The old skill grew one sensible sentence at a time, and that is how it got to 25
 
 ## What is left
 
-The usage report reads Copilot's logs; Claude Code's and Codex's are not read yet, and Codex's comes first. The quota helper cannot see extra credits bought for Claude Code, only its five-hour and weekly windows, so it informs a decision and never makes one. And I have not run the same work under both versions. A fair head-to-head would cost millions of tokens for a sample too small to mean much, so the only token savings I have are estimates from the 1.x medians, and I am not quoting them as results. 1.x stays a branch switch away until a real campaign has run on 2.0 for a week.
+The usage report reads Copilot's and Codex's logs; Claude Code's are not read yet. The quota helper cannot see extra credits bought for Claude Code, only its five-hour and weekly windows, so it informs a decision and never makes one. And I have not run the same work under both versions. A fair head-to-head would cost millions of tokens for a sample too small to mean much, so the only token savings I have are estimates from the 1.x medians, and I am not quoting them as results. 1.x stays a branch switch away.
 
 ## The part I did
 
