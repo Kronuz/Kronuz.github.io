@@ -4,7 +4,6 @@ subtitle: "Rebuilding my agent campaigns from their own logs"
 description: "The agent campaigns behind One Fun Task ran on a method I had grown for three weeks: fifteen roles, fourteen agent types, 25,000 words of instructions, ledgers kept by hand, and agents waiting hours for the machine. Their own logs showed where the tokens went. Campaign 2.0 keeps the reviews and the hunts that paid, and turns the rest into a small tool: four roles, two agent types, less than half the words, and checks that run on the exact code that lands."
 excerpt: "The campaign behind One Fun Task worked, and it was heavy: fifteen roles, 25,000 words of instructions, and agents that waited hours for a turn on the machine. Its logs said where the tokens went, so I had it rebuilt around what paid: a smaller party, a tool that enforces what the rules used to ask for, and nobody waiting on a benchmark."
 date: 2026-11-05
-draft: true
 authors: kronuz
 tags:
   - ai
