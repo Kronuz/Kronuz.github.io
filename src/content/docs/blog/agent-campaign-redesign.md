@@ -101,6 +101,8 @@ branch.review -> main.land
 
 The rule I care most about now is **the direct path first**. Gate checks block landing: the build, the tests, and the evidence the risk needs, like ThreadSanitizer for concurrency. Deferred checks (other platforms, long soaks, extended fuzzing) run after landing at low priority, and they block the milestone, never the next quest.
 
+One rule worked against me. A test held the instructions to 10,900 words, and once they reached it, every new rule was paid for by shortening an old one, until a few lost their conditions: a fresh agent reading them concluded that a message to the game master blocked a landing, and that an interrupted job must never be rerun. Size is a report now, counted as what each agent actually loads at launch, and it only warns.
+
 ## Nobody waits
 
 Builds, tests and benchmarks are **jobs**, run by one worker per machine for every campaign, in priority order, each under a runner with a heartbeat. The game master waits on all of them with one background command, which costs no tokens until it returns.
@@ -138,7 +140,7 @@ They talk to each other, too. An agent on an unrelated run found something for a
 
 ## What is left
 
-The usage report doesn't read Claude Code's logs yet, a message sends no receipt back to its sender, and I have not run the same work under both versions: a fair head-to-head would cost millions of tokens for a sample too small to mean much. 1.x stays a branch switch away. And a test holds the instructions to a word budget, so the next sensible sentence has to replace one.
+The usage report doesn't read Claude Code's logs yet, a message sends no receipt back to its sender, and I have not run the same work under both versions: a fair head-to-head would cost millions of tokens for a sample too small to mean much. 1.x stays a branch switch away.
 
 ## The part I did
 
