@@ -164,7 +164,9 @@ When the owner re-arms or cancels an entry that is not armed yet while the inbox
 
 ## What stash still does better
 
-Rule 2 is the honest cost, and it matters for the logger. The [logger](/blog/logger/) arms a "this is taking too long" line on every operation and cancels it from the worker thread when the operation finishes, which is almost always. In stash that cancel is one compare-and-swap from any thread. On the wheel a worker cannot cancel; it sets a flag that the fire checks, and the entry stays filed until its deadline, much as it does in stash. Whether the cheaper arm still wins that workload is a measurement I have not run yet.
+Rule 2 is the honest cost, and the [logger](/blog/logger/) shows it. The logger arms a "this is taking too long" line on every operation and cancels it from the worker thread when the operation finishes, which is almost always. On stash that cancel was one compare-and-swap from any thread. On the wheel a worker cannot cancel; it sets a flag that the fire checks, and the entry stays filed until its deadline.
+
+The logger has in fact already left stash's wheel: since November it writes each thread's lines into a queue of that thread's own and keeps deferred lines in a heap on its LOG thread, and it takes only a cancellable task type and a thread wrapper from scheduler. A first attempt to put it on the wheel found that the wheel's slots are last in, first out, so it wrote lines out of their thread's order, which the logger promises to keep. Its own queues and heap against the wheel is a measurement running now.
 
 It is not the only open item.
 
@@ -181,8 +183,8 @@ Scheduler is stash's front door: a threaded scheduler, a debouncer and scheduled
 
 Retirement has three conditions, and nothing is archived until all three hold.
 
-1. The replacement is its own library, which wheel is. My task library, the logger and Xapiand will depend on it rather than carry a copy.
-2. It is measured better on every current use: the logger's deferred and slow-operation lines, and Xapiand's fsync and manager debouncers, each with its own before-and-after.
+1. The replacement is its own library, which wheel is. My task library and Xapiand will depend on it rather than carry a copy.
+2. It is measured better on every current use: Xapiand's fsync and manager debouncers each with its own before-and-after, and for the logger, whichever of its own queues or the wheel measures better.
 3. Nothing uses stash or scheduler. A search across every one of my repositories comes back empty, and only then are the two archived.
 
 This one stings a little. I wrote stash by hand, over a long time, and it was a good answer to the question it was built for: many threads schedule, one fires, and nobody may block. The new wheel keeps both of its best ideas, nested levels of slots and producers that never wait on each other. What it drops is the shared structure everyone writes into, because the question changed: the owner re-arms constantly, and the owner should not have to pay for sharing.
