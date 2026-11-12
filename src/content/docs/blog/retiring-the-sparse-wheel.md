@@ -4,7 +4,6 @@ subtitle: "Why stash and scheduler retire, and what replaces them."
 description: "stash, the lock-free timer wheel from Xapiand, and scheduler, the library on top of it, are being retired. Measured on the timers my systems actually run, which are re-armed and cancelled far more often than they fire, a single-owner wheel with a striped inbox costs 3.6 to 30 times less per timer and 9 to 17 times less per arm from another thread. How it was measured, where stash's time goes, how the new wheel library works, and what stash still does better."
 excerpt: "Three months ago I wrote that stash was the familiar I would keep if I could keep only one. In the same post I wrote a table of when not to use it, and the first row was timers that are usually cancelled or moved. Then I built a system made almost entirely of those."
 date: 2026-11-11
-draft: true
 authors: kronuz
 series: "Familiars"
 seriesOrder: 30
