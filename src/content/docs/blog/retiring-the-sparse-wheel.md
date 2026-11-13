@@ -1,7 +1,7 @@
 ---
 title: "Who Owns the Wheel"
 subtitle: "Why stash and scheduler retire, and what replaces them."
-description: "stash, the lock-free timer wheel from Xapiand, and scheduler, the library on top of it, are being retired. On the timers my systems actually run, which are re-armed and cancelled far more often than they fire, the landed single-owner wheel costs 3 to 26 times less per timer than stash and arms 10 to 16 times cheaper from another thread. Where stash's time goes, how the wheel works inside, and what stash still does better."
+description: "stash, the lock-free timer wheel from Xapiand, and scheduler, the library on top of it, are being retired. On the timers my systems actually run, which are re-armed and cancelled far more often than they fire, the landed single-owner wheel costs 3 to 26 times less per timer than stash and arms about 10 to 16 times cheaper from another thread. Where stash's time goes, how the wheel works inside, and what stash still does better."
 excerpt: "Three months ago I wrote that stash was the familiar I would keep if I could keep only one. In the same post I wrote a table of when not to use it, and one of its rows was timers that are usually cancelled or moved. Then I built a system made almost entirely of those."
 date: 2026-11-11
 authors: kronuz
@@ -13,7 +13,7 @@ tags:
   - concurrency
 ---
 
-I am retiring [stash](https://github.com/Kronuz/stash) and [scheduler](https://github.com/Kronuz/scheduler). On the timers my systems run today, a timer wheel owned by one thread costs **3 to 26 times less** per timer than stash, and it arms **10 to 16 times cheaper** than stash does from other threads, with no allocation at all. The replacement is a new library, [wheel](https://github.com/Kronuz/wheel). This post is how I got there, what is inside it, and what stash still does better.
+I am retiring [stash](https://github.com/Kronuz/stash) and [scheduler](https://github.com/Kronuz/scheduler). On the timers my systems run today, a timer wheel owned by one thread costs **3 to 26 times less** per timer than stash, and it arms **about about 10 to 16 times cheaper** than stash does from other threads, with no allocation at all. The replacement is a new library, [wheel](https://github.com/Kronuz/wheel). This post is how I got there, what is inside it, and what stash still does better.
 
 *Updated 2026-11-12: every number here is the landed library measured against stash, from [one record with its job ids](https://github.com/Kronuz/Detent/blob/main/docs/perf/wheel-vs-stash.md).*
 
