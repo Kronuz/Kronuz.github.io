@@ -40,7 +40,7 @@ The campaign runs through the engine in loose chapters, each a cluster of relate
 - **The forbidden layer.** The libraries that live where the normal rules stop applying: the [crash tracer](/blog/the-haunted-handler/) that runs inside a signal handler, the EINTR-safe POSIX layer, the machine-introspection code that has to be portable across every OS the server runs on.
 - **The lock-free jewels.** The concurrency crown of the codebase: the [timer store](/blog/the-sparse-wheel/) whose insert never stalls another thread, the deferred logger built on it, an atomic `shared_ptr`, a bounded blocking deque.
 - **The network path.** One request's whole journey: the thread-per-core reactor, the HTTP framework, the streaming parser, the router that matches a URL to a handler without ever walking the whole tree.
-- **Bytes and persistence.** How data survives a crash and a wire: a crash-safe append-only store, three interchangeable compression codecs, a MessagePack value type, a condensed sortable UUID, an integer with no ceiling.
+- **Bytes and persistence.** How data survives a crash and a wire: a crash-safe append-only store, three interchangeable compression codecs, a MessagePack value type, a condensed sortable UUID, an integer with no ceiling, a [number codec](/blog/sortable/) whose bytes sort like the numbers.
 - **Space and sound.** Domain algorithms: the Hierarchical Triangular Mesh that turns the planet into terms, geodetic coordinate math, phonetic matching, string similarity.
 - **Compile-time magic.** The things that run before `main` does: compile-time hashing and character classification, reflective enums.
 - **The bag of holding.** And a heap of tiny, honest helpers too small for a post of their own, tipped out onto the table together at the end.
