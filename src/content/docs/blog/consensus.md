@@ -2,11 +2,11 @@
 title: "Acknowledged Means Durable"
 subtitle: "A log and a Raft core that never say yes too early."
 description: "journal is a header-only C++20 write-ahead log whose append returns only after the data is truly on disk, and which refuses to start rather than forget anything it confirmed. consensus is a header-only deterministic Raft core on top of it: events in, actions out, and no vote or acknowledgement leaves a machine before journal says it is saved. A real flush costs about 62 milliseconds on an Intel Mac, so journal groups work: 16 saved operations a second become 4,074 when 256 share one flush."
-excerpt: "When a database tells you your write is safe, it is repeating a promise a disk made to it. The thirty-fifth familiar is two libraries with one rule between them: nothing says yes until the bytes are really down, from the disk all the way up to a vote among servers."
+excerpt: "When a database tells you your write is safe, it is repeating a promise a disk made to it. The thirty-sixth familiar is two libraries with one rule between them: nothing says yes until the bytes are really down, from the disk all the way up to a vote among servers."
 date: 2026-11-14
 authors: kronuz
 series: "Familiars"
-seriesOrder: 35
+seriesOrder: 36
 chapter: "Bytes"
 tags:
   - familiars
