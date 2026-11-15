@@ -2,11 +2,11 @@
 title: "Sorted as Bytes"
 subtitle: "A number codec whose bytes compare like the numbers they hold."
 description: "sortable is a header-only C++20 codec that turns any int64, uint64 or double into 1 to 10 bytes whose memcmp order is the numeric order. The same number in any of the three types gives the same bytes, every 64-bit integer is exact, and a value is a tag byte for its binary exponent followed by its fraction, so a document id takes about 2 bytes and encodes in about 3 nanoseconds. It has two decoders: a strict one that accepts exactly what the encoder writes, for bytes from outside, and a trusted one for bytes read back from your own storage that keeps only the bounds checks and decodes 24 to 38 percent faster on real values."
-excerpt: "An index compares keys as raw bytes, and it does not care that some of those bytes were an integer and some were a double. The thirty-first familiar makes that blindness safe: any number, in any of three types, becomes a short string whose byte order is the numeric order, exact down to the last bit of a 64-bit integer."
+excerpt: "An index compares keys as raw bytes, and it does not care that some of those bytes were an integer and some were a double. The thirty-sixth familiar makes that blindness safe: any number, in any of three types, becomes a short string whose byte order is the numeric order, exact down to the last bit of a 64-bit integer."
 date: 2026-11-15
 authors: kronuz
 series: "Familiars"
-seriesOrder: 31
+seriesOrder: 36
 chapter: "Bytes"
 tags:
   - familiars

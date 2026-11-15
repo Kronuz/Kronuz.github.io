@@ -6,7 +6,7 @@ excerpt: "Three months ago I wrote that stash was the familiar I would keep if I
 date: 2026-11-11
 authors: kronuz
 series: "Familiars"
-seriesOrder: 30
+seriesOrder: 34
 tags:
   - familiars
   - cpp
