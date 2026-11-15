@@ -38,7 +38,7 @@ Not every line is deferred. A log entry takes one of three routes, chosen by wha
 - **Routine lines go into the thread's own queue**, formatted in place, with no lock and no allocation. The single LOG thread merges every thread's queue in the order the lines were logged and writes them off the hot path.
 - **Deferred lines are due at *now + delay*** and fire only if nothing cancels them first. This is the slow-op line, the debounce, the "warn me if this is still stuck later."
 
-Many producers that never wait on each other, one consumer writing ordered output, and a deferred lane you arm and usually cancel. Everything host-specific, the exception formatting, the real backtraces (that is [another familiar](/blog/the-haunted-handler/)), the thread names, the timestamp format, comes in through hooks. Underneath sit only wheel, [threadpool](https://github.com/Kronuz/threadpool) for the LOG thread itself, [term-color](https://github.com/Kronuz/term-color) for the colors, and the small [cppcodec](https://github.com/tplgy/cppcodec).
+Many producers that never wait on each other, one consumer writing ordered output, and a deferred lane you arm and usually cancel. Everything host-specific, the exception formatting, the real backtraces (that is [another familiar](/blog/the-haunted-handler/)), the thread names, the timestamp format, comes in through hooks. Underneath sit only wheel, [workpool](https://github.com/Kronuz/workpool) for the LOG thread itself, [term-color](https://github.com/Kronuz/term-color) for the colors, and the small [cppcodec](https://github.com/tplgy/cppcodec).
 
 ## Where it fits
 

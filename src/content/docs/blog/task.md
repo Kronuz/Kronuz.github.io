@@ -74,7 +74,7 @@ Besides the deep chains, the tests cover affinity across threads, budget demotio
 
 ## Where it fits
 
-task has two neighbors. [threadpool](/blog/threadpool/) owns *workers*, threads for blocking work like disk writes, shared fairly. [reactor](/blog/reactor/) owns *loops*, one per core, with accepting and clean shutdown. task owns neither: it is the coroutine that runs on a loop the host owns. Its docs tie it to the pool only at shutdown: the owner first stops every loop and pool a suspended task may be waiting on, which in Xapiand means draining its `WorkGroup`s, before any task frame is destroyed.
+task has two neighbors. [workpool](/blog/workpool/) owns *workers*, threads for blocking work like disk writes, shared fairly. [reactor](/blog/reactor/) owns *loops*, one per core, with accepting and clean shutdown. task owns neither: it is the coroutine that runs on a loop the host owns. Its docs tie it to the pool only at shutdown: the owner first stops every loop and pool a suspended task may be waiting on, which in Xapiand means draining its `WorkGroup`s, before any task frame is destroyed.
 
 [http](/blog/http/) is built on it now: a request handler is a `task::task<void>`, and each connection a task on its reactor's loop. Reach for task when coroutines share a loop someone else runs, must give it back on a time budget, and must come home to the thread they started on.
 

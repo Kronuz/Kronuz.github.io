@@ -29,7 +29,7 @@ export default defineConfig({
 	site: 'https://kronuz.github.io',
 	// The all-posts dashboard moved from /all/ to /blog/all/ (to sit beside the
 	// projects dashboard at /projects/all/). Keep the old path working.
-	redirects: { '/all': '/blog/all' },
+	redirects: { '/all': '/blog/all', '/blog/threadpool': '/blog/workpool' },
 	// Let the Vite dev server accept requests coming through a tunnel (ngrok,
 	// Cloudflare Tunnel, etc). Vite 7 blocks unknown Host headers by default and
 	// replies "Blocked request. This host ... is not allowed"; `allowedHosts: true`
