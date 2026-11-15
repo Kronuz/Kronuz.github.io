@@ -1,9 +1,10 @@
 ---
 title: "The Pool and Its Parts"
-subtitle: "A fixed-size worker pool, and the thread primitives it hands you so you can build your own."
-description: "threadpool is a small, dependency-free C++20 fixed-size worker pool: construct it with a name format and a thread count, then hand it work as fire-and-forget enqueue, bulk enqueue_bulk, or call-and-await-result async that returns a std::future. Each worker is a long-lived thread pulling tasks off a shared blocking queue. It is the pool Xapiand uses for its servers, indexers, and background work, and it ships the layers underneath it: a Thread CRTP base that turns any class with name() and operator() into a runnable joinable thread, a one-shot TaskQueue of packaged_tasks, and two mutex-backed concurrent queues, so you can build your own concurrency on the same parts."
-excerpt: "A thread pool is the least surprising thing in a concurrent codebase, which is exactly why it is worth getting plainly right rather than cleverly wrong. The twenty-fifth familiar is a straightforward fixed-size pool with fire-and-forget, bulk and future-returning submission, and the quietly useful part is that it comes unbundled: the CRTP thread base, the task queue, and its blocking queues are all exposed, so you can assemble your own."
+subtitle: "One set of workers shared fairly by thousands of owners."
+description: "threadpool is a small, dependency-free C++20 worker pool built for a server with thousands of open indexes. WorkPool is one set of named threads; each owner of work holds a WorkGroup on it and gets fair turns, its own waits and cancellation, and a fast lane for queries. Work items belong to the caller, so handing one over allocates nothing, and idle workers truly sleep: an idle pool uses 0.0008% of a core, and a query waits 12 to 40 microseconds behind 1,000 busy indexes instead of 70 milliseconds."
+excerpt: "A thread pool is the least surprising thing in a concurrent program, until thousands of owners share it. The twenty-fifth familiar is a set of workers that thousands of indexes take fair turns on, where a query never waits behind somebody else's housekeeping, and an idle pool costs nothing."
 date: 2026-10-02
+lastUpdated: 2026-11-15
 series: "Familiars"
 seriesOrder: 25
 chapter: "Lock-Free"
@@ -13,30 +14,58 @@ tags:
   - concurrency
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is the plainest of the concurrency crew, and useful for it: [threadpool](https://github.com/Kronuz/threadpool).*
+*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is the workers everything else runs on: [threadpool](https://github.com/Kronuz/threadpool).*
 
-Every server needs the same thing eventually: a set of worker threads that stay alive and chew through tasks handed to them, so that a slow or blocking piece of work does not tie up the thread that produced it. A thread pool is the least exotic component in a concurrent system, and that is precisely why it should be plain and correct rather than clever. [threadpool](https://github.com/Kronuz/threadpool) is exactly that plain thing: a fixed-size pool of long-lived workers, each pulling tasks off a shared blocking queue and running them until the pool is told to finish. It is the pool Xapiand runs its HTTP and binary servers on, its document indexers and preparers, and its background chores.
+A server does a lot of work that should not happen on the thread that asked for it. Writing an index to disk, compressing a block, answering a query: if each of those ran where it was requested, one slow job would freeze everything behind it. The usual answer is a **thread pool**: a fixed set of worker threads that stay alive and take jobs from a queue, one after another.
 
-You construct it with a worker-name format and a thread count, and hand it work. Three calls cover essentially everything you want from a pool:
+The first version of [threadpool](https://github.com/Kronuz/threadpool) was exactly that: a handful of workers and one shared queue. It served Xapiand for years. Then the question changed.
 
-- **`enqueue`**, fire-and-forget: run this, I do not care when or what it returns.
-- **`enqueue_bulk`**, the same for a batch of tasks at once.
-- **`async`**, call-and-await: run this and hand me back a `std::future` for its result, so I can go do other work and collect the answer later.
+## A thousand customers, one line
 
-That core is deliberately unremarkable. The value of a pool is that it is boring and does not surprise you at three in the morning.
+A search server does not hold one index. It keeps thousands open, and they all want the workers at once. Some of the work is housekeeping that can wait a little: flushing new documents to disk, merging old files into bigger ones. Some of it is a query, and a person is waiting for that.
 
-## Unbundled on purpose
+Picture a single checkout line at a busy store. Everyone waits in arrival order, so the customer with one item stands behind the one with three full carts. That is what one shared queue does. Measured with 1,000 busy indexes, a piece of a query waited **70.5 milliseconds** before a worker even looked at it, and an index that dumped a burst of jobs took 13 to 16 times its fair share of the workers. Nothing was wrong, exactly. The pool had just stopped being fair, and fairness had become the job.
 
-The part worth pointing at is that threadpool does not just hand you the pool as a sealed box; it ships the **layers it is built from**, each usable on its own. That is a small decision with an outsized payoff, because "I need *almost* a thread pool, but with one different behavior" is a situation you hit constantly, and a sealed pool leaves you rewriting it from scratch. Here the parts are on the table:
+So threadpool today is a different pool: `WorkPool` and `WorkGroup`.
 
-- **`Thread<Impl, policy>`** is a tiny CRTP base that turns any class with a `name()` and an `operator()` into a runnable, joinable thread. Want one long-lived named thread that is not part of a pool? Use this directly.
-- **`TaskQueue`** is a one-shot queue of `std::packaged_task`s you drain by calling them with arguments, the primitive behind "callbacks waiting on a condition."
-- **`ConcurrentQueue`** and **`BlockingConcurrentQueue`** are mutex-backed queues you can use on their own, cousins of the [blocking queue](/blog/queue/) from last post.
+## Each owner gets a lane
 
-So the pool is an *assembly* of named threads over a shared queue, and because the assembly is exposed, you can build a different one: a single worker, a priority variant, a pool with custom lifecycle, all from the same tested pieces instead of a fresh hand-rolled thread and a fresh hand-rolled queue with fresh hand-rolled shutdown bugs. Shipping the primitives, not just the product, is what turns a library from a thing you use into a thing you build with.
+`WorkPool` is the one set of workers for the whole program. Every owner of work (an index, a restore, an upload) gets its own `WorkGroup` and puts its jobs there:
+
+```cpp
+WorkPool pool;          // one worker per hardware thread
+WorkGroup index(pool);  // one group per owner
+
+index.enqueue([] { flush_to_disk(); });
+index.wait();           // waits for this group's jobs, nobody else's
+```
+
+Everything an owner controls is about its own group. `wait()` returns when *its* jobs are done, not when the whole pool is quiet. `cancel()` drops its jobs that have not started yet. Closing one index never has to wait for the others.
+
+Inside, the workers take turns among the groups, like a cashier who serves each line for a moment and then moves to the next. A worker serves one group for a short turn (100 microseconds of work), then sends that group to the back if it still has jobs. A group that ran long gets a shorter turn next time, so over time everyone gets the same share. The name for this is *deficit round robin*, and it is old networking wisdom: routers use it to share a link fairly between connections.
+
+The same rule handles both extremes. A group alone on a quiet server spreads across every worker: one index finishes a flush of 64 one-millisecond jobs in about 4.3 to 5.1 ms on 16 workers, close to the ideal 4.0. A thousand busy groups each take their turn and end up with equal shares, and a group that dumps a burst gets about its fair share instead of 13 times it.
+
+## An express lane for queries
+
+Fair is not enough when someone is waiting. So jobs come in classes: queries, flushes and merges. Workers always look at the query line first, and one worker is kept for queries only, the way a store keeps one express register open. A query never waits for somebody's long merge to finish. With that, a query piece behind 1,000 busy indexes waits **12 to 40 microseconds**, down from 70.5 milliseconds, well over a thousand times sooner.
+
+Merges get a promise in the other direction. A merge that has waited more than 100 ms moves ahead of the flushes, so a flood of flushes cannot starve it forever.
+
+## The tricky part: waiting inside the pool
+
+Here is the trap every pool falls into eventually. A job running on a worker splits itself into pieces and waits for them. That blocks a worker. If enough jobs do it at once, every worker is asleep waiting for pieces, and no worker is left to run the pieces. The program stops, forever.
+
+threadpool's answer is that a worker that waits does not sleep. It rolls up its sleeves and runs the pieces it is waiting for itself, and only those, so it can never get lost in somebody else's work. A wait that could never finish (waiting on a group that is already waiting on it) stops the program loudly instead of hanging quietly. The tests check this hard: 20,000 jobs that each wait on their own pieces still never need more than the existing threads, and a chain of 500 groups waiting on each other finishes on a single worker.
+
+## An idle pool sleeps
+
+The old workers checked for work ten times a second even when there was none, about 0.4% of a core and 300 wake-ups a second, per pool, doing nothing. Now each idle worker sleeps until someone actually hands it work, and a new job wakes exactly one sleeper, only when nobody is already looking. Idle cost dropped to **0.0008%** of a core, and handing a tiny job to the pool went from 7 microseconds to under 140 nanoseconds. On a fleet of mostly idle servers, that is real CPU and power handed back.
 
 ## Where it fits
 
-Reach for it when you want a straightforward worker pool with fire-and-forget, bulk, and future-returning submission, or when you want the thread-and-queue primitives to compose your own. Skip it if your runtime already owns task scheduling (an async framework, a coroutine executor), or if a single `std::async` or `std::jthread` covers your whole need.
+Reach for it when one program does work for many owners who must share the CPU fairly: indexes, tenants, sessions, with requests that must not wait behind bulk work. It is also simply a good pool of named workers when you have only one owner.
 
-That closes the lock-free chapter, and nearly closes the campaign. The last familiars are a different kind of magic: the ones that do their work before the program ever runs, at compile time.
+Skip it for fine-grained parallel algorithms that want *work stealing* (idle workers raiding busy workers' queues), for coroutines (that is [task](https://github.com/Kronuz/task)'s job), or when you need a full queue to push back on producers: here, adding a job never blocks. The whole design, every alternative it beat, and the measurements behind each number are in the repo's [scheduler research note](https://github.com/Kronuz/threadpool/blob/main/docs/research/scheduler.md).
+
+That closes the lock-free chapter. The next familiars are a different kind of magic: the ones that do their work before the program ever runs, at compile time.
