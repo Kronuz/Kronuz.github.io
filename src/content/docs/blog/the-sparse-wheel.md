@@ -4,6 +4,7 @@ subtitle: "A lock-free timer from Xapiand whose insert never stalls another thre
 description: "stash is a hierarchical timer wheel from Xapiand, built on a sparse, lazily grown array of atomic pointers. Many threads insert without a lock and one thread drains what is due in key order, so the insert tail stays flat under contention where a locked heap or an Asio timer spikes. How it works, what it costs, the catches it ships with, and the narrow job it is the right tool for."
 excerpt: "One thread in Xapiand sleeps while every other thread drops timed work onto its schedule: log lines, fsyncs, commits, replication. The drop can never take a lock, and more than that, it can never stall. The little data structure that makes both true is the strangest, best thing in the whole codebase, and the familiar I would keep if I could keep only one."
 date: 2026-08-06
+lastUpdated: 2026-11-15
 series: "Familiars"
 seriesOrder: 3
 chapter: "Lock-Free"
@@ -14,6 +15,8 @@ tags:
 ---
 
 *Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) opened the whole engine, and a [jester](/blog/rolling-for-a-name/) and a [tracer](/blog/the-haunted-handler/) came out of it first. This one opens the jewel I would pull out of it before any other: [stash](https://github.com/Kronuz/stash).*
+
+*Update, November 2026: the [logger](https://github.com/Kronuz/logger) library has since moved off stash to [wheel](https://github.com/Kronuz/wheel), a timer wheel owned by one thread, and stash and scheduler are retiring. [Who Owns the Wheel](/blog/retiring-the-sparse-wheel/) tells why. The rest of this post is as I wrote it in August.*
 
 Somewhere in a running Xapiand there is a thread that does almost nothing. It sleeps. Every so often it wakes, looks at a clock, runs whatever is due, and goes back to sleep. It is the laziest thread in the server, and on a busy node it is also the busiest, because every *other* thread keeps dropping work onto its schedule: a log line to write, an fsync to run, a database to commit, a replication trigger to fire. They all hand it something to do later, and they hand it over constantly.
 
@@ -114,9 +117,9 @@ The consumer works a key window in three modes. *Walk* drains everything due and
 
 ## Who rides it
 
-stash never shows up by name in the parts of Xapiand that use it. It sits under a scheduler, and the scheduler has two front doors. (Strictly, there is more than one sleeping thread: the logger has its own scheduler, and so does each debouncer. They are all the same machine.)
+stash never shows up by name in the parts of Xapiand that use it. It sits under a scheduler, and the scheduler has two front doors. (Strictly, there is more than one sleeping thread: the logger had its own scheduler, and so does each debouncer. They are all the same machine.)
 
-The first door is the **logger**, the original reason stash exists. Most of Xapiand's log lines are not written by the thread that logs them. They become tasks on the logger's scheduler, and its one LOG thread writes them out in order, so a worker spewing logs never blocks on the disk or on a lock around the file. Some lines are armed for the future on purpose: a "this is taking too long" line, armed when an operation starts and cleared when it finishes in time, which is almost always. The console stays quiet in normal operation and speaks up during a stall, and the clear is one compare-and-swap on the task.
+The first door was the **logger**, the original reason stash exists. Most of Xapiand's log lines are not written by the thread that logs them. They became tasks on the logger's scheduler, and its one LOG thread writes them out in order, so a worker spewing logs never blocks on the disk or on a lock around the file. Some lines are armed for the future on purpose: a "this is taking too long" line, armed when an operation starts and cleared when it finishes in time, which is almost always. The console stays quiet in normal operation and speaks up during a stall, and the clear is one compare-and-swap on the task.
 
 The second is the **debouncer**. Xapiand debounces its background side effects: the asynchronous fsync, the database committers, the discovery layer's updaters. A burst of touches of one key collapses into one eventual call. A throttle puts a floor on how often a key can fire, and a randomized force window makes sure that a key touched forever still fires, and that a herd of keys due at once spreads out instead of landing on one instant.
 
@@ -164,13 +167,13 @@ Three jobs have that shape, and here is why stash fits each one:
 
 | fits | why stash |
 | --- | --- |
-| deferred work armed from many threads: log lines, flushes, commits | request and worker threads arm it, one thread fires it, and nearly all of it fires. Xapiand's logger and its fsync and commit debouncers are this shape. |
+| deferred work armed from many threads: log lines, flushes, commits | request and worker threads arm it, one thread fires it, and nearly all of it fires. Xapiand's fsync and commit debouncers are this shape, and so was its logger. |
 | per-key debouncing | many threads touch a key; one thread walks the wheel and dispatches the single call that survives. |
 | many timers at millisecond resolution, armed from many threads | say, a flush deadline for each of tens of thousands of open indexes, armed when an index first gets dirty, so an idle index holds no timer. One shared wheel, one walker. |
 
 The thread through all of them: **many threads arming, one draining, most of it firing, and a tail you cannot let spike.**
 
-Xapiand's own logger bends the cancel rule, and the arithmetic says why it gets away with it. Its slow-operation lines are cleared far more often than they fire, but its ready-made ones are armed 100 ms to a second out, so a cleared line lingers for a second at most. A connection idle timeout, minutes out and pushed back on every request, would pile up minutes' worth of dead entries.
+Xapiand's own logger bent the cancel rule, and the arithmetic says why it got away with it. Its slow-operation lines are cleared far more often than they fire, but its ready-made ones are armed 100 ms to a second out, so a cleared line lingers for a second at most. A connection idle timeout, minutes out and pushed back on every request, would pile up minutes' worth of dead entries.
 
 Reach past stash the moment the shape breaks. There is a better-understood tool in every direction it breaks in:
 

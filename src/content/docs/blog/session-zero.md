@@ -4,6 +4,7 @@ subtitle: "Sixty small libraries, one search engine, and the campaign to open th
 description: "An introduction to Familiars, a series of standalone C++ libraries carved out of Xapiand, a distributed search engine I built. Each post opens one library on its own terms: what it does that nothing else does, the constraint that forced its shape, the gnarly bit it ships with, and where it is the right tool. This is the setup: the world, the party, and the rules of the campaign."
 excerpt: "I spent years building a distributed search engine, and when I came back to it years later, the tools were what I most wanted to keep. Sixty-odd small, sharp libraries fell out of Xapiand, each one a self-contained idea worth knowing on its own. This is the campaign to open them, one familiar at a time."
 date: 2026-07-29
+lastUpdated: 2026-11-15
 featured: true
 series: "Familiars"
 seriesOrder: 0
@@ -38,7 +39,7 @@ The campaign runs through the engine in loose chapters, each a cluster of relate
 
 - **Little languages.** Small compilers and grammars: the [name generator](/blog/rolling-for-a-name/) that names every node, a boolean-expression parser, a perfect hash built entirely at compile time.
 - **The forbidden layer.** The libraries that live where the normal rules stop applying: the [crash tracer](/blog/the-haunted-handler/) that runs inside a signal handler, the EINTR-safe POSIX layer, the machine-introspection code that has to be portable across every OS the server runs on.
-- **The lock-free jewels.** The concurrency crown of the codebase: the [timer store](/blog/the-sparse-wheel/) whose insert never stalls another thread, the deferred logger built on it, an atomic `shared_ptr`, a bounded blocking deque.
+- **The lock-free jewels.** The concurrency crown of the codebase: the [timer store](/blog/the-sparse-wheel/) whose insert never stalls another thread, the deferred logger it was built for, an atomic `shared_ptr`, a bounded blocking deque.
 - **The network path.** One request's whole journey: the thread-per-core reactor, the HTTP framework, the streaming parser, the router that matches a URL to a handler without ever walking the whole tree, and the [server](/blog/prism/) they assemble into.
 - **Bytes and persistence.** How data survives a crash and a wire: a crash-safe append-only store, three interchangeable compression codecs, a MessagePack value type, a condensed sortable UUID, an integer with no ceiling, a [number codec](/blog/sortable/) whose bytes sort like the numbers, a [term dictionary](/blog/fst/) at a few bytes a word, the [filter](/blog/fusefilter/) in front of it, and a [log and a Raft core](/blog/consensus/) that never acknowledge too early.
 - **Space and sound.** Domain algorithms: the Hierarchical Triangular Mesh that turns the planet into terms, geodetic coordinate math, phonetic matching, string similarity.

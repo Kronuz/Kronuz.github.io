@@ -4,6 +4,7 @@ subtitle: "The small, honest tools too little for a post of their own, and a loo
 description: "The closing of Familiars. A grab-bag of the smallest libraries carved out of Xapiand, the ones too little for a deep-dive on their own, tipped out and catalogued so none of them is lost: time helpers (times, time-point, epoch, nanosleep, datetime), string and byte tools (split, strings, static-string, stringified, escape, repr), digests (md5, sha256), number helpers (math, random, strict-stox), containers (lru-cache, bloom-filter, iterators, lazy), and the systems odds and ends (errno-names, located-exception, fs, allocators, scheduler, url-parser). Then a look back at what it means to take a whole system apart into small, standalone, honest tools."
 excerpt: "Not every tool earns its own chapter. This is the last of the campaign: the bag of small, honest libraries too little for a post apiece, tipped out onto the table so none of them is lost, and then a look back at the whole party we assembled from one search engine, and what it meant to take it apart."
 date: 2026-10-13
+lastUpdated: 2026-11-15
 series: "Familiars"
 seriesOrder: 29
 chapter: "Trinkets"
@@ -18,7 +19,7 @@ Every adventuring party accumulates a bag of small things that never get their o
 
 ## Time, which nobody gets right the first time
 
-- **[times](https://github.com/Kronuz/times)** and **[time-point](https://github.com/Kronuz/time-point)**: monotonic and wall-clock helpers, and the `std::chrono::time_point` conveniences the standard library makes you write yourself. Monotonic for measuring durations, wall-clock for stamping them; confusing the two is a classic bug, and keeping them separate types keeps you honest.
+- **[times](https://github.com/Kronuz/times)** and **[time-point](https://github.com/Kronuz/time-point)**: two small conversions the standard library leaves to you. `times` makes the operating system's `timespec` (seconds plus nanoseconds) behave like a number: add it, subtract it, compare it, read the wall clock into it, and the nanoseconds always carry into the seconds correctly. `time-point` packs a `std::chrono` instant into one integer of nanoseconds and back, so you can store it in a column, a record or an atomic. The wall clock is for stamping when something happened; to measure how long it took, use `std::chrono::steady_clock`, which never jumps.
 - **[epoch](https://github.com/Kronuz/epoch)**: time since the epoch, header-only and dependency-free, for when you just want the number.
 - **[nanosleep](https://github.com/Kronuz/nanosleep)**: an EINTR-safe sleep, because even sleeping is a syscall a signal can interrupt, and [io](/blog/io/)'s lesson applies here too.
 - **[datetime](https://github.com/Kronuz/datetime)**: a real date/time parser and formatter, the largest of this group, and honestly a full post's worth of pain (time zones, formats, the calendar's cruelty) waiting to be written.
@@ -49,7 +50,7 @@ Every adventuring party accumulates a bag of small things that never get their o
 - **[located-exception](https://github.com/Kronuz/located-exception)**: an exception base that remembers where it was thrown (function, file and line) and formats its message with `std::format`. It records that one site, not the stack; the whole stack is [the tracer](/blog/the-haunted-handler/)'s job.
 - **[fs](https://github.com/Kronuz/fs)**: filesystem helpers, the path and directory operations that sit just above [io](/blog/io/).
 - **[allocators](https://github.com/Kronuz/allocators)**: an STL-compatible allocator toolkit, for the places where the default allocator is not the right one.
-- **[scheduler](https://github.com/Kronuz/scheduler)**: the timer-wheel scheduler and per-key debouncer built directly on [the wheel](/blog/the-sparse-wheel/), the layer between the raw lock-free structure and [the logger](/blog/logger/) that rides it. It half-earned its own post; you have already met its heart and its best client.
+- **[scheduler](https://github.com/Kronuz/scheduler)**: the timer-wheel scheduler and per-key debouncer built directly on [the sparse wheel](/blog/the-sparse-wheel/), the layer between that raw lock-free structure and the code that arms timers. [The logger](/blog/logger/) rode it until it moved to a wheel of its own, and scheduler is now retiring along with stash; [Who Owns the Wheel](/blog/retiring-the-sparse-wheel/) tells why.
 - **[url-parser](https://github.com/Kronuz/url-parser)**: splits a URL path and query string into their parts, the small companion to [the router](/blog/radix-router/) that decides where the path goes.
 
 ## What the party was for

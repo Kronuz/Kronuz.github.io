@@ -1,8 +1,9 @@
 ---
 title: "The Line You Usually Cancel"
 subtitle: "Arming a 'this is taking too long' log on every operation, and paying only for the one that fires."
-description: "logger is Xapiand's deferred, lock-free logging library, and the original reason the stash timer wheel exists. Many threads arm log lines without blocking each other, one thread drains and writes them in order, and a scheduled 'this operation is taking too long' line is cancelled with a single atomic when the operation finishes in time, so the common fast path logs nothing at all. The trick only pays because arming and cancelling are each one atomic on the lock-free wheel; on a locked scheduler you would add lock traffic to every fast path just to catch the rare slow one."
+description: "logger is Xapiand's deferred, lock-free logging library, and the original reason the stash timer wheel was built. Each thread writes its lines into its own queue without blocking any other, one LOG thread merges the queues and writes them in order, and a 'this operation is taking too long' line is cancelled with a single atomic when the operation finishes in time, so the common fast path logs nothing at all. The trick only pays because arming and cancelling are each that cheap; on a locked scheduler you would add lock traffic to every fast path just to catch the rare slow one."
 excerpt: "You want to know which operations are slow, but logging every operation is noise you pay for on the hot path. So you invert it: arm a 'log this if it is still running in 200 ms' line on every single operation, and cancel it, free, the instant the operation finishes, which is almost always. The seventh familiar logs the exceptions by speculating on everything, and it is the reason the sparse wheel was built at all."
+lastUpdated: 2026-11-15
 date: 2026-08-16
 series: "Familiars"
 seriesOrder: 7
@@ -13,7 +14,7 @@ tags:
   - concurrency
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one closes a loop: [logger](https://github.com/Kronuz/logger) is the original reason [the sparse wheel](/blog/the-sparse-wheel/) exists.*
+*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one closes a loop: [logger](https://github.com/Kronuz/logger) is the original reason [the sparse wheel](/blog/the-sparse-wheel/) was built.*
 
 Here is a thing you want and cannot easily have: to know which operations in a busy server were slow, without logging the ones that were fast. The fast ones are almost all of them, and they are on the hot path, so logging every operation to catch the rare slow one means paying for the common case to observe the exception. Most systems give up and sample, or log nothing, or log everything and drown.
 
@@ -23,17 +24,21 @@ Here is a thing you want and cannot easily have: to know which operations in a b
 
 Arm-and-cancel-on-everything sounds wasteful because on any normal scheduler it is. Arming a timed line means inserting into a schedule; cancelling means removing from it; and if that schedule is a mutex-guarded heap, then every operation, the fast ones included, now takes a lock twice, to arm and to cancel, just so the rare slow one can be caught. You have moved the cost of observing the exception onto the common case, and worse, you have put a contended lock on the hot path, where its occasional stall leaks straight into the latency you were trying to measure. The cure poisons the patient.
 
-logger gets away with it because its schedule is not a locked heap. It is the [stash timer wheel](/blog/the-sparse-wheel/), where arming and cancelling are each a **single lock-free atomic** that never waits on another thread. So you really can arm a deferred line on every operation and cancel almost all of them, and the cost on the fast path is one atomic to arm and one to cancel, no lock, no stall, nothing that touches the operation's own tail. That is not a coincidence: logger is the reason the wheel was built. The strangest data structure in the engine exists to make this one logging pattern affordable.
+logger gets away with it because neither step touches a shared schedule. Arming a deferred line writes a small reference into the calling thread's *own* queue, published with one store, so no two threads ever contend for it. Cancelling is one compare-exchange on the line's record: whoever gets there first, the operation finishing or the LOG thread firing, wins, and the other does nothing. No lock, no stall, nothing that touches the operation's own tail.
+
+The schedule itself lives on the other side. The LOG thread files each deferred line in its own timer wheel, [wheel](https://github.com/Kronuz/wheel), a wheel of one-millisecond slots that only that thread ever touches, so it needs no lock and no atomic at all. A cancelled line just sits in its slot until the LOG thread reaches it and drops it.
+
+That was not always the shape. logger is the reason I built [the sparse wheel](/blog/the-sparse-wheel/), stash, whose insert never waits on another thread, so that every worker could arm a timer directly. Years later the deferred lines moved into a wheel owned by the LOG thread alone, and stash is retiring; [Who Owns the Wheel](/blog/retiring-the-sparse-wheel/) tells why.
 
 ## Three paths for a line
 
 Not every line is deferred. A log entry takes one of three routes, chosen by what you are asking for:
 
 - **Severe lines write inline**, on the calling thread, right now. When something is on fire you do not want it queued behind a background writer; you want it out before the process maybe dies.
-- **Routine lines are handed to a single LOG thread**, keyed at *now*, and written in order off the hot path. Many threads produce; one thread consumes and serializes; the producers never block each other.
-- **Deferred lines are keyed at *now + delay*** and fire only if nothing cancels them first. This is the slow-op line, the debounce, the "warn me if this is still stuck later."
+- **Routine lines go into the thread's own queue**, formatted in place, with no lock and no allocation. The single LOG thread merges every thread's queue in the order the lines were logged and writes them off the hot path.
+- **Deferred lines are due at *now + delay*** and fire only if nothing cancels them first. This is the slow-op line, the debounce, the "warn me if this is still stuck later."
 
-One consumer writing ordered output, many lock-free producers, and a deferred lane you arm and usually cancel. Everything host-specific, the exception formatting, the real backtraces (that is [another familiar](/blog/the-haunted-handler/)), the thread names, the timestamp format, comes in through hooks, so the core depends on little more than the scheduler beneath it.
+Many producers that never wait on each other, one consumer writing ordered output, and a deferred lane you arm and usually cancel. Everything host-specific, the exception formatting, the real backtraces (that is [another familiar](/blog/the-haunted-handler/)), the thread names, the timestamp format, comes in through hooks. Underneath sit only wheel, [threadpool](https://github.com/Kronuz/threadpool) for the LOG thread itself, [term-color](https://github.com/Kronuz/term-color) for the colors, and the small [cppcodec](https://github.com/tplgy/cppcodec).
 
 ## Where it fits
 
