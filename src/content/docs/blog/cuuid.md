@@ -4,6 +4,7 @@ subtitle: "Shrinking a 128-bit id by noticing how much of it is not random."
 description: "cuuid is Xapiand's condensed UUID value type. It mints time-sortable ids and puts them on the wire in 8 bytes instead of 16, by noticing that a time-based UUID is not random: it is a timestamp, a clock, and a node, mostly redundant across a stream from one machine. Its current format, cuuid v6, reconstructs the node with splitmix64 (nanoseconds, where the old code paid a Mersenne Twister) and stores the bytes in UUIDv6 order so the canonical form sorts by time; the older v1 format lives on only as the --legacy-ids compatibility mode."
 excerpt: "A UUID is sixteen bytes, and we treat them as sixteen bytes of pure randomness. A time-based UUID is nothing of the sort: it is a timestamp and a clock and a machine id wearing a hex costume, and a stream of them from one server repeats itself enormously. The ninth familiar reads that structure and packs the same id into eight bytes, decoded in nanoseconds and sortable by time."
 date: 2026-08-21
+lastUpdated: 2026-11-15
 series: "Familiars"
 seriesOrder: 9
 chapter: "Bytes"
@@ -37,18 +38,20 @@ In the **canonical sixteen-byte form**, v6 sorts by time too, timestamp first, a
 
 ## The node, and the dice
 
-Rebuilding the shared node on decode is where cuuid used to embarrass itself. The compact form does not store the 48-bit node; it stores a 7-bit salt and *reconstructs* a synthetic node deterministically from the timestamp, clock, and salt. That reconstruction needs a mixing function, and the original code reached for the obvious one: seed a `std::mt19937` and pull two draws. Constructing a Mersenne Twister initializes its 624-word state, every single time, on both encode and decode, and it dominated everything. The compact path cost about **880 nanoseconds each way**, two to three orders of magnitude more than Snowflake, UUIDv7, or ULID.
+Rebuilding the shared node on decode is where cuuid used to embarrass itself. The compact form does not store the 48-bit node; it stores a 7-bit salt and *reconstructs* a synthetic node deterministically from the timestamp, clock, and salt. That reconstruction needs a mixing function, and the original code reached for the obvious one: seed a `std::mt19937` and pull two draws. Constructing a Mersenne Twister initializes its whole 624-word state, every single time, on both encode and decode, and it dominated everything. Building that engine alone takes about **930 nanoseconds** today, and the compact path paid it each way, two to three orders of magnitude more than Snowflake, UUIDv7, or ULID.
 
-The node's actual value is arbitrary; it only has to be deterministic, carry the salt, and set the multicast bit. So I swapped the Mersenne Twister for a **splitmix64** mixer that does the identical job from the same seed, and the whole compact path fell with it: about **9 nanoseconds to encode and 12 to decode**, down from about 880 apiece. (Decode owed a little more to a byte-at-a-time loop unpacking the wire; folding that into a single machine byteswap took it from about 16 down to about 12.)
+The node's actual value is arbitrary; it only has to be deterministic, carry the salt, and set the multicast bit. So I swapped the Mersenne Twister for a **splitmix64** mixer that does the identical job from the same seed, and the whole compact path fell with it: about **11 nanoseconds to encode and 12 to decode** on an Apple M4 Pro. (Decode owed a little more to a byte-at-a-time loop unpacking the wire; folding that into a single machine byteswap took it from about 16 down to about 12.)
 
-Here is the compact path next to the other time-sortable ids, by wire size, sort resolution, and the cost to encode and decode one:
+The old v1 codec got cheaper too, without changing a byte of its output. It still needs the Mersenne Twister's first two draws, but those depend on only 399 of the 624 state words, so it now computes just those. That brings v1 to about **604 nanoseconds to encode and 610 to decode**: better, and still about fifty times slower than v6, because the dice are still there.
+
+Here is the compact path next to the other time-sortable ids, by wire size, sort resolution, and the cost to encode and decode one on the M4 Pro:
 
 | | wire size | sortable (wire) | encode + decode |
 | --- | --- | --- | --- |
-| cuuid v6 | 8 bytes | yes, ~1.64 ms | ~9 ns + ~12 ns |
-| cuuid v1 (legacy) | 8 bytes | yes, ~1.64 ms | ~880 ns + ~880 ns |
-| Snowflake | 8 bytes | yes, 1 ms | ~1 ns + ~2 ns |
-| UUIDv7 | 16 bytes | yes, 1 ms | ~1 ns + ~0.5 ns |
+| cuuid v6 | 8 bytes | yes, ~1.64 ms | ~11 ns + ~12 ns |
+| cuuid v1 (legacy) | 8 bytes | yes, ~1.64 ms | ~604 ns + ~610 ns |
+| Snowflake | 8 bytes | yes, 1 ms | ~1 ns + ~3 ns |
+| UUIDv7 | 16 bytes | yes, 1 ms | ~0.8 ns + ~0.4 ns |
 | UUIDv6 | 16 bytes | yes, 100 ns | ~0 ns |
 
 A different mixer reconstructs a different node, so the wire bytes move with it: swapping the dice makes a new format. That is what makes this **v6**, told apart from v1 by the version nibble, rather than a silent change slipped under the old ids.

@@ -4,6 +4,7 @@ subtitle: "A hash table for a fixed key set, built entirely at compile time, tha
 description: "constexpr-phf is a header-only, fully constexpr minimal perfect hash for a fixed set of integer keys. It builds a CHD-style minimal perfect hash function over a known key set at compile time, materializing the buckets and index arrays as constexpr data, so resolving a key at runtime is a mask, a multiply, a shift, and two array reads, with no collisions, no unpredictable branch on the hot path, and no heap. It is the machinery under a compile-time dispatch table: hash a set of tokens to integers, build a phf over them, and index a parallel array of handlers. Not a dynamic map, the key set is fixed and integers only, but for known keys it is a hash table with no bad days."
 excerpt: "An ordinary hash table has bad days: two keys collide, the lookup degrades to a probe or a chain, and worst-case is worse than average. If you know all your keys at compile time, you can eliminate the bad day entirely. The twenty-seventh familiar builds a minimal perfect hash over a fixed key set while the program compiles, so every lookup is a fixed handful of arithmetic and two array reads, forever, with no collision possible."
 date: 2026-10-08
+lastUpdated: 2026-11-15
 featured: true
 series: "Familiars"
 seriesOrder: 27
@@ -26,16 +27,18 @@ Before a perfect hash, you reach for what the language hands you. Say you are di
 
 An `if`-ladder is a linear scan: on average it tests half the cases before it hits, and every test is a branch the predictor can miss. A `switch` *looks* like it should become a jump table, but a jump table needs dense labels, and hashes are the opposite of dense. Handed a few hundred scattered 32-bit values, the compiler does the only thing it can and turns the `switch` into a **binary search** of comparisons: `O(log n)` branches, still branching, still growing. The reflexive escape, a [`std::unordered_map`](https://en.cppreference.com/w/cpp/container/unordered_map), trades the branches for a hash, a probe, a pointer chase, and a likely cache miss.
 
-Here is what each costs per lookup, in nanoseconds, as the set grows, on a fixed set of sparse keys (the hashes you actually dispatch on), on x86_64 with GCC 11 at `-O3`:
+Here is what each costs per lookup, in nanoseconds, as the set grows, on a fixed set of sparse keys (the hashes you actually dispatch on), on an Apple M4 Pro with Apple clang 17 at `-O3`:
 
-| keys | `if`-ladder | `switch` (binary search) | `unordered_map` | `phf` |
+| keys | `if`-ladder | binary search (what the `switch` becomes) | `unordered_map` | `phf` |
 | ---: | ---: | ---: | ---: | ---: |
-| 6 | 2.4 | 4.0 | 3.2 | 1.2 |
-| 46 | 14 | 8.2 | 3.1 | 1.2 |
-| 192 | 38 | 26 | 3.1 | 1.2 |
-| 1000 | 162 | 40 | 3.2 | 1.3 |
+| 6 | 1.39 | 1.50 | 1.00 | 0.53 |
+| 46 | 6.64 | 3.93 | 1.61 | 0.53 |
+| 192 | 32.9 | 7.39 | 1.69 | 0.48 |
+| 1000 | 138 | 8.65 | 1.38 | 0.53 |
 
-The ladder is fine at six keys and hopeless at a thousand, where it spends 160 nanoseconds walking comparisons. The `switch` grows with the logarithm and never stops branching, past 40 nanoseconds by the time the set is large. The map flattens out around three nanoseconds but never gets cheaper than that, because a hash-plus-probe-plus-indirection has a floor. Only the perfect hash is **flat and low**: about the same 1.2 nanoseconds at a thousand keys as at six, because it runs the same fixed arithmetic every time. Its worst case is its best case. The next section is why.
+The ladder is fine at six keys and hopeless at a thousand, where it spends 138 nanoseconds walking comparisons. The binary search grows with the logarithm and never stops branching. The map stays between one and two nanoseconds but never gets cheaper than that, because a hash-plus-probe-plus-indirection has a floor. Only the perfect hash is **flat and lowest**: about half a nanosecond at a thousand keys, the same as at six, because it runs the same fixed arithmetic every time. Its worst case is its best case. The next section is why.
+
+An older Intel Core i9 tells the same story from 46 keys up, with slower numbers all around (`phf` about one nanosecond, the map 2.6 to 10). At six keys there, though, the plain ladder wins, 0.76 nanoseconds against 0.98: six comparisons are cheaper than any hash. A perfect hash earns its keep once the set is more than a handful.
 
 ## What the lookup costs
 
@@ -45,19 +48,21 @@ That reduction into the table is a **multiply-shift**, not a modulo: the table i
 
 ## How it compares
 
-The engine is integer-only and never sees a string: you pick a hash, it takes the integer. So for string dispatch you hash the key, look the integer up in a `phf`, and (when the input might not be a member) compare against the one key at the slot to verify. On Xapiand's 192 field-type names (2 to 23 characters, a real mix of short and long), nanoseconds per lookup:
+The engine is integer-only and never sees a string: you pick a hash, it takes the integer. So for string dispatch you hash the key, look the integer up in a `phf`, and (when the input might not be a member) compare against the one key at the slot to verify. On Xapiand's 192 field-type names (2 to 23 characters, a real mix of short and long), with half the lookups missing, nanoseconds per lookup:
 
-| dispatch on 192 field-type names | ns/op |
-| :-- | ---: |
-| `gperf` (separate codegen step) | 14 |
-| **constexpr-phf**, hash-only | 18 |
-| **constexpr-phf**, hash + verify | 21 |
-| compile-time trie | 28 |
-| `std::unordered_map` | 29 |
-| `frozen::unordered_set` | 40 |
-| `std::set` | 82 |
+| dispatch on 192 field-type names | M4 Pro | i9 |
+| :-- | ---: | ---: |
+| **constexpr-phf**, hash-only | 8.99 | 13.0 |
+| `gperf` (separate codegen step) | 10.9 | 16.5 |
+| **constexpr-phf**, hash + verify | 14.1 | 21.4 |
+| `std::unordered_map` | 19.7 | 41.7 |
+| compile-time trie | 19.8 | 30.9 |
+| `frozen::unordered_set` | 28.2 | 33.0 |
+| `std::set` | 56.5 | 116 |
 
-Two phf rows, two honest ways to use it. Hash-only is the fast path Xapiand runs: hash, index, done, no string compare, which can misdispatch a stranger whose hash matches a member's, so you feed it only members or guard the shape first. Verified adds the one compare at the slot and never false-matches, the apples-to-apples number against gperf, frozen, and the containers, which all verify. The hash is yours to pick: a word-at-a-time hash reads eight bytes a step, 21 ns verified on these longer names. Both beat every container, the immutable `frozen` set, and a compile-time trie, and trail only [gperf](https://www.gnu.org/software/gperf/), which needs a separate codegen step constexpr-phf does not. And that is gperf's best case: on an all-short key set, the 570 English stop words, constexpr-phf edges ahead of gperf too, because a short key is a couple of hash steps and one compare while gperf still runs its generated `strcmp`. All of it is reproducible: the [comparison benchmarks](https://github.com/Kronuz/constexpr-phf/tree/master/bench) live in the repo.
+Two phf rows, two honest ways to use it. Hash-only is the fast path Xapiand runs: hash, index, done, no string compare, which can misdispatch a stranger whose hash matches a member's, so you feed it only members or guard the shape first. It is the quickest row, but not a fair race, since it skips the compare every other row does. Verified adds the one compare at the slot and never false-matches, the apples-to-apples number against gperf, frozen, and the containers, which all verify. The hash is yours to pick: both rows use a word-at-a-time hash that reads eight bytes a step, which suits these longer names. Verified beats every container, the immutable `frozen` set, and a compile-time trie, and trails only [gperf](https://www.gnu.org/software/gperf/), which needs a separate codegen step constexpr-phf does not.
+
+That is gperf's best case. On an all-short key set, the 570 English stop words picked out of *The Count of Monte Cristo*, the two tie: 4.53 milliseconds a pass for verified constexpr-phf against 4.57 for gperf on the M4 Pro, 6.74 against 6.79 on the i9. A short key is a couple of hash steps and one compare, and there a plain byte-at-a-time hash beats the wordwise one. All of it is reproducible: the [benchmarks](https://github.com/Kronuz/constexpr-phf/blob/master/docs/BENCHMARKS.md) and their code live in the repo.
 
 ## Where it came from
 
