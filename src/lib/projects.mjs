@@ -189,14 +189,19 @@ export async function resolveRelatedPosts(slugs) {
 		.filter(Boolean);
 }
 
-// A project's blog posts (`project: <id>` in their frontmatter), newest first. Published posts
-// always; a draft only in dev, greyed, the same rule as `related`.
+// A project's blog posts (`project: <id>` in their frontmatter), newest first, then in series
+// order. Published posts always; a draft only in dev, greyed, the same rule as `related`.
 export async function listProjectPosts(key) {
 	const docs = await getCollection('docs');
 	return docs
 		.filter((e) => e.id.startsWith('blog/') && e.data.project === key)
 		.filter((e) => e.data.draft !== true || !isProd)
-		.sort((a, b) => (b.data.date?.valueOf() ?? 0) - (a.data.date?.valueOf() ?? 0))
+		.sort(
+			(a, b) =>
+				(b.data.date?.valueOf() ?? 0) - (a.data.date?.valueOf() ?? 0) ||
+				(a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0) ||
+				a.data.title.localeCompare(b.data.title),
+		)
 		.map((e) => ({ slug: postSlug(e), title: e.data.title, pending: e.data.draft === true }));
 }
 
