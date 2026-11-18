@@ -36,14 +36,19 @@ export const collections = {
 						// (announcement / tutorial / note). Omit it for a plain
 						// article, the default, which gets no badge.
 						category: z.enum(['announcement', 'tutorial', 'note']).optional(),
+						// The project this page belongs to (a directory id under
+						// src/content/projects/). A post shows a "Project:" link and is listed on
+						// the project's hub; a synced reference page shows a breadcrumb to the hub.
+						project: z.string().optional(),
 					}),
 				),
 		}),
 	}),
-	// Projects are their own space (not Starlight docs, not blog posts): each is a page
-	// under src/content/projects/, rendered by src/pages/projects/[slug].astro and listed
-	// by src/pages/projects/index.astro. Kept out of the blog RSS, the blog index and /all/
-	// for free, since none of those look at this collection.
+	// Projects are their own space (not Starlight docs, not blog posts): a page per project,
+	// src/content/projects/<id>.md, or a directory, src/content/projects/<id>/ (index.md is the
+	// hub, every other file a part), rendered by src/pages/projects/[...slug].astro. Kept out
+	// of the blog RSS, the blog index and /all/ for free, since none of those look at this
+	// collection.
 	projects: defineCollection({
 		loader: glob({ base: './src/content/projects', pattern: '**/*.{md,mdx}' }),
 		schema: z.object({
@@ -69,10 +74,11 @@ export const collections = {
 				order: z.number().optional(),
 				featured: z.boolean().optional(),
 				draft: z.boolean().optional(),
-				// Project-internal grouping (multi-page projects), mirroring the blog series:
-				// same `series` name + `seriesOrder` link the parts with a stepper/pager.
-				series: z.string().optional(),
+				// A part's position in its project (the directory groups the parts; the hub
+				// comes first), and its short name in the project's own navigation (stepper,
+				// board). `title` names the subject everywhere else.
 				seriesOrder: z.number().optional(),
+				label: z.string().optional(),
 				// Cross-space links to blog posts (by slug), e.g. the write-up behind a project.
 				related: z.array(z.string()).default([]),
 		}),

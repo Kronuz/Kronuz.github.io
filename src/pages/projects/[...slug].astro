@@ -2,7 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { LinkCard, CardGrid } from '@astrojs/starlight/components';
-import { resolveProject, resolveRelatedPosts } from '../../lib/projects.mjs';
+import { listProjectPosts, resolveProject, resolveRelatedPosts } from '../../lib/projects.mjs';
 
 export async function getStaticPaths() {
 	const isProd = import.meta.env.MODE === 'production';
@@ -20,7 +20,10 @@ const proj = await resolveProject(project.id);
 const series = proj?.series ?? { inSeries: false };
 const seriesPrev = series.prev ?? null;
 const seriesNext = series.next ?? null;
-const related = await resolveRelatedPosts(d.related);
+// The hub lists the project's posts (`project: <id>`), newest first; `related` adds hand
+// picks that aren't already among them.
+const posts = proj?.isLanding ? await listProjectPosts(proj.key) : [];
+const related = (await resolveRelatedPosts(d.related)).filter((r) => !posts.some((p) => p.slug === r.slug));
 
 // Hand the series to the shared TableOfContents override (the sidebar stepper) through a
 // request local, so that component never imports the projects collection.
@@ -39,16 +42,13 @@ const links = [
 ].filter(Boolean);
 
 const isLandingHub = Boolean(proj?.isLanding && proj?.multi);
-// Landing of a multi-part project shows the project (series) name; a part page or a
-// standalone project uses the entry's own title.
-const pageTitle = isLandingHub ? proj.name : d.title;
 // Header status badge: on a standalone project or a part page, not on the multi-part landing
 // (which shows the board instead).
 const showStatusBadge = Boolean(d.status) && !isLandingHub;
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 ---
 
-<StarlightPage frontmatter={{ title: pageTitle, subtitle: d.tagline, description: d.description ?? d.tagline }}>
+<StarlightPage frontmatter={{ title: d.title, subtitle: d.tagline, description: d.description ?? d.tagline }}>
 	<div class="project-head not-content">
 		{d.logo && !isLandingHub && (
 			<img class="project-head-logo" src={d.logo} alt={`${d.title} logo`} />
@@ -131,6 +131,25 @@ const cap = (s) => s[0].toUpperCase() + s.slice(1);
 						)}
 					</CardGrid>
 				</nav>
+			</div>
+		)
+	}
+
+	{
+		posts.length > 0 && (
+			<div class="project-related not-content">
+				<p class="project-related-title">Posts</p>
+				<div class="pagination" data-pagefind-ignore>
+					<CardGrid>
+						{posts.map((r) => (
+							<LinkCard
+								href={`/blog/${r.slug}/`}
+								class={r.pending ? 'is-pending' : undefined}
+								title={r.title}
+							/>
+						))}
+					</CardGrid>
+				</div>
 			</div>
 		)
 	}

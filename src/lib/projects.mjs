@@ -1,18 +1,26 @@
 import { getCollection } from 'astro:content';
 
 // Project-space helpers (shared by both blogs). The model:
-//   - A *project* is a `series` (its name is the project name), or a single standalone entry.
-//   - Its *parts* are the entries sharing that series, sorted by `seriesOrder` then title.
-//   - The *landing* is the first part (lowest seriesOrder): it carries the project-level card
-//     metadata (tagline, tech, links, featured, order) and its body is the overview.
+//   - A *project* is a directory, `src/content/projects/<id>/`, or a single file `<id>.md`.
+//   - Its *landing* (hub) is `<id>/index.md` (entry id `<id>`): its title is the project name
+//     and it carries the card metadata (tagline, tech, links, featured, order).
+//   - Its *parts* are the other entries in the directory (ids `<id>/<part>`), sorted by
+//     `seriesOrder` then title. A part's optional `label` is its short name in the project's
+//     own navigation (stepper, board); its `title` names its subject everywhere else.
 //   - Each part has its own `status`. The project page shows the non-landing parts as a status
 //     board; the index shows one card per project with a status roll-up.
+//   - Blog posts join a project with `project: <id>`; the hub lists them, newest first.
 // Kept separate from the blog's series.mjs so that one stays blog-only (the shared
 // TableOfContents reads `Astro.locals.projectSeries`, which the project route sets).
 
 const isProd = import.meta.env.MODE === 'production';
 const isPublished = (p) => p.data.draft !== true;
 const visible = (p, currentId) => p.id === currentId || isPublished(p) || !isProd;
+// The project an entry belongs to: the first segment of its id (`hodor/how-it-works` -> `hodor`).
+export const projectId = (entryId) => entryId.split('/')[0];
+const navLabel = (e) => e.data.label ?? e.data.title;
+// A blog post's slug: its file name (`blog/<slug>.md`).
+const postSlug = (e) => e.id.replace(/\.mdx?$/, '').split('/').pop();
 
 // Status groups for the board + roll-up, in display order. shipped + completed collapse to
 // one "Done" group; everything else is its own group. Drives column order and chip order.
@@ -31,17 +39,18 @@ async function getProjects(currentId) {
 	const items = (await getCollection('projects')).filter((p) => visible(p, currentId));
 	const byKey = new Map();
 	for (const e of items) {
-		const key = e.data.series ?? `solo:${e.id}`;
-		if (!byKey.has(key)) byKey.set(key, { series: e.data.series ?? null, parts: [] });
-		byKey.get(key).parts.push(e);
+		const key = projectId(e.id);
+		if (!byKey.has(key)) byKey.set(key, []);
+		byKey.get(key).push(e);
 	}
-	return [...byKey.values()].map(({ series, parts }) => {
+	return [...byKey.entries()].map(([key, parts]) => {
 		parts.sort(
 			(a, b) =>
+				Number(b.id === key) - Number(a.id === key) ||
 				(a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0) ||
 				a.data.title.localeCompare(b.data.title),
 		);
-		return { name: series ?? parts[0].data.title, landing: parts[0], parts };
+		return { key, name: parts[0].data.title, landing: parts[0], parts };
 	});
 }
 
@@ -104,12 +113,12 @@ export async function resolveProject(id) {
 		label: g.label,
 		parts: bparts
 			.filter((p) => groupOf(p.data.status) === g.key)
-			.map((p) => ({ slug: p.id, title: p.data.title, status: p.data.status })),
+			.map((p) => ({ slug: p.id, title: navLabel(p), status: p.data.status })),
 	})).filter((col) => col.parts.length > 0);
 
 	const stepParts = parts.map((e, i) => ({
 		slug: e.id,
-		title: e.data.title,
+		title: navLabel(e),
 		index: i,
 		current: i === index,
 		reachable: isPublished(e) || !isProd,
@@ -131,7 +140,15 @@ export async function resolveProject(id) {
 			}
 		: { inSeries: false };
 
-	return { name: proj.name, isLanding: index === 0, multi, board, rollup: rollup(bparts), series };
+	return {
+		key: proj.key,
+		name: proj.name,
+		isLanding: index === 0,
+		multi,
+		board,
+		rollup: rollup(bparts),
+		series,
+	};
 }
 
 // Sidebar nav list (shown under "Projects" on /projects/ pages): all projects, featured
@@ -158,9 +175,8 @@ export async function listSidebarProjects(currentSlug) {
 export async function resolveRelatedPosts(slugs) {
 	if (!slugs || slugs.length === 0) return [];
 	const docs = await getCollection('docs');
-	const bareSlug = (id) => id.replace(/\.mdx?$/, '').split('/').pop();
 	const bySlug = new Map(
-		docs.filter((e) => e.id.startsWith('blog/')).map((e) => [bareSlug(e.id), e]),
+		docs.filter((e) => e.id.startsWith('blog/')).map((e) => [postSlug(e), e]),
 	);
 	return slugs
 		.map((s) => {
@@ -171,4 +187,25 @@ export async function resolveRelatedPosts(slugs) {
 			return { slug: s, title: e.data.title, pending: e.data.draft === true };
 		})
 		.filter(Boolean);
+}
+
+// A project's blog posts (`project: <id>` in their frontmatter), newest first. Published posts
+// always; a draft only in dev, greyed, the same rule as `related`.
+export async function listProjectPosts(key) {
+	const docs = await getCollection('docs');
+	return docs
+		.filter((e) => e.id.startsWith('blog/') && e.data.project === key)
+		.filter((e) => e.data.draft !== true || !isProd)
+		.sort((a, b) => (b.data.date?.valueOf() ?? 0) - (a.data.date?.valueOf() ?? 0))
+		.map((e) => ({ slug: postSlug(e), title: e.data.title, pending: e.data.draft === true }));
+}
+
+// The project a page names with `project: <id>` (a blog post, a synced reference page): its
+// name, and its hub's URL when the hub is built (null in production while the hub is a draft).
+export async function resolveProjectLink(key) {
+	if (!key) return null;
+	const hub = (await getCollection('projects')).find((e) => e.id === key);
+	if (!hub) return null;
+	const reachable = isPublished(hub) || !isProd;
+	return { key, name: hub.data.title, href: reachable ? `/projects/${key}/` : null };
 }

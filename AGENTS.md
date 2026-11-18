@@ -240,6 +240,15 @@ resampled:
 - `logo.svg` is a potrace trace of the original 1920×2180 brand PNG (the internal repo's
   `brand/README.md` has the recipe). Rendered back at full size it matches the PNG at IoU 0.993.
 - iOS caches touch icons; clear the site's Safari website data to see a new one.
+## Projects
+
+A project is a page, `src/content/projects/<id>.md` (`/projects/<id>/`), or a directory,
+`src/content/projects/<id>/`, whose `index.md` is the hub and every other `.md` a part
+(`/projects/<id>/<part>/`, ordered by `seriesOrder`, with an optional short `label` for the
+project's own stepper). `src/lib/projects.mjs` groups entries by the first segment of the id. A
+page's `title` names its subject on its own. A post joins a project with `project: <id>`: it
+shows a "Project:" link above its title, and the hub lists the project's posts.
+
 ## Cross-repo sync
 
 This repo and the **internal** mirror (`~/code/KronuzBlog/gmendezb-pages`, branch `main`,
@@ -249,7 +258,9 @@ served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared 
 (`remark-ansi.mjs`, `remark-d2.mjs`, `remark-snippet.mjs`, `remark-snippet-link.mjs`,
 `remark-soft-blog-links.mjs`) plus `lib/normalizeAnsi.mjs`, `lib/renderD2.mjs` and
 `starlightRouteData.ts`, plus the icon pipeline (`scripts/build-icons.mjs`, `src/assets/logo.svg`,
-`src/pages/manifest.webmanifest.ts`).
+`src/pages/manifest.webmanifest.ts`), plus the projects engine (`lib/projects.mjs`,
+`pages/projects/all/index.astro`, plus `components/ProjectsIndex.astro` and
+`pages/projects/[...slug].astro`, which this side extends with a project logo).
 After editing a shared file, copy it to the other repo and rebuild both. **Legitimately
 different:** content (posts, `about.md`, `index.mdx`, `projects.md`), `sidebar.mjs` (this side adds
 Projects), `content.config.ts`, `astro.config.mjs`, `consts.ts`, `SiteTitle.astro`, `Footer.astro`,

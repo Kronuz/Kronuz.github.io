@@ -9,13 +9,19 @@
 // second icon that opens the same source in the local editor (handy while writing) -- so
 // locally you get both, in production only the GitHub link. Projects (rendered via
 // StarlightPage) hand their own href in through Astro.locals.editHref.
+//
+// A page that names its project (`project: <id>`) gets a kicker line above the title: a blog
+// post shows "Project: <name>", any other page (a synced reference doc) a breadcrumb back to
+// the project's hub. The name is plain text while the hub is an unbuilt draft.
 import { Icon } from "@astrojs/starlight/components";
+import { resolveProjectLink } from "../lib/projects.mjs";
 
 const route = Astro.locals.starlightRoute;
-const { title, subtitle, category } = route.entry.data as {
+const { title, subtitle, category, project } = route.entry.data as {
 	title: string;
 	subtitle?: string;
 	category?: string;
+	project?: string;
 };
 const CATEGORY = {
 	announcement: { emoji: "📣", label: "Announcement" },
@@ -38,9 +44,19 @@ const localHref =
 	import.meta.env.DEV && isBlogPost && route.entry?.filePath
 		? `/__open-in-editor?file=${encodeURIComponent(`${process.cwd()}/${route.entry.filePath}`)}`
 		: null;
+
+const projectLink = await resolveProjectLink(project);
 ---
 
 <div class="kz-page-head">
+	{projectLink && (
+		<p class="kz-page-project">
+			{isBlogPost && <span>Project: </span>}
+			{projectLink.href ? <a href={projectLink.href}>{projectLink.name}</a> : <span>{projectLink.name}</span>}
+			{!isBlogPost && <span aria-hidden="true"> › </span>}
+			{!isBlogPost && <span>Reference</span>}
+		</p>
+	)}
 	<h1 id="_top">{cat && <span class="post-category" role="img" aria-label={`${cat.label}: `} title={cat.label}>{cat.emoji}</span>}{title}</h1>
 	{(githubHref || localHref) && (
 		<span class="kz-edit-group print:hidden">
@@ -92,6 +108,20 @@ const localHref =
 		font-weight: 400;
 		line-height: var(--sl-line-height-headings);
 		color: var(--sl-color-gray-3);
+	}
+
+	.kz-page-project {
+		flex: 1 0 100%;
+		margin: 0;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+	.kz-page-project a {
+		color: var(--sl-color-text-accent);
+		text-decoration: none;
+	}
+	.kz-page-project a:hover {
+		text-decoration: underline;
 	}
 
 	.post-category {

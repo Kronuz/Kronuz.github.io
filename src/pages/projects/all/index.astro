@@ -10,44 +10,53 @@
  * statuses at a glance. Draft entries aren't built in production, so a draft link resolves in
  * local dev (npm run dev) but 404s on the deployed site, by design.
  *
- * Sorted by project (series, then standalone title), then series order, so a project's parts
+ * Sorted by project name, then position in the project (hub first), so a project's parts
  * read top-to-bottom in sequence.
  */
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import { getCollection } from "astro:content";
+import { projectId } from "../../../lib/projects.mjs";
 
-const bareSlug = (id) => id.replace(/\.mdx?$/, "").split("/").pop();
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : "");
 
 const all = await getCollection("projects");
 
-// Total parts per project (series), so each row can show "N/M".
-const seriesTotal = {};
+// Each project's entries (its directory), hub first, then series order, so a row can show
+// "N/M" and a project's parts read top-to-bottom in sequence.
+const byProject = new Map();
 for (const e of all) {
-  const s = e.data.series;
-  if (s) seriesTotal[s] = (seriesTotal[s] ?? 0) + 1;
+  const key = projectId(e.id);
+  if (!byProject.has(key)) byProject.set(key, []);
+  byProject.get(key).push(e);
 }
-
-const rows = all
-  .sort(
+for (const [key, parts] of byProject) {
+  parts.sort(
     (a, b) =>
-      (a.data.series ?? a.data.title).localeCompare(b.data.series ?? b.data.title) ||
+      Number(b.id === key) - Number(a.id === key) ||
       (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0) ||
       a.data.title.localeCompare(b.data.title),
-  )
-  .map((e) => {
-    const d = e.data;
-    return {
-      slug: bareSlug(e.id),
-      title: d.title,
-      subtitle: d.tagline ?? "",
-      status: d.status ?? "",
-      draft: d.draft === true,
-      featured: d.featured === true,
-      series: d.series ?? "",
-      order: d.seriesOrder,
-      total: d.series ? seriesTotal[d.series] : 0,
-    };
+  );
+}
+const nameOf = (key) => byProject.get(key)[0].data.title;
+
+const rows = [...byProject.keys()]
+  .sort((a, b) => nameOf(a).localeCompare(nameOf(b)))
+  .flatMap((key) => {
+    const parts = byProject.get(key);
+    return parts.map((e, i) => {
+      const d = e.data;
+      return {
+        slug: e.id,
+        title: d.title,
+        subtitle: d.tagline ?? "",
+        status: d.status ?? "",
+        draft: d.draft === true,
+        featured: d.featured === true,
+        series: parts.length > 1 ? nameOf(key) : "",
+        order: i + 1,
+        total: parts.length,
+      };
+    });
   });
 
 const published = rows.filter((r) => !r.draft).length;
