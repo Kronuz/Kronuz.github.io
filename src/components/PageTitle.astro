@@ -1,7 +1,8 @@
 ---
 // Custom override of Starlight's PageTitle: renders the page <h1> with an optional category
 // emoji just before the title (announcement / tutorial / note), an optional `subtitle` line
-// on its own row below, and an "Edit source" affordance next to the title.
+// on its own row below, and the page tools next to the title: a text-size toggle and an
+// "Edit source" affordance.
 //
 // The primary "Edit source" link opens the page's source in the GitHub web editor
 // (editLink.baseUrl + the entry's source path, exposed as route.editUrl). It shows in both
@@ -58,20 +59,27 @@ const projectLink = await resolveProjectLink(project);
 		</p>
 	)}
 	<h1 id="_top">{cat && <span class="post-category" role="img" aria-label={`${cat.label}: `} title={cat.label}>{cat.emoji}</span>}{title}</h1>
-	{(githubHref || localHref) && (
-		<span class="kz-edit-group print:hidden">
-			{githubHref && (
-				<a class="kz-edit" href={githubHref} target="_blank" rel="noopener noreferrer" title="Edit this page on GitHub">
-					<Icon name="pencil" size="0.85em" /> <span>Edit source</span>
-				</a>
-			)}
-			{localHref && (
-				<a class="kz-edit-local" href="#" data-edit={localHref} data-astro-prefetch="false" title="Open the source in your local editor" onclick="event.preventDefault();fetch(this.dataset.edit).catch(()=>{});">
-					<Icon name="laptop" size="0.85em" />
-				</a>
-			)}
-		</span>
-	)}
+	<span class="kz-page-tools print:hidden">
+		<button type="button" class="kz-text-size" data-kz-text-size aria-pressed="false" aria-label="Larger text" title="Larger text">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M2 20 5.5 11 9 20M3.2 16.9h4.6M10.5 20 16 4l5.5 16M12.6 14h6.8"></path>
+			</svg>
+		</button>
+		{(githubHref || localHref) && (
+			<span class="kz-edit-group">
+				{githubHref && (
+					<a class="kz-edit" href={githubHref} target="_blank" rel="noopener noreferrer" title="Edit this page on GitHub">
+						<Icon name="pencil" size="0.85em" /> <span>Edit source</span>
+					</a>
+				)}
+				{localHref && (
+					<a class="kz-edit-local" href="#" data-edit={localHref} data-astro-prefetch="false" title="Open the source in your local editor" onclick="event.preventDefault();fetch(this.dataset.edit).catch(()=>{});">
+						<Icon name="laptop" size="0.85em" />
+					</a>
+				)}
+			</span>
+		)}
+	</span>
 	{subtitle && <p class="page-subtitle">{subtitle}</p>}
 </div>
 
@@ -130,8 +138,40 @@ const projectLink = await resolveProjectLink(project);
 		vertical-align: 0.02em;
 	}
 
-	/* Edit affordance: the GitHub "Edit source" link, plus (dev only) a small local-editor
-	   icon beside it. Kept subtle and non-shrinking so it stays on the title's row. */
+	/* Page tools on the title's row: the text-size toggle, then the edit affordance (the GitHub
+	   "Edit source" link, plus a dev-only local-editor icon). Kept subtle and non-shrinking so
+	   they stay on the title's row. */
+	.kz-page-tools {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	.kz-text-size {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.15rem;
+		border: 0;
+		border-radius: 0.25rem;
+		background: none;
+		color: var(--sl-color-gray-3);
+		cursor: pointer;
+	}
+	.kz-text-size svg {
+		width: 1.15rem;
+		height: 1.15rem;
+	}
+	.kz-text-size:hover,
+	:global(:root[data-text-size='large']) .kz-text-size {
+		color: var(--sl-color-text-accent);
+	}
+	/* A finger-sized hit area on touch screens, without moving the icon. */
+	@media (pointer: coarse) {
+		.kz-text-size {
+			padding: 0.6rem;
+			margin: -0.45rem;
+		}
+	}
 	.kz-edit-group {
 		flex-shrink: 0;
 		display: inline-flex;
@@ -151,3 +191,47 @@ const projectLink = await resolveProjectLink(project);
 		color: var(--sl-color-text-accent);
 	}
 </style>
+
+<script>
+	// The text-size toggle: switch the reading column between the default and the large size
+	// (custom.css, "Reading text size"), remember the choice (starlightRouteData.ts re-applies
+	// it before paint on every page), and keep the line at the top of the screen in place while
+	// the page reflows.
+	const KEY = "kz-text-size";
+	const root = document.documentElement;
+	const sync = () => {
+		const large = String(root.dataset.textSize === "large");
+		for (const button of document.querySelectorAll("[data-kz-text-size]")) button.setAttribute("aria-pressed", large);
+	};
+	// The content's blocks. A post's body sits inside <article class="kz-post">, so its blocks
+	// are the article's children; other pages' are the content's own.
+	const BLOCKS = "main .sl-markdown-content > :not(article), main .sl-markdown-content > article > *";
+	// The point being read: where the screen's top edge falls in the first block still on it.
+	const readingPoint = () => {
+		const edge = parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
+		for (const el of document.querySelectorAll(BLOCKS)) {
+			const rect = el.getBoundingClientRect();
+			if (rect.bottom <= edge || !rect.height) continue;
+			const y = Math.max(edge, rect.top);
+			return { el, y, at: (y - rect.top) / rect.height };
+		}
+		return null;
+	};
+	sync();
+	document.addEventListener("click", (event) => {
+		if (!(event.target as Element).closest("[data-kz-text-size]")) return;
+		const point = readingPoint();
+		const large = root.dataset.textSize !== "large";
+		if (large) root.dataset.textSize = "large";
+		else delete root.dataset.textSize;
+		try {
+			if (large) localStorage.setItem(KEY, "large");
+			else localStorage.removeItem(KEY);
+		} catch {}
+		sync();
+		if (point) {
+			const rect = point.el.getBoundingClientRect();
+			window.scrollBy(0, rect.top + point.at * rect.height - point.y);
+		}
+	});
+</script>

@@ -218,6 +218,22 @@ durable rules:
   jump from splash to doc pages.
 - **Hero icon-first:** `attrs.class: kz-icon-first` on a hero action renders its icon before the
   text (the Projects and About actions use it).
+- **One filled highlight.** Only the sidebar link whose `href` is this page keeps Starlight's filled
+  highlight (`aria-current="page"`). `Sidebar.astro` turns every other current link (the Blog or
+  Projects root, a project hub while reading one of its parts, the series a post belongs to) into
+  an ancestor (`data-ancestor`), tinted in `custom.css`. A page the menu does not list shows only
+  its tinted ancestors.
+- **Reading text size.** The toggle beside "Edit source" (`PageTitle.astro`) sets
+  `html[data-text-size="large"]`, remembered in `localStorage` (`kz-text-size`) and re-applied from
+  `<head>` before paint by `starlightRouteData.ts`. `custom.css` ("Reading text size") scales every
+  Starlight type token inside `<main>` by 1.125, and widens `--sl-content-width` by the same factor
+  at the root, where the TOC column and the header read it. The header and sidebars keep their
+  size, and pages without a sidebar (the splash home page) are untouched. The toggle keeps the line
+  at the top of the screen in place while the page reflows.
+- **Image zoom.** `ImageZoom.astro`, mounted by `MarkdownContent.astro`, opens a content image or
+  D2 diagram in a modal fitted to the window, on a desktop pointer only (hover and a fine pointer;
+  touch screens keep pinch-to-zoom). An image is zoomable, and gets the zoom-in cursor, only when
+  the modal shows it at least 1.15x larger; linked images, snippets and code are left alone.
 
 ## Site icons
 
@@ -254,7 +270,7 @@ shows a "Project:" link above its title, and the hub lists the project's posts.
 This repo and the **internal** mirror (`~/code/KronuzBlog/gmendezb-pages`, branch `main`,
 served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared components,
 `renderSnippet.mjs`, the snippet pages, `PageTitle.astro`, `Sidebar.astro`, `ThemeSelect.astro`,
-`TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
+`ImageZoom.astro`, `TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
 (`remark-ansi.mjs`, `remark-d2.mjs`, `remark-snippet.mjs`, `remark-snippet-link.mjs`,
 `remark-soft-blog-links.mjs`) plus `lib/normalizeAnsi.mjs`, `lib/renderD2.mjs` and
 `starlightRouteData.ts`, plus the icon pipeline (`scripts/build-icons.mjs`, `src/assets/logo.svg`,

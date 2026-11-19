@@ -14,7 +14,9 @@
  *     current for the whole section) stands in for it, followed by Recent posts
  *     and Tags. The single-author Authors group is dropped.
  * A single global RSS link is then appended last on every page (replacing
- * starlight-blog's own RSS entry, which we drop to avoid a duplicate). Finally
+ * starlight-blog's own RSS entry, which we drop to avoid a duplicate). Only the link
+ * to this page keeps the filled current highlight; other current links are its
+ * ancestors and get a tinted hint (data-ancestor). Finally
  * we render Starlight's stock Sidebar, so markup, styling, scroll persistence,
  * the mobile menu, and the current-post highlight stay native.
  */
@@ -149,7 +151,18 @@ if (onBlog) {
     isProjectsRoot(e) ? [{ ...e, isCurrent: true }, ...sublinks] : [e],
   );
 }
-route.sidebar = [...menu, ...extras, RSS];
+// One filled highlight, on the link that is this page. Any other link marked current (the
+// Blog or Projects root, a project hub while reading one of its parts, the series a post
+// belongs to) is an ancestor of this page: it drops aria-current and gets a tinted hint.
+const normPath = (p) => (p.includes(".") || p.endsWith("/") ? p : `${p}/`);
+const here = normPath(pathname);
+const hintAncestors = (entries) =>
+  entries.map((e) => {
+    if (e.type === "group") return { ...e, entries: hintAncestors(e.entries) };
+    if (!e.isCurrent || normPath(e.href) === here) return e;
+    return { ...e, isCurrent: false, attrs: { ...(e.attrs ?? {}), "data-ancestor": "" } };
+  });
+route.sidebar = hintAncestors([...menu, ...extras, RSS]);
 ---
 
 <Default />

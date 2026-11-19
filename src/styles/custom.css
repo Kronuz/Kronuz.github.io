@@ -705,11 +705,26 @@ padding-inline-start: 1.55em;
 font-size: var(--sl-text-sm);
 }
 /* "View more…" at the bottom of the sidebar "Recent posts" group: a small accent call to
-   action linking to the /blog/ page that continues after the recent list. */
+   action linking to the /blog/ page that continues after the recent list. Not when it is the
+   current page, where the filled highlight's inverted text must win. */
 a[data-view-more] {
 font-size: var(--sl-text-sm);
 font-weight: 600;
+}
+a[data-view-more]:not([aria-current]) {
 color: var(--sl-color-text-accent);
+}
+/* An ancestor of the current page (the Blog or Projects root, a project hub, a post's
+   series): tinted, so the one filled highlight stays on the page itself. */
+a[data-ancestor] {
+font-weight: 600;
+color: var(--sl-color-text-accent);
+background-color: color-mix(in srgb, var(--sl-color-text-accent) 12%, transparent);
+}
+a[data-ancestor]:hover,
+a[data-ancestor]:focus {
+color: var(--sl-color-text-accent);
+background-color: color-mix(in srgb, var(--sl-color-text-accent) 20%, transparent);
 }
 a[data-icon="information"]::before { --kz-sb-ico: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%22M12%2011a1%201%200%200%200-1%201v4a1%201%200%200%200%202%200v-4a1%201%200%200%200-1-1Zm.38-3.92a1%201%200%200%200-.76%200%201%201%200%200%200-.33.21%201.15%201.15%200%200%200-.21.33%201%201%200%200%200%20.21%201.09c.097.088.209.16.33.21A1%201%200%200%200%2013%208a1.05%201.05%200%200%200-.29-.71%201%201%200%200%200-.33-.21ZM12%202a10%2010%200%201%200%200%2020%2010%2010%200%200%200%200-20Zm0%2018a8%208%200%201%201%200-16.001A8%208%200%200%201%2012%2020Z%22%2F%3E%3C%2Fsvg%3E"); }
 a[data-icon="open-book"]::before { --kz-sb-ico: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%22M21.17%202.06A13.1%2013.1%200%200%200%2019%201.87a12.94%2012.94%200%200%200-7%202.05%2012.94%2012.94%200%200%200-7-2%2013.1%2013.1%200%200%200-2.17.19%201%201%200%200%200-.83%201v12a1%201%200%200%200%201.17%201%2010.9%2010.9%200%200%201%208.25%201.91l.12.07h.11a.91.91%200%200%200%20.7%200h.11l.12-.07A10.899%2010.899%200%200%201%2020.83%2016%201%201%200%200%200%2022%2015V3a1%201%200%200%200-.83-.94ZM11%2015.35a12.87%2012.87%200%200%200-6-1.48H4v-10c.333-.02.667-.02%201%200a10.86%2010.86%200%200%201%206%201.8v9.68Zm9-1.44h-1a12.87%2012.87%200%200%200-6%201.48V5.67a10.86%2010.86%200%200%201%206-1.8c.333-.02.667-.02%201%200v10.04Zm1.17%204.15a13.098%2013.098%200%200%200-2.17-.19%2012.94%2012.94%200%200%200-7%202.05%2012.94%2012.94%200%200%200-7-2.05c-.727.003-1.453.066-2.17.19A1%201%200%200%200%202%2019.21a1%201%200%200%200%201.17.79%2010.9%2010.9%200%200%201%208.25%201.91%201%201%200%200%200%201.16%200A10.9%2010.9%200%200%201%2020.83%2020a1%201%200%200%200%201.17-.79%201%201%200%200%200-.83-1.15Z%22%2F%3E%3C%2Fsvg%3E"); }
@@ -1403,4 +1418,82 @@ grid-template-columns: auto 1fr auto;
 }
 .metadata.not-content .badges .sl-badge.note::before {
 	content: "⭐\00A0";
+}
+
+/* Reading text size. The toggle in the page title (PageTitle.astro) sets
+   html[data-text-size="large"], and the reading column, everything inside <main>, sets every
+   Starlight type token one step larger (x1.125: the body goes from --sl-text-base to
+   --sl-text-lg). The header and both sidebars keep their size. The content panel widens by the
+   same factor, so a line keeps its length in characters; TwoColumnContent and the header read
+   --sl-content-width at the root, so it is set there. Pages without a sidebar (the splash home
+   page and its REPL) are left alone, and keep Starlight's own 67.5rem width. */
+:root[data-text-size='large'][data-has-sidebar] {
+	--kz-reading-scale: 1.125;
+	--sl-content-width: calc(45rem * var(--kz-reading-scale));
+}
+:root[data-text-size='large'][data-has-sidebar] main {
+	--sl-text-2xs: calc(0.75rem * var(--kz-reading-scale));
+	--sl-text-xs: calc(0.8125rem * var(--kz-reading-scale));
+	--sl-text-sm: calc(0.875rem * var(--kz-reading-scale));
+	--sl-text-base: calc(1rem * var(--kz-reading-scale));
+	--sl-text-lg: calc(1.125rem * var(--kz-reading-scale));
+	--sl-text-xl: calc(1.25rem * var(--kz-reading-scale));
+	--sl-text-2xl: calc(1.5rem * var(--kz-reading-scale));
+	--sl-text-3xl: calc(1.8125rem * var(--kz-reading-scale));
+	--sl-text-4xl: calc(2.1875rem * var(--kz-reading-scale));
+	--sl-text-5xl: calc(2.625rem * var(--kz-reading-scale));
+	--sl-text-6xl: calc(4rem * var(--kz-reading-scale));
+	/* The semantic tokens were resolved against the default scale at :root; re-derive them here. */
+	--sl-text-body: var(--sl-text-base);
+	--sl-text-body-sm: var(--sl-text-xs);
+	--sl-text-code: var(--sl-text-sm);
+	--sl-text-code-sm: var(--sl-text-xs);
+	--sl-text-h1: var(--sl-text-4xl);
+	--sl-text-h2: var(--sl-text-3xl);
+	--sl-text-h3: var(--sl-text-2xl);
+	--sl-text-h4: var(--sl-text-xl);
+	--sl-text-h5: var(--sl-text-lg);
+	--kz-code-font-size: calc(0.875rem * var(--kz-reading-scale));
+	/* <main> inherits the body's computed 16px, so it has to take the new size explicitly. */
+	font-size: var(--sl-text-body);
+}
+@media (min-width: 50em) {
+	:root[data-text-size='large'][data-has-sidebar] main {
+		--sl-text-h1: var(--sl-text-5xl);
+		--sl-text-h2: var(--sl-text-4xl);
+		--sl-text-h3: var(--sl-text-3xl);
+		--sl-text-h4: var(--sl-text-2xl);
+	}
+}
+
+/* Image zoom (ImageZoom.astro): on a desktop pointer, a content image or D2 diagram that would
+   show meaningfully larger opens in a modal, fitted to the window. The zoom-in cursor marks
+   exactly those images. The image sits on the page background so a transparent diagram stays
+   readable over the dark backdrop. */
+@media (hover: hover) and (pointer: fine) {
+	.sl-markdown-content img[data-kz-zoom] {
+		cursor: zoom-in;
+	}
+}
+.kz-zoom {
+	max-width: none;
+	max-height: none;
+	margin: auto;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	overflow: visible;
+	cursor: zoom-out;
+}
+.kz-zoom::backdrop {
+	background: rgba(0, 0, 0, 0.75);
+}
+.kz-zoom img {
+	display: block;
+	box-sizing: content-box;
+	max-width: none;
+	padding: 1rem;
+	border-radius: 0.6rem;
+	background: var(--sl-color-bg);
+	box-shadow: var(--sl-shadow-lg);
 }

@@ -4,11 +4,21 @@ import { tocHasHeadings } from './lib/toc.mjs';
 import { resolveSeries } from './lib/series.mjs';
 
 export const onRequest = defineRouteMiddleware(async (context, next) => {
+	addReadingTextSize(context);
 	await fitTitleAndToc(context);
 	// starlight-blog's middleware resolves each post's authors and runs after this one.
 	await next();
 	addArticleMeta(context);
 });
+
+// The reader's text size (the toggle in PageTitle.astro, remembered in localStorage) is set on
+// <html> from <head>, before the first paint, so a large-text page never flashes at the default.
+function addReadingTextSize(context: APIContext) {
+	context.locals.starlightRoute.head.push({
+		tag: 'script',
+		content: "try{if(localStorage.getItem('kz-text-size')==='large')document.documentElement.dataset.textSize='large'}catch(e){}",
+	});
+}
 
 // Unify the right "On this page" column across the blog and the projects space: it should
 // appear only when there is something real to show. Starlight (and starlight-blog) leave a
