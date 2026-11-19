@@ -1420,16 +1420,18 @@ grid-template-columns: auto 1fr auto;
 	content: "⭐\00A0";
 }
 
-/* Reading text size. The toggle in the page title (PageTitle.astro) sets
-   html[data-text-size="large"], and the reading column, everything inside <main>, sets every
-   Starlight type token one step larger (x1.125: the body goes from --sl-text-base to
-   --sl-text-lg). The header and both sidebars keep their size. The content panel widens by the
-   same factor, so a line keeps its length in characters; TwoColumnContent and the header read
-   --sl-content-width at the root, so it is set there. Pages without a sidebar (the splash home
-   page and its REPL) are left alone, and keep Starlight's own 67.5rem width. */
+/* Reading text size. The "Aa" toggle (TextSizeToggle.astro) sets html[data-text-size="large"],
+   and the reading column, everything inside <main>, sets every Starlight type token one step
+   larger (x1.125: the body goes from --sl-text-base to --sl-text-lg). The header and both
+   sidebars keep their size. The content panel opens up a little more than the text grows
+   (x1.25, up to 900px: about 97 characters a line, against 86 at the default size); the
+   TOC column keeps its 300px minimum, so below about 1500px wide the panel grows less.
+   TwoColumnContent and the header read --sl-content-width at the root, so it is set there.
+   Pages without a sidebar (the splash home page and its REPL) are left alone, and keep
+   Starlight's own 67.5rem width. */
 :root[data-text-size='large'][data-has-sidebar] {
 	--kz-reading-scale: 1.125;
-	--sl-content-width: calc(45rem * var(--kz-reading-scale));
+	--sl-content-width: calc(45rem * 1.25);
 }
 :root[data-text-size='large'][data-has-sidebar] main {
 	--sl-text-2xs: calc(0.75rem * var(--kz-reading-scale));

@@ -165,6 +165,7 @@ export default defineConfig({
 				Footer: './src/components/Footer.astro',
 				SiteTitle: './src/components/SiteTitle.astro',
 				ThemeSelect: './src/components/ThemeSelect.astro',
+				Search: './src/components/Search.astro',
 				Sidebar: './src/components/Sidebar.astro',
 				SocialIcons: './src/components/SocialIcons.astro',
 			},

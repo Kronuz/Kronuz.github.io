@@ -29,8 +29,8 @@ const related = (await resolveRelatedPosts(d.related)).filter((r) => !posts.some
 // request local, so that component never imports the projects collection.
 Astro.locals.projectSeries = series;
 
-// Dev-only "Edit source" link: hand this part's source path to the shared PageTitle override
-// (which renders the link by the subtitle) through a request local. Never set in production.
+// Dev-only "Edit source" link: hand this part's source path to the shared EditLink override
+// (which renders it in the footer) through a request local. Never set in production.
 if (import.meta.env.DEV && project.filePath) {
 	Astro.locals.editHref = `/__open-in-editor?file=${encodeURIComponent(`${process.cwd()}/${project.filePath}`)}`;
 }

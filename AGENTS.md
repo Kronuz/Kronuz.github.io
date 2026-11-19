@@ -207,7 +207,7 @@ durable rules:
   page by `Sidebar.astro`. Menu entries take a leading icon via `data-icon="<name>"`, masked in
   `custom.css` from Starlight's own icon set.
 - **Top nav is icon-only** (`ThemeSelect.astro`): About · Blog · RSS, labels kept as
-  `aria-label`/`title`.
+  `aria-label`/`title`, then the text-size toggle and the theme selector.
 - **RSS lives in the nav only.** starlight-blog auto-injects an `rss` social icon; a trailing
   Starlight plugin in `astro.config.mjs` filters it out (the feed + `rel="alternate"` head tag stay).
 - **Snippets match Expressive Code's terminal frame** (theme-adaptive bar, faint dots, drop shadow,
@@ -223,13 +223,21 @@ durable rules:
   Projects root, a project hub while reading one of its parts, the series a post belongs to) into
   an ancestor (`data-ancestor`), tinted in `custom.css`. A page the menu does not list shows only
   its tinted ancestors.
-- **Reading text size.** The toggle beside "Edit source" (`PageTitle.astro`) sets
+- **Reading text size.** The "Aa" toggle (`TextSizeToggle.astro`) sits just before the theme
+  selector on desktop (`ThemeSelect.astro`) and in the header after the search button on a phone
+  (the `Search.astro` override), one visible at a time; splash pages hide it. It sets
   `html[data-text-size="large"]`, remembered in `localStorage` (`kz-text-size`) and re-applied from
   `<head>` before paint by `starlightRouteData.ts`. `custom.css` ("Reading text size") scales every
-  Starlight type token inside `<main>` by 1.125, and widens `--sl-content-width` by the same factor
-  at the root, where the TOC column and the header read it. The header and sidebars keep their
-  size, and pages without a sidebar (the splash home page) are untouched. The toggle keeps the line
+  Starlight type token inside `<main>` by 1.125 and opens `--sl-content-width` by 1.25 (900px,
+  about 97 characters a line) at the root, where the TOC column and the header read it; the TOC
+  keeps its 300px minimum, so the panel grows less below about 1500px wide. The header and
+  sidebars keep their size, and pages without a sidebar are untouched. The toggle keeps the line
   at the top of the screen in place while the page reflows.
+- **Edit links are for the author.** `EditLink.astro` renders "Edit source" (and, for a post under
+  `npm run dev`, a local-editor icon) in the footer's meta row. They always show under `npm run dev`;
+  in production only in a browser that opted in by visiting any page with `?editor=on`
+  (`?editor=off` opts out), a `localStorage` flag that `starlightRouteData.ts` turns into
+  `html[data-editor]` before paint. Project pages only ever get the dev-only link.
 - **Image zoom.** `ImageZoom.astro`, mounted by `MarkdownContent.astro`, opens a content image or
   D2 diagram in a modal fitted to the window, on a desktop pointer only (hover and a fine pointer;
   touch screens keep pinch-to-zoom). An image is zoomable, and gets the zoom-in cursor, only when
@@ -270,7 +278,8 @@ shows a "Project:" link above its title, and the hub lists the project's posts.
 This repo and the **internal** mirror (`~/code/KronuzBlog/gmendezb-pages`, branch `main`,
 served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared components,
 `renderSnippet.mjs`, the snippet pages, `PageTitle.astro`, `Sidebar.astro`, `ThemeSelect.astro`,
-`ImageZoom.astro`, `TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
+`ImageZoom.astro`, `TextSizeToggle.astro`, `Search.astro`, `EditLink.astro`,
+`TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
 (`remark-ansi.mjs`, `remark-d2.mjs`, `remark-snippet.mjs`, `remark-snippet-link.mjs`,
 `remark-soft-blog-links.mjs`) plus `lib/normalizeAnsi.mjs`, `lib/renderD2.mjs` and
 `starlightRouteData.ts`, plus the icon pipeline (`scripts/build-icons.mjs`, `src/assets/logo.svg`,

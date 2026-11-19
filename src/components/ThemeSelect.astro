@@ -1,12 +1,15 @@
 ---
 import Default from '@astrojs/starlight/components/ThemeSelect.astro';
 import { Icon } from '@astrojs/starlight/components';
+import TextSizeToggle from './TextSizeToggle.astro';
 
 // Header site menu, shown before the theme selector. Replaces starlight-blog's
 // built-in single "Blog" injector (we set its `navigation: 'none'`), so we own
 // the links. Visible on every screen size: icon + text on desktop, icon-only on
 // mobile (so the menu stays reachable even on the splash, which has no sidebar
 // hamburger). aria-label keeps the labels for screen readers when text hides.
+// The reading text size toggle sits just before the theme selector (desktop only;
+// on a phone it is in the header, see Search.astro).
 const items = [
 { label: 'About', href: '/about/', icon: 'information' },
 { label: 'Blog', href: '/blog/', icon: 'open-book' },
@@ -31,6 +34,7 @@ rel={it.external ? 'noopener' : undefined}
 ))
 }
 </nav>
+<TextSizeToggle placement="theme" />
 <Default><slot /></Default>
 
 <style>
