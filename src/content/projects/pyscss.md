@@ -7,7 +7,7 @@ logo: /img/projects/pyscss.png
 repo: https://github.com/Kronuz/pyScss
 docs: http://pyscss.readthedocs.io
 status: shipped
-order: 3
+order: 5
 ---
 
 pyScss is a pure-Python implementation of the Sass language, the CSS superset that adds

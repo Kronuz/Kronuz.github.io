@@ -5,7 +5,7 @@ description: An elegant web interface for browsing multiple git repositories, bu
 tech: [Python, Django]
 repo: https://github.com/Kronuz/django-gitlist
 status: dead
-order: 7
+order: 8
 ---
 
 A Django web interface for browsing multiple git repositories: commits, branches, file

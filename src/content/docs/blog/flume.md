@@ -13,7 +13,7 @@ tags:
   - compression
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one moves whole files, not buffers: [flume](https://github.com/Kronuz/flume).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one moves whole files, not buffers: [flume](https://github.com/Kronuz/flume).*
 
 A flume is the wooden channel that floats logs downstream, and the name is the design. When a node has to send another node a whole database, a replication snapshot, a bulk import, you cannot compress it the way you compress a small buffer, because the file is bigger than the memory you are willing to spend on it. You need to feed it in one end of a channel and have it come out the other, smaller and intact, while only ever holding a block of it at a time. That is [flume](https://github.com/Kronuz/flume): carry a file, or any fd-backed byte source, downstream over a channel, compressed, framed, integrity-checked, in **bounded memory**.
 

@@ -14,7 +14,7 @@ tags:
   - concurrency
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is the floor everything networked stands on: [reactor](https://github.com/Kronuz/reactor).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is the floor everything networked stands on: [reactor](https://github.com/Kronuz/reactor).*
 
 Write a second network server in the same codebase and you notice you are writing the same thing you wrote for the first one. Not the protocol, the protocol is different, but everything *under* it: the pool of event loops spread across the cores, the accept loop that binds a port and fans new connections out to those loops, and the shutdown sequence that stops all of it without deadlocking on in-flight work. It is unglamorous plumbing, it is identical every time, and it is precisely where the nasty concurrency bugs live, the ones about cross-thread teardown and sockets closing under a coroutine's feet. Rewriting it per protocol is how you get to debug the same race three times.
 

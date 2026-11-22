@@ -14,7 +14,7 @@ tags:
   - compile-time
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is a word list the compiler turns into a tree: [ctrie](https://github.com/Kronuz/ctrie).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is a word list the compiler turns into a tree: [ctrie](https://github.com/Kronuz/ctrie).*
 
 Think of how you find a word in a paper dictionary. You do not read it from the first page. You open to the **P** section, then look for **PO**, then **POS**, and each letter throws away most of the book. A *trie* (pronounced "try", from re*trie*val) is that idea as a data structure: a tree where every step down is one letter, and words that start the same way share the same path for as long as they agree.
 

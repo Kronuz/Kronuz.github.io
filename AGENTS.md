@@ -273,6 +273,11 @@ project's own stepper). `src/lib/projects.mjs` groups entries by the first segme
 page's `title` names its subject on its own. A post joins a project with `project: <id>`: it
 shows a "Project:" link above its title, and the hub lists the project's posts.
 
+The public Projects index and sidebar use `order` as an editorial rank by German's own
+recent work, not the upstream repository's latest commit. Update the ranks when work on
+a project changes their order. `featured` currently marks the three most active projects;
+the renderer puts those first, then sorts by `order`.
+
 ## Cross-repo sync
 
 This repo and the **internal** mirror (`~/code/KronuzBlog/gmendezb-pages`, branch `main`,

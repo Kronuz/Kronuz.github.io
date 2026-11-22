@@ -1,7 +1,7 @@
 ---
 title: "Packing a UUID"
 subtitle: "Shrinking a 128-bit id by noticing how much of it is not random."
-description: "cuuid is Xapiand's condensed UUID value type. It mints time-sortable ids and puts them on the wire in 8 bytes instead of 16, by noticing that a time-based UUID is not random: it is a timestamp, a clock, and a node, mostly redundant across a stream from one machine. Its current format, cuuid v6, reconstructs the node with splitmix64 (nanoseconds, where the old code paid a Mersenne Twister) and stores the bytes in UUIDv6 order so the canonical form sorts by time; the older v1 format lives on only as the --legacy-ids compatibility mode."
+description: "cuuid is a condensed UUID value type. It mints time-sortable ids and puts them on the wire in 8 bytes instead of 16, by noticing that a time-based UUID is not random: it is a timestamp, a clock, and a node, mostly redundant across a stream from one machine. Its current format, cuuid v6, reconstructs the node with splitmix64 (nanoseconds, where the old code paid a Mersenne Twister) and stores the bytes in UUIDv6 order so the canonical form sorts by time; the older v1 format lives on only as the --legacy-ids compatibility mode."
 excerpt: "A UUID is sixteen bytes, and we treat them as sixteen bytes of pure randomness. A time-based UUID is nothing of the sort: it is a timestamp and a clock and a machine id wearing a hex costume, and a stream of them from one server repeats itself enormously. The ninth familiar reads that structure and packs the same id into eight bytes, decoded in nanoseconds and sortable by time."
 date: 2026-08-21
 lastUpdated: 2026-11-15
@@ -14,7 +14,7 @@ tags:
   - encoding
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is an identifier that weighs less than it should: [cuuid](https://github.com/Kronuz/cuuid).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is an identifier that weighs less than it should: [cuuid](https://github.com/Kronuz/cuuid).*
 
 A UUID is 128 bits, and the reason we love it is that we can pretend those bits are random: generate one anywhere, never coordinate, and trust that it will not collide. That is the right mental model for a *version-4* UUID, which really is random. It is quietly wrong for a **time-based** UUID, the kind you reach for when you also want ids that sort by when they were made. A time UUID is not random at all. It is a 60-bit timestamp, a 14-bit clock sequence, and a 48-bit node identifier, packed into the same 128 bits and dressed up in the familiar hyphenated hex.
 

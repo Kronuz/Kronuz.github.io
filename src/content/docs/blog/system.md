@@ -1,7 +1,7 @@
 ---
 title: "Asking the Machine"
 subtitle: "Reading a host's own limits, on systems that each hide the answer somewhere different."
-description: "system is Xapiand's process- and machine-level resource introspection: open and maximum file descriptors against the rlimit, total and per-process RAM and virtual memory, disk and inode capacity, and compiler, OS, and architecture identification strings. It is a small library whose entire difficulty is portability, because every operating system keeps these numbers somewhere different (proc files on Linux, sysctl on the BSDs and macOS, task info on Apple), and a server that wants to know how close it is to running out of descriptors or memory has to ask each of them in its own dialect."
+description: "system provides process- and machine-level resource introspection: open and maximum file descriptors against the rlimit, total and per-process RAM and virtual memory, disk and inode capacity, and compiler, OS, and architecture identification strings. It is a small library whose entire difficulty is portability, because every operating system keeps these numbers somewhere different (proc files on Linux, sysctl on the BSDs and macOS, task info on Apple), and a server that wants to know how close it is to running out of descriptors or memory has to ask each of them in its own dialect."
 excerpt: "A long-running server should know its own limits: how many file descriptors it is burning against the cap, how much RAM the process holds, how much disk is left before writes start failing. None of those numbers has a portable source. The nineteenth familiar is the small, unglamorous library that asks each operating system for them in its own dialect, so the rest of the engine can just ask once."
 date: 2026-09-16
 series: "Familiars"
@@ -13,7 +13,7 @@ tags:
   - portability
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one asks the host about itself: [system](https://github.com/Kronuz/system).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one asks the host about itself: [system](https://github.com/Kronuz/system).*
 
 A server that runs for months needs a kind of self-awareness that a short program never does. It has to know how close it is to the walls. How many file descriptors am I holding against my limit, so I can refuse a connection before `accept` starts failing? How much resident memory is the process using right now? How much disk and how many inodes are left before a write turns into an error I cannot recover from gracefully? These are not exotic questions. They are the difference between a service that degrades politely under pressure and one that falls over.
 

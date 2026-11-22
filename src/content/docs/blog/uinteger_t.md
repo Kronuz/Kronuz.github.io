@@ -14,7 +14,7 @@ tags:
   - algorithms
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one has no ceiling: [uinteger_t](https://github.com/Kronuz/uinteger_t), an integer as big as memory allows, which I grew in 2017 out of Jason Lee's `uint128_t`.*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one has no ceiling: [uinteger_t](https://github.com/Kronuz/uinteger_t), an integer as big as memory allows, which I grew in 2017 out of Jason Lee's `uint128_t`.*
 
 Sixty-four bits is a lot of headroom until it isn't. A hash wider than a machine word, a base-62 id, a factorial, a counter that must never silently wrap: all of them run past `uint64_t`, and when they do you want a number that keeps going, without giving up the thing that makes integers pleasant, which is that they read like arithmetic. `a * b + c`, not `bignum_add(bignum_mul(a, b), c)`.
 

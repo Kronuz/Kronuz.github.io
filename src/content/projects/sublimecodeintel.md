@@ -8,7 +8,7 @@ repo: https://github.com/SublimeCodeIntel/SublimeCodeIntel
 website: https://sublimecodeintel.github.io/
 docs: https://sublimecodeintel.github.io/docs/
 status: shipped
-order: 2
+order: 7
 ---
 
 SublimeCodeIntel brought IDE-grade code intelligence to Sublime Text: jump-to-definition,

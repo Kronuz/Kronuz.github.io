@@ -1,7 +1,7 @@
 ---
 title: "Who Owns the Tree"
 subtitle: "A JSON-shaped MessagePack value whose copies share nothing."
-description: "msgpack is Xapiand's MessagePack document value: MsgPack, a JSON-like value with map and array access and typed accessors, kept as msgpack-c objects in an arena of its own, with RapidJSON and string_view adaptors and an RFC 6902 JSON-Patch helper. A reference is a node inside the document, a move hands the arena over, and a copy builds a new arena and copies every node, so a copy shares nothing with its source. Sharing is a separate step: lock() freezes a document so many threads can read it through one shared_ptr, which is how Xapiand shares its schemas and copies one only when a request writes to it."
+description: "msgpack is a MessagePack document value: MsgPack, a JSON-like value with map and array access and typed accessors, kept as msgpack-c objects in an arena of its own, with RapidJSON and string_view adaptors and an RFC 6902 JSON-Patch helper. A reference is a node inside the document, a move hands the arena over, and a copy builds a new arena and copies every node, so a copy shares nothing with its source. Sharing is a separate step: lock() freezes a document so many threads can read it through one shared_ptr, which is how Xapiand shares its schemas and copies one only when a request writes to it."
 excerpt: "A search engine moves documents around all day, and in C++ the way you hand one over decides what it costs. The sixteenth familiar is the document value itself, and every document lives in an arena of its own: a reference reaches into it, a move hands it over, and a copy builds a whole new one. When Xapiand needed many threads to share one document, it froze it and shared a pointer instead."
 date: 2026-09-09
 series: "Familiars"
@@ -13,7 +13,7 @@ tags:
   - serialization
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is the document itself: [msgpack](https://github.com/Kronuz/msgpack).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is the document itself: [msgpack](https://github.com/Kronuz/msgpack).*
 
 A document-oriented search engine is, underneath, a program that moves documents around all day. It parses one from a request, hands it to a handler, changes a field, serializes it to the store, and sends it across the cluster. In C++ every one of those hand-offs is a choice between a copy, a reference, and a move, and for a tree of maps and arrays that choice is most of what the hand-off costs.
 

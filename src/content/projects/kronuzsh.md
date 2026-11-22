@@ -5,7 +5,7 @@ description: "My zsh setup: a ported prompt, three plugins, and gitstatus, with 
 tech: [Zsh, Shell]
 repo: https://github.com/Kronuz/KronuZSH
 status: active
-order: 8
+order: 4
 ---
 
 KronuZSH is my zsh setup, stripped down to the parts I actually use. It replaces a prezto

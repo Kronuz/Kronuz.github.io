@@ -13,7 +13,7 @@ tags:
   - compilers
 ---
 
-*Part of a new series, **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand) and set loose in their own repositories. [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) opened the engine; each of these opens one creature that used to live inside it. Every campaign starts by naming the party, so this one starts with the thing that does the naming: [fantasyname](https://github.com/Kronuz/fantasyname).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) opened the engine; this one starts with the creature that named its nodes: [fantasyname](https://github.com/Kronuz/fantasyname).*
 
 Boot a small Xapiand cluster and the nodes introduce themselves. Not `node-0`, `node-1`, `node-2`. They come up called **Manaugh**, **Chorurn**, **Nielsion**, **Cualei**. Kill one and a new one joins as **Dielque**. They read like a party sheet from a campaign nobody ran, and that is on purpose: a machine you have to think about for the next three years may as well have a name you can say out loud.
 

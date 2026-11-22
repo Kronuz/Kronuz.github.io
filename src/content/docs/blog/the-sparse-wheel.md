@@ -1,7 +1,7 @@
 ---
 title: "The Sparse Wheel"
-subtitle: "A lock-free timer from Xapiand whose insert never stalls another thread."
-description: "stash is a hierarchical timer wheel from Xapiand, built on a sparse, lazily grown array of atomic pointers. Many threads insert without a lock and one thread drains what is due in key order, so the insert tail stays flat under contention where a locked heap or an Asio timer spikes. How it works, what it costs, the catches it ships with, and the narrow job it is the right tool for."
+subtitle: "A lock-free timer whose insert never stalls another thread."
+description: "stash is a hierarchical timer wheel built on a sparse, lazily grown array of atomic pointers. Many threads insert without a lock and one thread drains what is due in key order, so the insert tail stays flat under contention where a locked heap or an Asio timer spikes. How it works, what it costs, the catches it ships with, and the narrow job it is the right tool for."
 excerpt: "One thread in Xapiand sleeps while every other thread drops timed work onto its schedule: log lines, fsyncs, commits, replication. The drop can never take a lock, and more than that, it can never stall. The little data structure that makes both true is the strangest, best thing in the whole codebase, and the familiar I would keep if I could keep only one."
 date: 2026-08-06
 lastUpdated: 2026-11-15
@@ -14,7 +14,7 @@ tags:
   - concurrency
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) opened the whole engine, and a [jester](/blog/rolling-for-a-name/) and a [tracer](/blog/the-haunted-handler/) came out of it first. This one opens the jewel I would pull out of it before any other: [stash](https://github.com/Kronuz/stash).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) opened the whole engine, and a [jester](/blog/rolling-for-a-name/) and a [tracer](/blog/the-haunted-handler/) came out of it first. This one opens the jewel I would pull out of it before any other: [stash](https://github.com/Kronuz/stash).*
 
 *Update, November 2026: the [logger](https://github.com/Kronuz/logger) library has since moved off stash to [wheel](https://github.com/Kronuz/wheel), a timer wheel owned by one thread, and stash and scheduler are retiring. [Who Owns the Wheel](/blog/retiring-the-sparse-wheel/) tells why. The rest of this post is as I wrote it in August.*
 

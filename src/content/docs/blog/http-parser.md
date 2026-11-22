@@ -1,7 +1,7 @@
 ---
 title: "Sixteen Bytes Too Far"
 subtitle: "A streaming HTTP parser that never copies, and the one place it read past the buffer."
-description: "http-parser is Xapiand's C++20 fork of the Joyent/Node.js HTTP/1.x parser: a callback-driven, zero-copy state machine you feed raw bytes in any framing, that calls back as it recognizes the request line, headers, body, and boundaries, handing you slices of your own input buffer and never allocating. It resumes mid-header across calls so the parse is identical however the bytes were framed. The gnarly bit is a hand-rolled SSE2 scan for the CRLF that read a 16-byte vector past the end of the buffer, an overread only ASAN caught. It was replaced with a bounded memchr, and later the vector scan came back, this time reading only whole blocks inside the buffer."
+description: "http-parser is a C++20 fork of the Joyent/Node.js HTTP/1.x parser: a callback-driven, zero-copy state machine you feed raw bytes in any framing, that calls back as it recognizes the request line, headers, body, and boundaries, handing you slices of your own input buffer and never allocating. It resumes mid-header across calls so the parse is identical however the bytes were framed. The gnarly bit is a hand-rolled SSE2 scan for the CRLF that read a 16-byte vector past the end of the buffer, an overread only ASAN caught. It was replaced with a bounded memchr, and later the vector scan came back, this time reading only whole blocks inside the buffer."
 excerpt: "Bytes arrive off a socket in whatever sizes the network felt like: a whole request in one read, or one byte at a time, or a header split down the middle. A streaming parser has to produce the same result regardless, without copying and without ever reading a byte it was not handed. The eighth familiar does exactly that, except for the one line where it reached sixteen bytes past the end of the buffer, and only the sanitizer noticed."
 date: 2026-08-19
 lastUpdated: 2026-11-15
@@ -14,7 +14,7 @@ tags:
   - parsing
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one lives at the wire: [http-parser](https://github.com/Kronuz/http-parser).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one lives at the wire: [http-parser](https://github.com/Kronuz/http-parser).*
 
 TCP does not hand you messages. It hands you bytes, in whatever sizes it pleased, and the boundaries mean nothing: a whole HTTP request might arrive in one `read`, or dribble in one byte at a time, or split a header name straight down the middle across two packets. A parser that only works when the whole request shows up at once is not a parser, it is a demo. The real job is to consume bytes as they come and produce the exact same parse no matter how the wire chopped them up.
 

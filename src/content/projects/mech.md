@@ -8,7 +8,7 @@ repo: https://github.com/mechboxes/mech
 website: https://mechboxes.github.io/mech/
 docs: https://mechboxes.github.io/mech/docs/
 status: shipped
-order: 4
+order: 6
 ---
 
 Mech is a command-line tool for managing virtual machines, in the spirit of Vagrant but

@@ -14,7 +14,7 @@ tags:
   - http
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is where the network familiars meet in one program: [prism](https://github.com/Kronuz/prism).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is where the network familiars meet in one program: [prism](https://github.com/Kronuz/prism).*
 
 Think of a web service as a restaurant. The *views* are the recipes: ask for `/hello` and you get a greeting, ask for `/json` and you get some JSON back. A *router* is the recipe book, the thing that looks at the address a request asked for and finds the right recipe. [radix-router](/blog/radix-router/) and [the http framework](/blog/http/) give you a very good recipe book.
 

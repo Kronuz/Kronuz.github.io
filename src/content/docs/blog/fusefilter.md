@@ -14,7 +14,7 @@ tags:
   - filters
 ---
 
-*Part of **Familiars**: the small, sharp libraries around [Xapiand](https://github.com/Kronuz/Xapiand). This one is new, written for the engine underneath it, and it stands at the door of every dictionary: [fusefilter](https://github.com/Kronuz/fusefilter).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is new, written for the engine underneath it, and it stands at the door of every dictionary: [fusefilter](https://github.com/Kronuz/fusefilter).*
 
 Picture a library with fifty reading rooms, each with its own card catalog. You want one book, and it is in exactly one room. What you want is a cheap sign on each door that says either "definitely not here" or "maybe here, go check".
 

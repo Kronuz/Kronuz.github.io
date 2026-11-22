@@ -1,7 +1,7 @@
 ---
 title: "The Syscalls That Lie"
 subtitle: "The EINTR retry, the fsync that isn't, and the one call you must never retry."
-description: "io is an EINTR-safe POSIX file and socket layer extracted from Xapiand. Every function in the io:: namespace mirrors a syscall of the same name but adds the retry and short-count handling a real storage or network engine needs: read, write, send, recv, fsync and friends retry through EINTR, write and pwrite loop until the whole buffer moves, open refuses to hand back a descriptor below stderr and sets O_CLOEXEC, and durability is made portable (fdatasync on Linux, F_FULLFSYNC on macOS for real on-platter sync, fallocate with fallbacks). The one deliberate exception is close(), which never retries on EINTR, because retrying close can double-close a file descriptor another thread has already reused."
+description: "io is an EINTR-safe POSIX file and socket layer for storage and network code. Every function in the io:: namespace mirrors a syscall of the same name but adds the retry and short-count handling a real storage or network engine needs: read, write, send, recv, fsync and friends retry through EINTR, write and pwrite loop until the whole buffer moves, open refuses to hand back a descriptor below stderr and sets O_CLOEXEC, and durability is made portable (fdatasync on Linux, F_FULLFSYNC on macOS for real on-platter sync, fallocate with fallbacks). The one deliberate exception is close(), which never retries on EINTR, because retrying close can double-close a file descriptor another thread has already reused."
 excerpt: "The POSIX calls at the bottom of every server are not as honest as they look. A read can be cut short by a signal and return having done nothing wrong. An fsync on macOS returns success without actually putting your data on the platter. And retrying a close() that was interrupted can silently destroy a file descriptor another thread just reused. The eighteenth familiar is the thin layer that knows all of this and does the boring, correct thing so the rest of the engine never has to."
 date: 2026-09-14
 series: "Familiars"
@@ -13,7 +13,7 @@ tags:
   - posix
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is the floor nobody thanks: [io](https://github.com/Kronuz/io).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is the floor nobody thanks: [io](https://github.com/Kronuz/io).*
 
 The system calls at the bottom of every server look like the simplest thing in the stack, and they are the most quietly treacherous. Not because they are hard, but because they are *honest in ways you did not ask for*: they report exactly what the kernel did, and what the kernel did is often "nothing, because a signal arrived," or "I wrote some of it," or "I flushed to the disk's cache and called that durable." Handle each of those correctly at every call site and your code is right and unreadable. Handle them by copy-pasting a retry loop and you will get one of them wrong. [io](https://github.com/Kronuz/io) is the thin layer that handles them **once**: every function in the `io::` namespace mirrors a syscall of the same name, and adds the retry and short-count handling underneath, so no call site ever open-codes an `EINTR` loop again.
 

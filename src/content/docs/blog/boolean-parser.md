@@ -13,7 +13,7 @@ tags:
   - parsing
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is a little compiler in a single class: [boolean-parser](https://github.com/Kronuz/boolean-parser).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is a little compiler in a single class: [boolean-parser](https://github.com/Kronuz/boolean-parser).*
 
 People write boolean queries in *infix*: `a OR (b AND NOT c)`, operators between their operands, precedence in their heads, parentheses to override it. It is the natural way to write and the worst way to evaluate, because you cannot read it left to right and act as you go. When you reach `OR` you do not yet know its right operand; when you hit `(` you have to remember everything outside it and come back. Infix demands you look ahead and back up, which is exactly the sort of thing a stack was invented to avoid.
 

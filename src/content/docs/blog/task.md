@@ -14,7 +14,7 @@ tags:
   - coroutines
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is how code takes turns on a shared thread: [task](https://github.com/Kronuz/task).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is how code takes turns on a shared thread: [task](https://github.com/Kronuz/task).*
 
 Picture one waiter serving a whole restaurant. They take an order, hand it to the kitchen, and instead of standing there until the food is ready, they go take the next table's order. When a dish comes up, they carry it out and pick up where they left off.
 

@@ -1,10 +1,10 @@
 ---
 title: "Session Zero"
-subtitle: "Sixty small libraries, one search engine, and the campaign to open them."
-description: "An introduction to Familiars, a series of standalone C++ libraries carved out of Xapiand, a distributed search engine I built. Each post opens one library on its own terms: what it does that nothing else does, the constraint that forced its shape, the gnarly bit it ships with, and where it is the right tool. This is the setup: the world, the party, and the rules of the campaign."
-excerpt: "I spent years building a distributed search engine, and when I came back to it years later, the tools were what I most wanted to keep. Sixty-odd small, sharp libraries fell out of Xapiand, each one a self-contained idea worth knowing on its own. This is the campaign to open them, one familiar at a time."
+subtitle: "Small C++ libraries, one search engine, and the campaign to open them."
+description: "An introduction to Familiars, a collection of standalone C++ building blocks that began with libraries from Xapiand and grew beyond it. Each post opens one library on its own terms: the constraint that forced its shape, the gnarly bit it ships with, and where it is the right tool. This is the setup: the world, the party, and the rules of the campaign."
+excerpt: "I spent years building a distributed search engine, and when I came back to it years later, the tools were what I most wanted to keep. The first Familiars came out of Xapiand; other building blocks joined later. This is the campaign to open them, one at a time."
 date: 2026-07-29
-lastUpdated: 2026-11-15
+lastUpdated: 2026-11-22
 featured: true
 series: "Familiars"
 seriesOrder: 0
@@ -14,11 +14,11 @@ tags:
   - cpp
 ---
 
-*This is the opening of **Familiars**, a series of self-contained C++ libraries I pulled out of [Xapiand](https://github.com/Kronuz/Xapiand). [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) tells the story of the engine itself; this series opens the small creatures I found living inside it.*
+*This is the opening of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. The first parts came out of [Xapiand](https://github.com/Kronuz/Xapiand). [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) tells the story of the engine itself; this series opens the small creatures I found living inside it.*
 
 I spent the better part of a decade building a distributed search engine. [Xapiand](https://github.com/Kronuz/Xapiand) wraps a daemon around [Xapian](https://xapian.org): the cluster, the replication, the storage, the geometry, the network, everything you have to build *around* a good index to make it a real server. That story is [its own post](/blog/a-search-engine-from-scratch/). This is not that story.
 
-When I came back to the engine years later, what I most wanted to keep was the **tools**. This year, whenever a piece of Xapiand was sharp enough and self-contained enough to live on its own, I carved it out into its own repository, gave it a real README and a test suite, and let it stand up by itself. There are about sixty of them now, scattered across [github.com/Kronuz](https://github.com/Kronuz): a lock-free timer, a signal-safe crash tracer, a fantasy-name generator, a triangular mesh for the whole planet, an integer with no ceiling. Small things. Sharp things.
+When I came back to the engine years later, what I most wanted to keep was the **tools**. This year, whenever a piece of Xapiand was sharp enough and self-contained enough to live on its own, I carved it out into its own repository, gave it a real README and a test suite, and let it stand up by itself. Other pieces joined from new systems and independent work. There are about ninety now, mapped on the [Familiars page](https://kronuz.github.io/cpp-libraries/): a lock-free timer, a signal-safe crash tracer, a fantasy-name generator, a triangular mesh for the whole planet, an integer with no ceiling. Small things. Sharp things.
 
 This series opens them, one at a time.
 
@@ -35,7 +35,7 @@ You can read any one of these on its own. None of them needs the search engine, 
 
 ## The map
 
-The campaign runs through the engine in loose chapters, each a cluster of related familiars:
+The campaign follows the libraries through loose chapters, each a cluster of related familiars:
 
 - **Little languages.** Small compilers and grammars: the [name generator](/blog/rolling-for-a-name/) that names every node, a boolean-expression parser, a perfect hash built entirely at compile time.
 - **The forbidden layer.** The libraries that live where the normal rules stop applying: the [crash tracer](/blog/the-haunted-handler/) that runs inside a signal handler, the EINTR-safe POSIX layer, the machine-introspection code that has to be portable across every OS the server runs on.
@@ -54,6 +54,6 @@ A few, and they are the same as the rest of this blog:
 - **The messy parts stay in.** The bug I shipped, the design that failed first, the thing I only caught by staring at it too long. Those are the point.
 - **Everything is real and open.** Every familiar is a public repository you can clone, read, and use. Most are MIT or public domain. The code in each post is the code that runs.
 
-The party is [already assembled](https://github.com/Kronuz). Three of them come first: a [jester who names the world](/blog/rolling-for-a-name/), a [tracer that works in a haunted room](/blog/the-haunted-handler/), and the [strange lock-free thing](/blog/the-sparse-wheel/) I would keep over all the others. The rest are waiting.
+The party is [already assembled](https://kronuz.github.io/cpp-libraries/). Three of them come first: a [jester who names the world](/blog/rolling-for-a-name/), a [tracer that works in a haunted room](/blog/the-haunted-handler/), and the [strange lock-free thing](/blog/the-sparse-wheel/) I would keep over all the others. The rest are waiting.
 
 Roll for initiative.

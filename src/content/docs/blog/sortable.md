@@ -14,7 +14,7 @@ tags:
   - encoding
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one is a way of writing numbers down so that a byte comparison gets them right: [sortable](https://github.com/Kronuz/sortable).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is a way of writing numbers down so that a byte comparison gets them right: [sortable](https://github.com/Kronuz/sortable).*
 
 A search engine sorts and ranges over numbers constantly, and it almost never does it with numbers. It does it with bytes. A sort key, a value slot, a term in the index: each is a byte string, and the storage layer orders them with `memcmp`, the dumbest and fastest comparison there is. It knows nothing about signs, exponents, or types. So every number has to be written down in a form where the byte order *is* the numeric order, or the index will happily put 10 before 9.
 

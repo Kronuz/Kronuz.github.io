@@ -1,7 +1,7 @@
 ---
 title: "The Line You Usually Cancel"
 subtitle: "Arming a 'this is taking too long' log on every operation, and paying only for the one that fires."
-description: "logger is Xapiand's deferred, lock-free logging library, and the original reason the stash timer wheel was built. Each thread writes its lines into its own queue without blocking any other, one LOG thread merges the queues and writes them in order, and a 'this operation is taking too long' line is cancelled with a single atomic when the operation finishes in time, so the common fast path logs nothing at all. The trick only pays because arming and cancelling are each that cheap; on a locked scheduler you would add lock traffic to every fast path just to catch the rare slow one."
+description: "logger is a deferred, lock-free logging library, and the original reason the stash timer wheel was built. Each thread writes its lines into its own queue without blocking any other, one LOG thread merges the queues and writes them in order, and a 'this operation is taking too long' line is cancelled with a single atomic when the operation finishes in time, so the common fast path logs nothing at all. The trick only pays because arming and cancelling are each that cheap; on a locked scheduler you would add lock traffic to every fast path just to catch the rare slow one."
 excerpt: "You want to know which operations are slow, but logging every operation is noise you pay for on the hot path. So you invert it: arm a 'log this if it is still running in 200 ms' line on every single operation, and cancel it, free, the instant the operation finishes, which is almost always. The seventh familiar logs the exceptions by speculating on everything, and it is the reason the sparse wheel was built at all."
 lastUpdated: 2026-11-15
 date: 2026-08-16
@@ -14,7 +14,7 @@ tags:
   - concurrency
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one closes a loop: [logger](https://github.com/Kronuz/logger) is the original reason [the sparse wheel](/blog/the-sparse-wheel/) was built.*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one closes a loop: [logger](https://github.com/Kronuz/logger) is the original reason [the sparse wheel](/blog/the-sparse-wheel/) was built.*
 
 Here is a thing you want and cannot easily have: to know which operations in a busy server were slow, without logging the ones that were fast. The fast ones are almost all of them, and they are on the hot path, so logging every operation to catch the rare slow one means paying for the common case to observe the exception. Most systems give up and sample, or log nothing, or log everything and drown.
 

@@ -13,7 +13,7 @@ tags:
   - cpp
 ---
 
-*The closing of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This is the last one, and it is really a table full of them.*
+*The closing of [**Familiars**](https://kronuz.github.io/cpp-libraries/): the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This is the last one, and it is really a table full of them.*
 
 Every adventuring party accumulates a bag of small things that never get their own scene: the rope, the chalk, the ten-foot pole, each one dull until the exact moment it saves you. A codebase is the same. Most of what falls out of a big system is not a jewel with a story; it is a small, honest tool that does one plain thing correctly so you never have to think about it again. There are a lot of these in Xapiand, too small for a deep-dive apiece, and they deserve better than to be lost, so here they are, tipped out onto the table at once.
 

@@ -13,7 +13,7 @@ tags:
   - encoding
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one turns a blob into something you can type: [base-x](https://github.com/Kronuz/base-x).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one turns a blob into something you can type: [base-x](https://github.com/Kronuz/base-x).*
 
 Sooner or later a pile of bytes has to face a human. An id in a URL, a hash in a log line, a key someone reads off one screen and types into another. Bytes are not built for that. Raw, they are unprintable. As hex they are honest but twice as long as they need to be and a featureless wall of `a` to `f`. As base64 they are shorter, but they carry `+`, `/`, and `=`, which break in a URL, and they mix `0` with `O` and `1` with `l` and `I`, which break the moment a person copies them by eye.
 

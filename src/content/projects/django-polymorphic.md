@@ -5,7 +5,7 @@ description: Improved Django model inheritance with automatic downcasting, and t
 tech: [Python, Django]
 repo: https://github.com/django-commons/django-polymorphic
 status: shipped
-order: 6
+order: 10
 ---
 
 django-polymorphic improves model inheritance for Django: querying a base model returns

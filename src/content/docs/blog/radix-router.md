@@ -13,7 +13,7 @@ tags:
   - data-structures
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). [The sparse wheel](/blog/the-sparse-wheel/) is the strangest thing in the engine; this one is the first thing every request meets: [radix-router](https://github.com/Kronuz/radix-router).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. [The sparse wheel](/blog/the-sparse-wheel/) is the strangest thing in the engine; this one is the first thing every request meets: [radix-router](https://github.com/Kronuz/radix-router).*
 
 A request arrives as a URL, and before anything real can happen, something has to decide which handler owns it. `/documents/count` goes here, `/documents/42` goes there, `/static/css/site.css` goes somewhere else entirely. That decision happens on every single request, so it sits squarely on the hot path, and the naive way to make it is the way that quietly kills you as the server grows.
 

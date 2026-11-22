@@ -1,7 +1,7 @@
 ---
 title: "The Haunted Handler"
 subtitle: "Walking every thread's stack, portably, from inside a signal handler."
-description: "traceback, a whole-process crash dumper extracted from Xapiand, freezes every registered thread with SIGUSR2 and has each one photograph its own stack from inside the signal handler. Two unrelated hard parts meet there: walking a stack portably (the frame pointer is one idea spelled nine ways across Linux, macOS, and FreeBSD on i386, x86-64, and AArch64, plus stack-growth direction and whether backtrace() even exists), and doing it where almost nothing is safe to call. Plus the bug where backtrace() itself lazily dlopens libgcc_s (a malloc) on its first call, inside the handler, which killed the TSAN build at startup until we warmed it one call early."
+description: "traceback, a whole-process crash dumper, freezes every registered thread with SIGUSR2 and has each one photograph its own stack from inside the signal handler. Two unrelated hard parts meet there: walking a stack portably (the frame pointer is one idea spelled nine ways across Linux, macOS, and FreeBSD on i386, x86-64, and AArch64, plus stack-growth direction and whether backtrace() even exists), and doing it where almost nothing is safe to call. Plus the bug where backtrace() itself lazily dlopens libgcc_s (a malloc) on its first call, inside the handler, which killed the TSAN build at startup until we warmed it one call early."
 excerpt: "Sometimes the only useful question about a stuck server is 'what is every thread doing, right now?' traceback answers it by signalling every thread at once and having each photograph its own stack. The hard part is that the stack walk is one idea spelled nine different ways across Linux, macOS, and FreeBSD, run inside a signal handler where the wrong call deadlocks the process. The second familiar out of Xapiand, written half by reasoning and half by waiting for a red build on a machine I'll never log into."
 date: 2026-08-03
 series: "Familiars"
@@ -13,7 +13,7 @@ tags:
   - concurrency
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). [Rolling for a Name](/blog/rolling-for-a-name/) pulled out a jester. This one pulls out something that has to do its work in a haunted room: [traceback](https://github.com/Kronuz/traceback).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. [Rolling for a Name](/blog/rolling-for-a-name/) pulled out a jester. This one pulls out something that has to do its work in a haunted room: [traceback](https://github.com/Kronuz/traceback).*
 
 There is a question you eventually need to ask a server that has stopped answering: **what is every thread doing, right now?** Not "what crashed," which a core dump tells you, but the live picture of a process that is up, accepting connections, and quietly wedged. One thread is blocked on a lock, another is spinning, a third is asleep waiting for the first, and the shape of the deadlock is written across all of their stacks at once. You want a single photograph of the whole process, every call stack frozen in the same instant.
 

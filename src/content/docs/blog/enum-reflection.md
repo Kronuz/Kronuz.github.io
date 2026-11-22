@@ -13,7 +13,7 @@ tags:
   - compile-time
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one gives back what the language discards: [enum-reflection](https://github.com/Kronuz/enum-reflection).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one gives back what the language discards: [enum-reflection](https://github.com/Kronuz/enum-reflection).*
 
 Here is a small, permanent annoyance in C++. You write `enum class Method { GET, POST, SEARCH, COMMIT };`, and the compiler reads those names, understands them, and then **throws them away**. At runtime there is no way to ask "what is `Method::SEARCH` called," because the string `"SEARCH"` does not exist in the program anymore; only the integer does. So every codebase does the same tedious thing, by hand: a `switch` that maps each member back to a string literal of its own name, for logging, and another mapping the other way, for parsing, both of which you must remember to update every time you add a member, and which drift out of sync the first time you forget. The names were right there at compile time. The language just does not keep them.
 

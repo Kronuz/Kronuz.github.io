@@ -13,7 +13,7 @@ tags:
   - compile-time
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This opens the compile-time chapter with three tiny ones: [hashes](https://github.com/Kronuz/hashes), [char-classify](https://github.com/Kronuz/char-classify), and [term-color](https://github.com/Kronuz/term-color).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This opens the compile-time chapter with three tiny ones: [hashes](https://github.com/Kronuz/hashes), [char-classify](https://github.com/Kronuz/char-classify), and [term-color](https://github.com/Kronuz/term-color).*
 
 The fastest code is the code that never runs, and the closest thing to that in C++ is code the compiler runs *for* you, before `main` ever starts. `constexpr` turned that from a party trick into a tool: a value computed at compile time costs nothing at runtime, and a mistake in it becomes a compile error instead of a bug. Three of the smallest familiars live entirely in that world, and each one takes a cost you would normally pay every time the program runs and pays it once, at the build.
 

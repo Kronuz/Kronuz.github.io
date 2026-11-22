@@ -6,7 +6,7 @@ tech: [Python, Sublime Text]
 repo: https://github.com/SublimeLinter/SublimeLinter
 website: http://www.sublimelinter.com
 status: shipped
-order: 5
+order: 9
 ---
 
 SublimeLinter is a linting framework for Sublime Text. Rather than bundling one linter, it

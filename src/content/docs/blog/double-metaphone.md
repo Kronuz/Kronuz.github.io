@@ -13,7 +13,7 @@ tags:
   - text
 ---
 
-*Part of **Familiars**: the small, sharp libraries I carved out of [Xapiand](https://github.com/Kronuz/Xapiand). This one matches by sound: [double-metaphone](https://github.com/Kronuz/double-metaphone).*
+*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one matches by sound: [double-metaphone](https://github.com/Kronuz/double-metaphone).*
 
 `Smith` and `Schmidt` are the same name, spelled two ways. If you index people by the spelling of their names, as any literal text index does, those two will never find each other, and neither will `Catherine` and `Kathryn`, or `Jon` and `John`. That is fine until the thing you are searching *is* names, at which point it is a disaster, because names are the most spelling-unstable words there are: transliterated, anglicized, typo'd, and written a dozen ways for one sound. The fix is to stop matching letters and start matching **sound**.
 
