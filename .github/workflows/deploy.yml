@@ -24,9 +24,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install D2 (build-time diagram renderer)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          curl -fsSL https://d2lang.com/install.sh | sh -s --
-          d2 --version
+          gh release download v0.9.0 --repo d2lang/d2 \
+            --pattern d2-v0.9.0-linux-amd64.tar.gz \
+            --pattern SHA256SUMS --dir "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP"
+          grep ' d2-v0.9.0-linux-amd64.tar.gz$' SHA256SUMS | sha256sum --check
+          tar -xzf d2-v0.9.0-linux-amd64.tar.gz
+          echo "$RUNNER_TEMP/d2-v0.9.0/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/d2-v0.9.0/bin/d2" --version
       - uses: actions/setup-node@v4
         with:
           node-version: 22
