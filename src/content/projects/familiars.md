@@ -11,6 +11,9 @@ featured: true
 order: 3
 related:
   - session-zero
+  - strata-prospect
+  - faultlab-crash-states
+  - pki-keys-stay-home
 ---
 
 Familiars is my collection of C++ building blocks: a timer wheel, a crash tracer, an
