@@ -23,15 +23,16 @@ I had already watched those concerns grow together inside [Xapiand](https://gith
 
 `prospect` supplies the inverted layout: a term dictionary, postings, positions, lengths, document values, and the machinery that reads them. It can change how those sections compress or how a scorer traverses them without inventing another commit protocol. One segment still has a table of contents and a versioned, checksummed footer. The same manifest records which segments form a committed index.
 
-```text
- application
-     │
-     ├── document layout ──────────── keys + stored records
-     │
-     └── prospect search layout ───── terms + postings + scores
-                       │
-                    strata core
-              segments · manifest · merge
+```d2 alt="An application chooses either a document layout with keys and stored records or prospect's search layout with postings; both use strata for segments, manifests, and merges."
+direction: down
+app: Application
+document: "Document layout\nkeys + stored records"
+search: "prospect layout\nterms + postings\nBM25 scoring"
+core: "strata core\nsegments\nmanifests + merges" { style.bold: true }
+app -> document
+app -> search
+document -> core
+search -> core
 ```
 
 This boundary matters most during a merge. Merging is not merely concatenating files: live documents may move to new segment ordinals, postings need encoding again, and readers holding an older snapshot must still see its files. `strata` owns the file lifecycle and the ordinal map. `prospect` owns the meaning of its search sections and can reorder documents to improve compression and pruning. A storage concern stays in one place, and a search concern gets a hook where the bytes are written.
