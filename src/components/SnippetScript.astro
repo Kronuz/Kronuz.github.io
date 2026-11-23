@@ -2,7 +2,8 @@
 /**
  * <SnippetScript /> — the one delegated click handler that drives every snippet
  * surface on a page: opening a <SnippetLink> modal, the Copy button (in the
- * modal, the inline figure, and the full-page view), Close, and backdrop-click.
+ * modal, the inline figure, and the full-page view), Close, backdrop-click,
+ * and tap-to-reveal Copy on touch screens in snippets and code blocks.
  *
  * It lives in its own component so the modal (SnippetLink) and the full-page
  * viewer route can both pull in identical behavior without duplicating the
@@ -43,6 +44,22 @@
             copyBtn.setAttribute("aria-label", "Copy to clipboard");
           }, 1500);
         });
+      }
+      return;
+    }
+
+    const code = target.closest<HTMLElement>(
+      ".expressive-code .frame pre, .snippet .snippet-code",
+    );
+    if (code && window.matchMedia("(hover: none)").matches && !target.closest("a, button")) {
+      const frame = code.closest<HTMLElement>(".frame, .snippet");
+      if (frame?.querySelector(".copy button, [data-snippet-copy]")) {
+        const reveal = !frame.hasAttribute("data-copy-revealed");
+        document.querySelectorAll<HTMLElement>("[data-copy-revealed]").forEach((other) => {
+          other.removeAttribute("data-copy-revealed");
+          other.querySelector<HTMLButtonElement>(".copy button, [data-snippet-copy]")?.blur();
+        });
+        if (reveal) frame.setAttribute("data-copy-revealed", "");
       }
       return;
     }

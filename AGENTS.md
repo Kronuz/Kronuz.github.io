@@ -212,6 +212,9 @@ durable rules:
   Starlight plugin in `astro.config.mjs` filters it out (the feed + `rel="alternate"` head tag stay).
 - **Snippets match Expressive Code's terminal frame** (theme-adaptive bar, faint dots, drop shadow,
   `0.45rem` radius) — mirror EC's tokens, don't hard-code.
+- **Copy on touch screens** stays hidden until a tap on the code reveals it; a second tap
+  hides it. `SnippetScript.astro` handles Expressive Code frames and source snippets,
+  while the `(hover: none)` rules in `custom.css` preserve desktop hover and keyboard focus.
 - **About page:** no `## About me` heading, `tableOfContents: false`, role/intro line is a muted
   italic `.about-lede` (the name stays upright/full-color via `.about-lede strong`).
 - **Header search is pinned** (`.header { grid-template-columns: auto 1fr auto }`) so it doesn't
