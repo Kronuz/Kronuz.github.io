@@ -13,7 +13,7 @@
  * private dashboard): it belongs in search and the sitemap so readers can find the series.
  */
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
-import { listAllSeries } from "../../../lib/series.mjs";
+import { listAllSeries } from "@kronuz/starlight-core/lib/series.mjs";
 
 const series = await listAllSeries();
 ---

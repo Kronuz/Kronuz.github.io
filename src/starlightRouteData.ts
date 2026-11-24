@@ -1,7 +1,8 @@
 import type { APIContext } from 'astro';
 import { defineRouteMiddleware } from '@astrojs/starlight/route-data';
-import { tocHasHeadings } from './lib/toc.mjs';
-import { resolveSeries } from './lib/series.mjs';
+import { tocHasHeadings } from '@kronuz/starlight-core/lib/toc.mjs';
+import { resolveSeries } from '@kronuz/starlight-core/lib/series.mjs';
+import { readerPreferences } from '@kronuz/starlight-core/lib/readerPreferences.mjs';
 
 export const onRequest = defineRouteMiddleware(async (context, next) => {
 	addReaderPreferences(context);
@@ -15,15 +16,8 @@ export const onRequest = defineRouteMiddleware(async (context, next) => {
 // the reading text size (TextSizeToggle.astro), so a large-text page never flashes at the
 // default; and the author's opt-in to the edit links (EditLink.astro), turned on or off by
 // visiting any page with `?editor=on` or `?editor=off`.
-const READER_PREFERENCES = [
-	"try{var d=document.documentElement,s=localStorage,e=new URLSearchParams(location.search).get('editor');",
-	"if(s.getItem('kz-text-size')==='large')d.dataset.textSize='large';",
-	"if(e==='on')s.setItem('kz-editor','1');else if(e==='off')s.removeItem('kz-editor');",
-	"if(s.getItem('kz-editor'))d.dataset.editor=''}catch(x){}",
-].join('');
-
 function addReaderPreferences(context: APIContext) {
-	context.locals.starlightRoute.head.push({ tag: 'script', content: READER_PREFERENCES });
+	context.locals.starlightRoute.head.push({ tag: 'script', content: readerPreferences });
 }
 
 // Unify the right "On this page" column across the blog and the projects space: it should

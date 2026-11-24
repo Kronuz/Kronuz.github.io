@@ -23,7 +23,7 @@
 import Default from "@astrojs/starlight/components/Sidebar.astro";
 import { buildSidebar } from "../lib/sidebar.mjs";
 import { listSidebarProjects } from "../lib/projects.mjs";
-import { countBlogPosts, listAllSeries } from "../lib/series.mjs";
+import { countBlogPosts, listAllSeries } from "@kronuz/starlight-core/lib/series.mjs";
 import { BLOG_POST_COUNT, RECENT_POST_COUNT } from "../consts";
 
 const route = Astro.locals.starlightRoute;

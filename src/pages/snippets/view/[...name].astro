@@ -21,10 +21,11 @@
  * Astro's internal $$file.)
  */
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
-import SnippetScript from "../../../components/SnippetScript.astro";
+import SnippetScript from "@kronuz/starlight-core/components/SnippetScript.astro";
+import CopyReveal from "@kronuz/starlight-core/components/CopyReveal.astro";
 import {
   listSnippets, readSnippet, langForFile, snippetFigure, rawHref, projectFiles,
-} from "../../../lib/renderSnippet.mjs";
+} from "@kronuz/starlight-core/lib/renderSnippet.mjs";
 
 export function getStaticPaths() {
   return listSnippets().map((file) => ({ params: { name: file }, props: { file } }));
@@ -64,6 +65,7 @@ const noLinesHead = [{
   )}
   <Fragment set:html={figure} />
   <SnippetScript />
+  <CopyReveal />
 </StarlightPage>
 
 <script>

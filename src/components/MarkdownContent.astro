@@ -15,9 +15,10 @@
 // That's expected: we re-import its override below, so the blog frame still renders.
 import BlogMarkdownContent from 'starlight-blog/overrides/MarkdownContent.astro';
 import Discussions from '../../discussions/astro/Discussions.astro';
-import SnippetScript from './SnippetScript.astro';
-import ImageZoom from './ImageZoom.astro';
-import { resolveSeries, resolveChronological } from '../lib/series.mjs';
+import SnippetScript from '@kronuz/starlight-core/components/SnippetScript.astro';
+import ImageZoom from '@kronuz/starlight-core/components/ImageZoom.astro';
+import CopyReveal from '@kronuz/starlight-core/components/CopyReveal.astro';
+import { resolveSeries, resolveChronological } from '@kronuz/starlight-core/lib/series.mjs';
 import { DISCUSSIONS_ACCESS_KEY, DISCUSSIONS_BACKEND, DISCUSSIONS_STRIP_SUFFIX, DISCUSSIONS_GIPHY_KEY } from '../consts';
 
 const { entry } = Astro.locals.starlightRoute;
@@ -193,6 +194,7 @@ const ARROW_RIGHT = '<path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 
 	<SnippetScript />
 </BlogMarkdownContent>}
 <ImageZoom />
+<CopyReveal />
 
 <style>
 	/* Mobile-only series nav. The full stepper lives in the right sidebar (the

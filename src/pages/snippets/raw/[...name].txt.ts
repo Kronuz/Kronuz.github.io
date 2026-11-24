@@ -1,5 +1,5 @@
 import type { APIRoute, GetStaticPaths } from "astro";
-import { listSnippets, readSnippet } from "../../../lib/renderSnippet.mjs";
+import { listSnippets, readSnippet } from "@kronuz/starlight-core/lib/renderSnippet.mjs";
 
 /**
  * Raw snippet text at /snippets/raw/<file>.txt (file may be nested, e.g.

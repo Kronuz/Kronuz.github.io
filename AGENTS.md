@@ -60,8 +60,8 @@ Articles tell an honest arc (problem → struggle → payoff → what's left + c
 
 ## D2 diagrams: the recipe
 
-Fenced ```d2 blocks are rendered at build time by `src/plugins/remark-d2.mjs` →
-`src/lib/renderD2.mjs`, which shells out to the `d2` CLI. `\n` in a label = line break. The fence's
+Fenced ```d2 blocks are rendered at build time by the shared engine's
+`plugins/remark-d2.mjs` and `lib/renderD2.mjs`, which shell out to the `d2` CLI. `\n` in a label = line break. The fence's
 `alt="..."` is the diagram's description, read once by Reader view and screen readers (see "Reader
 view and listening"): write it as a sentence.
 
@@ -88,7 +88,7 @@ slightly different sizes. Measure like this:
 ```bash
 # from repo root, with d2 on PATH
 node --input-type=module -e '
-import { renderD2 } from "./src/lib/renderD2.mjs";
+import { renderD2 } from "@kronuz/starlight-core/lib/renderD2.mjs";
 const code = `direction: down
 a -> b -> c`;
 const svg = decodeURIComponent(renderD2(code,"light").replace("data:image/svg+xml,",""));
@@ -142,8 +142,8 @@ templates give them the article and nothing else (fix regressions in the templat
 - **The article.** On a post, `MarkdownContent.astro` wraps the body in
   `<article class="kz-post" aria-labelledby="_top">`, named by the page `<h1>`. The series chip
   (`details.series-mobile`), both pagers, the comments and the post footer are siblings outside it.
-  Starlight puts the title panel (`PageTitle.astro`: `<h1>`, subtitle, "Edit source") and the content
-  panel in separate siblings, so the title, subtitle and edit link sit above the article, and the date
+  Starlight puts the title panel (`PageTitle.astro`: `<h1>`, subtitle) and the content
+  panel in separate siblings, so the title and subtitle sit above the article, and the date
   and byline sit between them and the chip. Reader view starts at the first paragraph and takes the
   title, byline and date from metadata.
 - **Metadata.** Posts carry `og:type` `article`, a schema.org `BlogPosting` in JSON-LD (author,
@@ -151,9 +151,9 @@ templates give them the article and nothing else (fix regressions in the templat
   `starlightRouteData.ts` adds the meta tags after `next()`, once starlight-blog's middleware has
   resolved the post, so they match the rendered byline. Mozilla Readability, the extractor behind
   Firefox's Reader View, reads byline and date from them when the JSON-LD is absent.
-- **D2 diagrams.** `figureHtml` (`lib/renderD2.mjs`) emits both theme images as decorative (`alt=""`),
+- **D2 diagrams.** `figureHtml` (shared `lib/renderD2.mjs`) emits both theme images as decorative (`alt=""`),
   the dark one with `hidden` (Readability drops it, so Firefox's Reader shows the light diagram only;
-  `custom.css` shows it again under `[data-theme='dark']`), and the fence's `alt="..."` as one
+  `styles/blog.css` shows it again under `[data-theme='dark']`), and the fence's `alt="..."` as one
   `figcaption.diagram-description.sr-only`. The description is text, so Reader and Listen to Page read
   it once in either theme, and Chrome's accessibility tree exposes it once and no image. Hand-written
   `<figure class="diagram">` HTML needs the same markup.
@@ -200,21 +200,20 @@ Do not add the `Co-authored-by: Copilot` trailer to commits.
 
 ## Navigation, chrome & snippets
 
-The page chrome is shared byte-for-byte with the internal mirror (see "Cross-repo sync"); the
-durable rules:
+The shared engine owns the chrome controls and footer; the durable rules:
 
 - **One authoritative menu** in `src/lib/sidebar.mjs` (About · Projects · Blog), re-set on every
   page by `Sidebar.astro`. Menu entries take a leading icon via `data-icon="<name>"`, masked in
-  `custom.css` from Starlight's own icon set.
-- **Top nav is icon-only** (`ThemeSelect.astro`): About · Blog · RSS, labels kept as
+  `styles/blog.css` from Starlight's own icon set.
+- **Top nav is icon-only** (shared `BlogThemeSelect.astro`): About · Blog · RSS, labels kept as
   `aria-label`/`title`, then the text-size toggle and the theme selector.
 - **RSS lives in the nav only.** starlight-blog auto-injects an `rss` social icon; a trailing
   Starlight plugin in `astro.config.mjs` filters it out (the feed + `rel="alternate"` head tag stay).
 - **Snippets match Expressive Code's terminal frame** (theme-adaptive bar, faint dots, drop shadow,
   `0.45rem` radius) — mirror EC's tokens, don't hard-code.
 - **Copy on touch screens** stays hidden until a tap on the code reveals it; a second tap
-  hides it. `SnippetScript.astro` handles Expressive Code frames and source snippets,
-  while the `(hover: none)` rules in `custom.css` preserve desktop hover and keyboard focus.
+  hides it. The shared `CopyReveal.astro` handles Expressive Code frames and source snippets,
+  while the `(hover: none)` rules in `styles/blog.css` preserve desktop hover and keyboard focus.
 - **About page:** no `## About me` heading, `tableOfContents: false`, role/intro line is a muted
   italic `.about-lede` (the name stays upright/full-color via `.about-lede strong`).
 - **Header search is pinned** (`.header { grid-template-columns: auto 1fr auto }`) so it doesn't
@@ -224,13 +223,13 @@ durable rules:
 - **One filled highlight.** Only the sidebar link whose `href` is this page keeps Starlight's filled
   highlight (`aria-current="page"`). `Sidebar.astro` turns every other current link (the Blog or
   Projects root, a project hub while reading one of its parts, the series a post belongs to) into
-  an ancestor (`data-ancestor`), tinted in `custom.css`. A page the menu does not list shows only
+  an ancestor (`data-ancestor`), tinted in `styles/blog.css`. A page the menu does not list shows only
   its tinted ancestors.
 - **Reading text size.** The "Aa" toggle (`TextSizeToggle.astro`) sits just before the theme
   selector on desktop (`ThemeSelect.astro`) and in the header after the search button on a phone
   (the `Search.astro` override), one visible at a time; splash pages hide it. It sets
   `html[data-text-size="large"]`, remembered in `localStorage` (`kz-text-size`) and re-applied from
-  `<head>` before paint by `starlightRouteData.ts`. `custom.css` ("Reading text size") scales every
+  `<head>` before paint by `starlightRouteData.ts`. `styles/blog.css` ("Reading text size") scales every
   Starlight type token inside `<main>` by 1.125 and opens `--sl-content-width` by 1.25 (900px,
   about 97 characters a line) at the root, where the TOC column and the header read it; the TOC
   keeps its 300px minimum, so the panel grows less below about 1500px wide. The header and
@@ -281,23 +280,20 @@ recent work, not the upstream repository's latest commit. Update the ranks when 
 a project changes their order. `featured` currently marks the three most active projects;
 the renderer puts those first, then sorts by `order`.
 
-## Cross-repo sync
+## Shared site engine
 
-This repo and the **internal** mirror (`~/code/KronuzBlog/gmendezb-pages`, branch `main`,
-served at go/Kronuz) share their *code* byte-for-byte: `custom.css`, the shared components,
-`renderSnippet.mjs`, the snippet pages, `PageTitle.astro`, `Sidebar.astro`, `ThemeSelect.astro`,
-`ImageZoom.astro`, `TextSizeToggle.astro`, `Search.astro`, `EditLink.astro`,
-`TableOfContents.astro` + `lib/series.mjs` (the series UI), and the remark plugins
-(`remark-ansi.mjs`, `remark-d2.mjs`, `remark-snippet.mjs`, `remark-snippet-link.mjs`,
-`remark-soft-blog-links.mjs`) plus `lib/normalizeAnsi.mjs`, `lib/renderD2.mjs` and
-`starlightRouteData.ts`, plus the icon pipeline (`scripts/build-icons.mjs`, `src/assets/logo.svg`,
-`src/pages/manifest.webmanifest.ts`), plus the projects engine (`lib/projects.mjs`,
-`pages/projects/all/index.astro`, plus `components/ProjectsIndex.astro` and
-`pages/projects/[...slug].astro`, which this side extends with a project logo).
-After editing a shared file, copy it to the other repo and rebuild both. **Legitimately
-different:** content (posts, `about.md`, `index.mdx`, `projects.md`), `sidebar.mjs` (this side adds
-Projects), `content.config.ts`, `astro.config.mjs`, `consts.ts`, `SiteTitle.astro`, `Footer.astro`,
-`ReplHero.astro`, and the surrounding `MarkdownContent.astro` layout.
+This repo, the internal blog (`~/code/KronuzBlog/gmendezb-pages`), Xapiand docs,
+and Detent docs pin the public `Kronuz/starlight-core` package. It owns the
+reading controls, code copy, image zoom, themes, Markdown plugins, snippet
+renderer, series resolver, unified footer, and the blog and docs style presets.
+The footer follows this blog's centered copyright and social layout, with
+"Proudly hosted by GitHub" on all four sites. Change that package once, build
+all four consumers, then update their pinned revision.
+
+The site repositories own content, navigation, logos, project data, footer identity,
+Astro configuration, and deployment. The blogs retain their surrounding post
+layout and comments tenant configuration. The public blog also owns its icon
+pipeline and project pages.
 
 Kronuz Discussions has a three-repo vendor sync contract. The complete tracked
 `discussions/` package must be byte-identical here, in `~/code/KronuzBlog/gmendezb-pages`,
