@@ -295,19 +295,16 @@ Astro configuration, and deployment. The blogs retain their surrounding post
 layout and comments tenant configuration. The public blog also owns its icon
 pipeline and project pages.
 
-Kronuz Discussions has a three-repo vendor sync contract. The complete tracked
-`discussions/` package must be byte-identical here, in `~/code/KronuzBlog/gmendezb-pages`,
-and in `~/code/Kronuz/Xapiand/docs`. It includes the framework-free widget, packaged Astro
-component, Worker, D1 migrations, tests, and generic documentation. Deployment-local files
-inside `discussions/worker/` are gitignored and excluded from comparisons. The public and
-internal blogs import `discussions/astro/Discussions.astro` with different tenant URLs.
-Xapiand carries the complete package for reuse but does not currently mount comments.
+[Kronuz Discussions](https://github.com/Kronuz/discussions) owns the Astro
+component, browser widget, and Worker. Both blogs pin its Git revision and
+configure their own tenant URLs. Xapiand does not mount comments.
 
 The internal tenant sets `oauth.identitySource: app-token` (public stays on the default
 `userinfo`): it resolves the signed-in user via the OAuth App's token-introspection endpoint
 instead of `GET /user`, because an enterprise IP allow list on the internal tenant's identity
 provider blocks the Worker's Cloudflare IP on the authenticated userinfo call. See the
-Worker's OPERATIONS.md / TUTORIAL.md.
+Worker's [operations guide](https://github.com/Kronuz/discussions/blob/main/worker/OPERATIONS.md)
+and [tutorial](https://github.com/Kronuz/discussions/blob/main/worker/TUTORIAL.md).
 
 ## Deferred ideas
 

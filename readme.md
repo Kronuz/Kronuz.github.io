@@ -49,10 +49,10 @@ set the title with `title="..."`. An `ansi` block renders raw terminal output in
 
 ## Comments
 
-Comments use the shared Cloudflare Worker and D1 service in `discussions/`. The public
-tenant base URL is configured as `DISCUSSIONS_BACKEND` in `src/consts.ts`. See
-`discussions/worker/TUTORIAL.md` for deployment and tenant setup, and
-`discussions/worker/OPERATIONS.md` for routine maintenance.
+Comments use [Kronuz Discussions](https://github.com/Kronuz/discussions), a
+Cloudflare Worker backed by D1. The public tenant base URL is configured as
+`DISCUSSIONS_BACKEND` in `src/consts.ts`. The Discussions repository has the
+deployment tutorial and operations guide.
 
 ## Deploy
 
