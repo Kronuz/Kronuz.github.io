@@ -14,7 +14,7 @@ tags:
   - concurrency
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is the workers everything else runs on: [workpool](https://github.com/Kronuz/workpool).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is the workers everything else runs on: [workpool](https://github.com/Kronuz/workpool).*
 
 A server does a lot of work that should not happen on the thread that asked for it. Writing an index to disk, compressing a block, answering a query: if each of those ran where it was requested, one slow job would freeze everything behind it. The usual answer is a **thread pool**: a fixed set of worker threads that stay alive and take jobs from a queue, one after another.
 

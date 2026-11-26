@@ -13,7 +13,7 @@ tags:
   - serialization
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is the document itself: [msgpack](https://github.com/Kronuz/msgpack).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is the document itself: [msgpack](https://github.com/Kronuz/msgpack).*
 
 A document-oriented search engine is, underneath, a program that moves documents around all day. It parses one from a request, hands it to a handler, changes a field, serializes it to the store, and sends it across the cluster. In C++ every one of those hand-offs is a choice between a copy, a reference, and a move, and for a tree of maps and arrays that choice is most of what the hand-off costs.
 

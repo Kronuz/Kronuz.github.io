@@ -13,7 +13,7 @@ tags:
   - concurrency
 ---
 
-I am retiring [stash](https://github.com/Kronuz/stash) and [scheduler](https://github.com/Kronuz/scheduler), two of the [Familiars](https://kronuz.github.io/cpp-libraries/). On the timers my systems run today, a timer wheel owned by one thread costs **3 to 26 times less** per timer than stash, and arming from another thread takes **10 to 16 times less time**, with no allocation at all. The replacement is a new library, [wheel](https://github.com/Kronuz/wheel). This post is how I got there, what is inside it, and what stash still does better.
+I am retiring [stash](https://github.com/Kronuz/stash) and [scheduler](https://github.com/Kronuz/scheduler), two of the [Familiars](https://kronuz.com/cpp-libraries/). On the timers my systems run today, a timer wheel owned by one thread costs **3 to 26 times less** per timer than stash, and arming from another thread takes **10 to 16 times less time**, with no allocation at all. The replacement is a new library, [wheel](https://github.com/Kronuz/wheel). This post is how I got there, what is inside it, and what stash still does better.
 
 *Updated 2026-11-12: every number here is the landed library measured against stash, from [one record with its job ids](https://github.com/Kronuz/Detent/blob/main/docs/perf/wheel-vs-stash.md).*
 

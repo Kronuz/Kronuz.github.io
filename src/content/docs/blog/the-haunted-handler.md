@@ -13,7 +13,7 @@ tags:
   - concurrency
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. [Rolling for a Name](/blog/rolling-for-a-name/) pulled out a jester. This one pulls out something that has to do its work in a haunted room: [traceback](https://github.com/Kronuz/traceback).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. [Rolling for a Name](/blog/rolling-for-a-name/) pulled out a jester. This one pulls out something that has to do its work in a haunted room: [traceback](https://github.com/Kronuz/traceback).*
 
 There is a question you eventually need to ask a server that has stopped answering: **what is every thread doing, right now?** Not "what crashed," which a core dump tells you, but the live picture of a process that is up, accepting connections, and quietly wedged. One thread is blocked on a lock, another is spinning, a third is asleep waiting for the first, and the shape of the deadlock is written across all of their stacks at once. You want a single photograph of the whole process, every call stack frozen in the same instant.
 

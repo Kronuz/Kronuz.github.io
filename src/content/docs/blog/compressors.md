@@ -13,7 +13,7 @@ tags:
   - compression
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is three engines behind one handle: [compressors](https://github.com/Kronuz/compressors).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is three engines behind one handle: [compressors](https://github.com/Kronuz/compressors).*
 
 There is no best compression algorithm, only tradeoffs. **deflate** (zlib) is everywhere and speaks gzip, so it wins on interop. **lz4** barely thinks before it compresses, so it wins on speed and on cheap CPU. **zstd** gets the best ratio for the least regret and is the sensible modern default. Which one you want depends on the data, the CPU budget, and who has to read the bytes on the other end, and the honest answer for a system that compresses many kinds of thing is "different ones in different places."
 

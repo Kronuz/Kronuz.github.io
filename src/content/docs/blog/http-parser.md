@@ -14,7 +14,7 @@ tags:
   - parsing
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one lives at the wire: [http-parser](https://github.com/Kronuz/http-parser).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one lives at the wire: [http-parser](https://github.com/Kronuz/http-parser).*
 
 TCP does not hand you messages. It hands you bytes, in whatever sizes it pleased, and the boundaries mean nothing: a whole HTTP request might arrive in one `read`, or dribble in one byte at a time, or split a header name straight down the middle across two packets. A parser that only works when the whole request shows up at once is not a parser, it is a demo. The real job is to consume bytes as they come and produce the exact same parse no matter how the wire chopped them up.
 

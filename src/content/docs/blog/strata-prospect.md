@@ -11,7 +11,7 @@ chapter: "Bytes"
 tags: [familiars, cpp, storage, search]
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This pair is [strata](https://github.com/Kronuz/strata) and [prospect](https://github.com/Kronuz/prospect).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This pair is [strata](https://github.com/Kronuz/strata) and [prospect](https://github.com/Kronuz/prospect).*
 
 A search index has two kinds of work that happen to live in the same files. One kind decides when bytes become durable, which readers can still see an old segment, and when it is safe to reclaim a file. The other turns a query into terms, postings, scores, and a ranked list of documents. The first set of rules matters to any persistent index. The second is specific to search.
 

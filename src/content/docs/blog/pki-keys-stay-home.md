@@ -11,7 +11,7 @@ chapter: "Trust"
 tags: [familiars, cpp, security, tls]
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is [pki](https://github.com/Kronuz/pki).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is [pki](https://github.com/Kronuz/pki).*
 
 An offline certificate authority has a simple rule: its signing key stays on the operator's host. The nodes generate requests and receive certificates, but they never receive that key. The rule is easy to write on a diagram and easy to erode in practice. A directory is copied into a data root. A key is created with a permissive mode. A passphrase ends up in a command line or an environment variable. An expiring certificate is discovered only when a connection fails.
 

@@ -5,8 +5,8 @@ description: A C++ runtime-configuration system for feature flags, kill switches
 tech: [C++]
 logo: /img/projects/detent.svg
 repo: https://github.com/Kronuz/Detent
-website: https://kronuz.github.io/Detent/
-docs: https://kronuz.github.io/Detent/welcome/
+website: https://kronuz.com/Detent/
+docs: https://kronuz.com/Detent/welcome/
 status: active
 featured: true
 order: 2
@@ -25,5 +25,5 @@ their applications. If delivery stops, readers keep the last good snapshot.
 The C++ client, Python and Rust bindings, and shell reader all use the same knob model.
 Underneath, Detent pulls in several of my [Familiars](/projects/familiars/), including
 `atomic-shared-ptr` for snapshot publication and `consensus` for the authority's Raft core.
-The [quick-start](https://kronuz.github.io/Detent/quickstart/) walks through the first
+The [quick-start](https://kronuz.com/Detent/quickstart/) walks through the first
 knob and rollout.

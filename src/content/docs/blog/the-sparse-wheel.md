@@ -14,7 +14,7 @@ tags:
   - concurrency
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) opened the whole engine, and a [jester](/blog/rolling-for-a-name/) and a [tracer](/blog/the-haunted-handler/) came out of it first. This one opens the jewel I would pull out of it before any other: [stash](https://github.com/Kronuz/stash).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) opened the whole engine, and a [jester](/blog/rolling-for-a-name/) and a [tracer](/blog/the-haunted-handler/) came out of it first. This one opens the jewel I would pull out of it before any other: [stash](https://github.com/Kronuz/stash).*
 
 *Update, November 2026: the [logger](https://github.com/Kronuz/logger) library has since moved off stash to [wheel](https://github.com/Kronuz/wheel), a timer wheel owned by one thread, and stash and scheduler are retiring. [Who Owns the Wheel](/blog/retiring-the-sparse-wheel/) tells why. The rest of this post is as I wrote it in August.*
 

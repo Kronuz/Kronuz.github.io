@@ -13,7 +13,7 @@ tags:
   - portability
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one asks the host about itself: [system](https://github.com/Kronuz/system).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one asks the host about itself: [system](https://github.com/Kronuz/system).*
 
 A server that runs for months needs a kind of self-awareness that a short program never does. It has to know how close it is to the walls. How many file descriptors am I holding against my limit, so I can refuse a connection before `accept` starts failing? How much resident memory is the process using right now? How much disk and how many inodes are left before a write turns into an error I cannot recover from gracefully? These are not exotic questions. They are the difference between a service that degrades politely under pressure and one that falls over.
 

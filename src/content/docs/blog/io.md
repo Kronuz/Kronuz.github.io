@@ -13,7 +13,7 @@ tags:
   - posix
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is the floor nobody thanks: [io](https://github.com/Kronuz/io).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is the floor nobody thanks: [io](https://github.com/Kronuz/io).*
 
 The system calls at the bottom of every server look like the simplest thing in the stack, and they are the most quietly treacherous. Not because they are hard, but because they are *honest in ways you did not ask for*: they report exactly what the kernel did, and what the kernel did is often "nothing, because a signal arrived," or "I wrote some of it," or "I flushed to the disk's cache and called that durable." Handle each of those correctly at every call site and your code is right and unreadable. Handle them by copy-pasting a retry loop and you will get one of them wrong. [io](https://github.com/Kronuz/io) is the thin layer that handles them **once**: every function in the `io::` namespace mirrors a syscall of the same name, and adds the retry and short-count handling underneath, so no call site ever open-codes an `EINTR` loop again.
 

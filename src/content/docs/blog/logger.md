@@ -14,7 +14,7 @@ tags:
   - concurrency
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one closes a loop: [logger](https://github.com/Kronuz/logger) is the original reason [the sparse wheel](/blog/the-sparse-wheel/) was built.*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one closes a loop: [logger](https://github.com/Kronuz/logger) is the original reason [the sparse wheel](/blog/the-sparse-wheel/) was built.*
 
 Here is a thing you want and cannot easily have: to know which operations in a busy server were slow, without logging the ones that were fast. The fast ones are almost all of them, and they are on the hot path, so logging every operation to catch the rare slow one means paying for the common case to observe the exception. Most systems give up and sample, or log nothing, or log everything and drown.
 

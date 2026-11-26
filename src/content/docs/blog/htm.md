@@ -13,7 +13,7 @@ tags:
   - geospatial
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is the largest single idea in the pile: [htm](https://github.com/Kronuz/htm), the mesh that let a text search engine answer questions about space.*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is the largest single idea in the pile: [htm](https://github.com/Kronuz/htm), the mesh that let a text search engine answer questions about space.*
 
 "Find me documents within five kilometers of here" is not a text query. A search index is superb at one thing, *which documents contain this term*, and a distance is not a term. You could bolt a separate spatial database onto the side, run two systems, and join them. Or you could find a way to turn *where* into *what*, a place into a word the index already knows how to match. That second path is the [Hierarchical Triangular Mesh](https://github.com/Kronuz/htm), and it is the most quietly clever thing in the whole engine.
 

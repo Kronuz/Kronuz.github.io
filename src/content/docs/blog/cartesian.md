@@ -13,7 +13,7 @@ tags:
   - geospatial
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is the ground the [mesh](/blog/htm/) stands on: [cartesian](https://github.com/Kronuz/cartesian).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is the ground the [mesh](/blog/htm/) stands on: [cartesian](https://github.com/Kronuz/cartesian).*
 
 Latitude and longitude feel like coordinates, but they are angles on a curved surface, and you cannot do vector math on angles. You cannot dot two latitudes, or take a meaningful cross product of two longitudes, or measure the angle between two cities by subtracting their coordinates. Every real piece of geographic geometry, the angular distance between two points, the plane through three of them, feeding a circular region to a [spatial index](/blog/htm/), starts by leaving lat/long behind and turning each point into a genuine 3-D **vector**: its position in space, measured in meters from the center of the Earth. [cartesian](https://github.com/Kronuz/cartesian) is the library that does that crossing, in both directions, and the little algebra you need once you are on the other side.
 

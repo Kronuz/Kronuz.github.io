@@ -13,7 +13,7 @@ tags:
   - concurrency
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is designed to become unnecessary: [atomic-shared-ptr](https://github.com/Kronuz/atomic-shared-ptr).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is designed to become unnecessary: [atomic-shared-ptr](https://github.com/Kronuz/atomic-shared-ptr).*
 
 A `shared_ptr` is thread-safe in exactly one respect: the reference count. Two threads can copy and destroy their own copies of one `shared_ptr` concurrently and the count stays correct. What is *not* safe is two threads racing on the pointer itself, one reading it while another reassigns it, which is exactly what you need to do to publish a new version of some shared state without a lock of your own: build the new thing, then atomically swap the pointer so readers either see the whole old value or the whole new one, never a torn half. That atomic swap is the primitive under a lot of lock-free design, the read-copy-update pattern, a config you hot-reload, the head of a lock-free list, and a plain `shared_ptr` cannot do it.
 

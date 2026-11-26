@@ -13,7 +13,7 @@ tags:
   - storage
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is where the data lives: [storage](https://github.com/Kronuz/storage).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is where the data lives: [storage](https://github.com/Kronuz/storage).*
 
 Every datastore has one moment it is most afraid of, and it is the same moment: the power fails, or the process is killed, in the middle of a write. What happens to your data in that instant is decided long before it, by the shape of the format. A store that **overwrites in place**, that seeks to an existing record and writes new bytes over it, is exposed at that moment in the worst way, because a half-finished overwrite has destroyed the old record without finishing the new one. The data that was safe a millisecond ago is now torn.
 

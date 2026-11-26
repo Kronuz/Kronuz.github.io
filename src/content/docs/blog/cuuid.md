@@ -14,7 +14,7 @@ tags:
   - encoding
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is an identifier that weighs less than it should: [cuuid](https://github.com/Kronuz/cuuid).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is an identifier that weighs less than it should: [cuuid](https://github.com/Kronuz/cuuid).*
 
 A UUID is 128 bits, and the reason we love it is that we can pretend those bits are random: generate one anywhere, never coordinate, and trust that it will not collide. That is the right mental model for a *version-4* UUID, which really is random. It is quietly wrong for a **time-based** UUID, the kind you reach for when you also want ids that sort by when they were made. A time UUID is not random at all. It is a 60-bit timestamp, a 14-bit clock sequence, and a 48-bit node identifier, packed into the same 128 bits and dressed up in the familiar hyphenated hex.
 

@@ -15,7 +15,7 @@ tags:
   - data-structures
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is two libraries that only make sense together: [fst](https://github.com/Kronuz/fst), a compact ordered map, and [termdict](https://github.com/Kronuz/termdict), the dictionary built on top of it.*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is two libraries that only make sense together: [fst](https://github.com/Kronuz/fst), a compact ordered map, and [termdict](https://github.com/Kronuz/termdict), the dictionary built on top of it.*
 
 Every search engine keeps a list of every distinct word it has indexed, each with a little record: how many documents contain it, and where to find them. That list is the **term dictionary**. Type "apple" in a search box and the first thing the engine does is look "apple" up in it.
 

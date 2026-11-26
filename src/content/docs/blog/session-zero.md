@@ -14,11 +14,11 @@ tags:
   - cpp
 ---
 
-*This is the opening of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. The first parts came out of [Xapiand](https://github.com/Kronuz/Xapiand). [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) tells the story of the engine itself; this series opens the small creatures I found living inside it.*
+*This is the opening of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. The first parts came out of [Xapiand](https://github.com/Kronuz/Xapiand). [A Search Engine from Scratch](/blog/a-search-engine-from-scratch/) tells the story of the engine itself; this series opens the small creatures I found living inside it.*
 
 I spent the better part of a decade building a distributed search engine. [Xapiand](https://github.com/Kronuz/Xapiand) wraps a daemon around [Xapian](https://xapian.org): the cluster, the replication, the storage, the geometry, the network, everything you have to build *around* a good index to make it a real server. That story is [its own post](/blog/a-search-engine-from-scratch/). This is not that story.
 
-When I came back to the engine years later, what I most wanted to keep was the **tools**. This year, whenever a piece of Xapiand was sharp enough and self-contained enough to live on its own, I carved it out into its own repository, gave it a real README and a test suite, and let it stand up by itself. Other pieces joined from new systems and independent work. There are about ninety now, mapped on the [Familiars page](https://kronuz.github.io/cpp-libraries/): a lock-free timer, a signal-safe crash tracer, a fantasy-name generator, a triangular mesh for the whole planet, an integer with no ceiling. Small things. Sharp things.
+When I came back to the engine years later, what I most wanted to keep was the **tools**. This year, whenever a piece of Xapiand was sharp enough and self-contained enough to live on its own, I carved it out into its own repository, gave it a real README and a test suite, and let it stand up by itself. Other pieces joined from new systems and independent work. There are about ninety now, mapped on the [Familiars page](https://kronuz.com/cpp-libraries/): a lock-free timer, a signal-safe crash tracer, a fantasy-name generator, a triangular mesh for the whole planet, an integer with no ceiling. Small things. Sharp things.
 
 This series opens them, one at a time.
 
@@ -54,6 +54,6 @@ A few, and they are the same as the rest of this blog:
 - **The messy parts stay in.** The bug I shipped, the design that failed first, the thing I only caught by staring at it too long. Those are the point.
 - **Everything is real and open.** Every familiar is a public repository you can clone, read, and use. Most are MIT or public domain. The code in each post is the code that runs.
 
-The party is [already assembled](https://kronuz.github.io/cpp-libraries/). Three of them come first: a [jester who names the world](/blog/rolling-for-a-name/), a [tracer that works in a haunted room](/blog/the-haunted-handler/), and the [strange lock-free thing](/blog/the-sparse-wheel/) I would keep over all the others. The rest are waiting.
+The party is [already assembled](https://kronuz.com/cpp-libraries/). Three of them come first: a [jester who names the world](/blog/rolling-for-a-name/), a [tracer that works in a haunted room](/blog/the-haunted-handler/), and the [strange lock-free thing](/blog/the-sparse-wheel/) I would keep over all the others. The rest are waiting.
 
 Roll for initiative.

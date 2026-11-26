@@ -13,7 +13,7 @@ tags:
   - text
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one measures closeness eight ways: [string-similarity](https://github.com/Kronuz/string-similarity).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one measures closeness eight ways: [string-similarity](https://github.com/Kronuz/string-similarity).*
 
 Ask "how similar are these two strings" and the honest first response is a question back: similar *how*? `color` and `colour` differ by one inserted letter, so they are close under **edit distance**. `Jon` and `Jonathan` share a prefix, which **Jaro-Winkler** rewards and edit distance does not. `night` and `nacht` share three of their seven distinct letters, which **Jaccard** measures, and one of their letter pairs, which **Sørensen-Dice** counts. And `Smith` and `Schmidt` are close only if you listen, which needs [sound](/blog/double-metaphone/). There is no single "string similarity," only a shelf of metrics, each one right for a different shape of data, and the mistake is picking one and using it for everything.
 

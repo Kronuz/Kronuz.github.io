@@ -14,7 +14,7 @@ tags:
   - http
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one rides the [runtime from last time](/blog/reactor/): [http](https://github.com/Kronuz/http), the framework itself.*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one rides the [runtime from last time](/blog/reactor/): [http](https://github.com/Kronuz/http), the framework itself.*
 
 A good framework is mostly about what it refuses to make you think about. [http](https://github.com/Kronuz/http) is a generic HTTP/1.1 application framework on [task](https://github.com/Kronuz/task) coroutines running over [standalone Asio](https://think-async.com/Asio/), and its entire design goal is to put your application *above* the server, so that the socket, the byte parsing, and the event loop are simply not your problem. It does that with a single seam. You implement one class, `HttpHandler`, and the method that matters on it, `handle`, is a coroutine (a function that can pause while it waits and let the loop serve someone else) that receives the `Request` and a `ResponseWriter`. The framework does the rest: one task per connection parses the incoming bytes with [http-parser](/blog/http-parser/), assembles the `Request`, hands it to your handler, and frames whatever you write back over the socket.
 

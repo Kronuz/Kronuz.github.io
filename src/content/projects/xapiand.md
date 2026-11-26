@@ -5,8 +5,8 @@ description: A modern, distributed RESTful search and storage engine, written fr
 tech: [C++]
 logo: /img/projects/xapiand.png
 repo: https://github.com/Kronuz/Xapiand
-website: https://Kronuz.github.io/Xapiand
-docs: https://Kronuz.github.io/Xapiand/docs
+website: https://kronuz.com/Xapiand
+docs: https://kronuz.com/Xapiand/docs
 status: shipped
 featured: true
 order: 1

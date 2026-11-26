@@ -5,7 +5,7 @@ description: A collection of small C++ libraries, each with one job, its own tes
 tech: [C++]
 logo: /img/projects/familiars.svg
 repo: https://github.com/Kronuz/cpp-libraries
-website: https://kronuz.github.io/cpp-libraries/
+website: https://kronuz.com/cpp-libraries/
 status: active
 featured: true
 order: 3
@@ -25,7 +25,7 @@ Each library has one job, a README, tests and a CMake target. Most are header-on
 is no common runtime to adopt. Link the part you need and let its declared dependencies
 follow. [Detent](/projects/detent/) uses several of them, and Xapiand uses many more.
 
-The [Familiars page](https://kronuz.github.io/cpp-libraries/) is a short map by task. The
+The [Familiars page](https://kronuz.com/cpp-libraries/) is a short map by task. The
 [full catalog](https://github.com/Kronuz/cpp-libraries) lists every library, and the
 [Familiars series](/blog/session-zero/) opens them one by one: the constraint behind each
 design, the mechanism inside it, and where I reach for it.

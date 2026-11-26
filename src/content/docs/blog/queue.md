@@ -13,7 +13,7 @@ tags:
   - concurrency
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one reaches for a mutex on purpose: [queue](https://github.com/Kronuz/queue).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one reaches for a mutex on purpose: [queue](https://github.com/Kronuz/queue).*
 
 This series has spent a lot of time on structures that go to real lengths to avoid a lock: a [timer wheel](/blog/the-sparse-wheel/) whose insert never stalls, the shared-nothing loops of the [reactor](/blog/reactor/). So it is worth saying the honest thing out loud: **most of the time, a mutex is the right tool**, and pretending otherwise is how you ship a subtle bug in pursuit of a benchmark nobody was measuring. [queue](https://github.com/Kronuz/queue) is the familiar that reaches straight for one, without apology, because what it needs to be good at is not throughput.
 

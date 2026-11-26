@@ -11,7 +11,7 @@ chapter: "Trust"
 tags: [familiars, cpp, testing, storage]
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. This one is [faultlab](https://github.com/Kronuz/faultlab).*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. This one is [faultlab](https://github.com/Kronuz/faultlab).*
 
 The most reassuring storage test is also one of the weakest: write a record, kill the process, reopen the database, and find the record still there. A process exit usually leaves the operating system and its caches alive. Even a real power cut gives you just one outcome from a large set. The state that breaks recovery might require the new manifest to survive while one of its files does not, or a name to persist while half an unsynced append does not.
 

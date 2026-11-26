@@ -15,7 +15,7 @@ tags:
   - raft
 ---
 
-*Part of [**Familiars**](https://kronuz.github.io/cpp-libraries/), my collection of standalone C++ building blocks. These two are a pair, and they replace the logging and replication Xapiand used to do on its own: [journal](https://github.com/Kronuz/journal) keeps the bytes, and [consensus](https://github.com/Kronuz/consensus) decides which bytes count.*
+*Part of [**Familiars**](https://kronuz.com/cpp-libraries/), my collection of standalone C++ building blocks. These two are a pair, and they replace the logging and replication Xapiand used to do on its own: [journal](https://github.com/Kronuz/journal) keeps the bytes, and [consensus](https://github.com/Kronuz/consensus) decides which bytes count.*
 
 When an app says "saved," it is repeating what the operating system told it, which is repeating what the disk told it. You are betting your data that the drive meant it.
 
