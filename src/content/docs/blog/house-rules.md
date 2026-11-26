@@ -1,7 +1,7 @@
 ---
 title: "House Rules"
 subtitle: "Self-hosted comments, built to be mine."
-description: "The boss fight in 'Goodbye, Dr. Jekyll' was comments, and giscus won the truce. Then I went back down and built my own: a self-hosted comment system that lives on the edge, signs you in with GitHub, renders Markdown in the same colors as the rest of the site, and belongs entirely to me. What it is, how it works, and why building the one thing a static site 'can't have' was the most fun I've had all year."
+description: "The boss fight in 'Goodbye, Dr. Jekyll' was comments, and giscus won the truce. Then I went back down and built my own: a self-hosted comment system that lives on the edge, signs you in with GitHub, renders Markdown in the same colors as the rest of the site, and belongs entirely to me. What it is, how it works, and why building the one thing a static site 'can't have' was the most fun I've had all year. The code is open source, so you can build your own."
 excerpt: "Goodbye, Dr. Jekyll ended with giscus winning the comments boss fight. It turns out the boss got back up. This is the comment system I built to replace it: self-hosted, on the edge, mine down to the boards, and a blast to build."
 date: 2026-07-17
 authors: kronuz
@@ -51,21 +51,31 @@ worker -> db: read / write
 
 A little script rides along on each post and mounts a comment box keyed to that page. It talks to a tiny API running as a [Cloudflare Worker](https://developers.cloudflare.com/workers/), close to whoever is reading. The Worker keeps everything in [D1](https://developers.cloudflare.com/d1/), a SQLite database that also lives at the edge, so the data sits next to the code instead of an ocean away.
 
-Two details I am fond of. First, Markdown is rendered on the server with [Shiki](https://shiki.style), using the very same Kronuz theme the article code blocks use, so a fenced snippet in a comment comes out in the exact olive green I am constitutionally incapable of living without. Second, there is no session table: your sign-in rides in a small signed cookie, which means there is nothing on my side to leak and nothing to sweep. It is multi-tenant too, so one deployment could keep house for more than one blog, each thread walled off to its own.
+Two details I am fond of. First, Markdown is rendered on the server with [Shiki](https://shiki.style), using the very same Kronuz theme the article code blocks use, so a fenced snippet in a comment comes out in the exact olive green I am constitutionally incapable of living without. Second, there is no session table: your sign-in rides in a small signed cookie, which means there is nothing on my side to leak and nothing to sweep.
+
+It is multi-tenant, too, and that stopped being hypothetical. One deployment keeps house for this blog and for a private one, each walled off behind its own path, with its own sign-in app and moderators, and its settings encrypted at rest. The private one even locks its door with an access key, so only its own pages can read what is said there. GitHub is just the sign-in this blog happens to use; any [OAuth 2.0](https://oauth.net/2/) provider plugs into the same slot.
 
 ## The fun parts
 
 Here is where it stops being work and turns into a toy I cannot put down.
 
-**It is tiny, and it flies.** The entire Worker is about 360 KB, and rendering a comment (Markdown, highlighting, all of it) takes roughly five milliseconds. The slow part was never the render, it was the trip across the network, so the preview quietly starts rendering the moment your cursor drifts toward the Preview tab. By the time you click it, it is already there.
+**It is tiny, and it flies.** The entire Worker is about 370 KB compressed, and rendering a comment (Markdown, highlighting, all of it) takes roughly five milliseconds. The slow part was never the render, it was the trip across the network, so the preview quietly starts rendering the moment your cursor drifts toward the Preview tab. By the time you click it, it is already there.
 
 **It runs on nothing.** Cloudflare's free tier, scaled to zero. When nobody is commenting there is no server sitting idle, no bill, no cron job, nothing to patch at 2am.
 
 **It has a GIF picker,** because a comment section that cannot answer with a perfectly timed reaction GIF is a sad comment section.
 
-**And it is mine.** If I ever change hosts, the whole conversation comes with me in a single file. No export dance, no "download your data," no waiting on a form.
+**It knocks when you talk.** A new comment pings me on Discord (Slack and Telegram work too), and each blog has a private [Atom](https://datatracker.ietf.org/doc/html/rfc4287) feed of its latest comments, so a reply never sits unanswered just because I did not happen to reload the page.
+
+**And it is mine.** If I ever change hosts, the whole conversation comes with me in a single file. No export dance, no "download your data," no waiting on a form. Even the address is mine: it answers at `comments.kronuz.com`, on a domain I own, rather than on a shared `workers.dev` street that some corporate networks block wholesale.
 
 None of those is the real reason, though. The real reason is that a static site is not supposed to be able to do this at all, and comments are the exact thing everyone tells you to farm out. Building the one part you are told you cannot have, and watching it come out small and fast and yours, is the whole of the fun.
+
+## Build your own porch
+
+The blueprints are public. [Kronuz Discussions](https://github.com/Kronuz/discussions) is open source under the MIT license: the Worker, a framework-free widget you can drop into any page, and an Astro component for sites like this one. It comes with a [step-by-step tutorial](https://github.com/Kronuz/discussions/blob/main/worker/TUTORIAL.md) that takes you from an empty Cloudflare account to a working comment box, and an [operations handbook](https://github.com/Kronuz/discussions/blob/main/worker/OPERATIONS.md) for the day something goes sideways (backups, migrations, moving to your own domain, recovering a lost configuration).
+
+It all runs on your own Cloudflare account, so the comments live in your database, not mine. Your house, your rules.
 
 ## Say something
 
