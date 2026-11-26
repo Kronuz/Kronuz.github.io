@@ -2,7 +2,7 @@
 
 My personal blog and project notes — Python, C++, and systems at scale.
 
-**Live:** <https://kronuz.github.io>
+**Live:** <https://kronuz.com> (GitHub Pages; the custom domain is set in the repository's Pages settings)
 
 Built with [Astro](https://astro.build) + [Starlight](https://starlight.astro.build) +
 [starlight-blog](https://github.com/HiDeoo/starlight-blog), with a custom *Kronuz* code

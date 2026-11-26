@@ -1,11 +1,14 @@
 ---
 import { logos } from 'virtual:starlight/user-images';
 import config from 'virtual:starlight/user-config';
+import { SITE_TITLE } from '../consts';
 
-// Two-tone header title: "Kronuz" in the brand green, ".github.io" muted.
+// Two-tone header title: the name in the brand green, the TLD muted.
 // Replicates Starlight's stock SiteTitle (logo + link) and swaps the plain
 // title span for the coloured one. Meta/<title> still comes from SITE_TITLE.
 const { siteTitleHref } = Astro.locals.starlightRoute;
+const dot = SITE_TITLE.indexOf('.');
+const [name, tld] = dot < 0 ? [SITE_TITLE, ''] : [SITE_TITLE.slice(0, dot), SITE_TITLE.slice(dot)];
 ---
 
 <a href={siteTitleHref} class="site-title sl-flex">
@@ -32,7 +35,7 @@ const { siteTitleHref } = Astro.locals.starlightRoute;
 		)
 	}
 	<span class:list={{ 'sr-only': config.logo?.replacesTitle }} translate="no">
-		<span class="kz-name">Kronuz</span><span class="kz-tld">.github.io</span>
+		<span class="kz-name">{name}</span><span class="kz-tld">{tld}</span>
 	</span>
 </a>
 

@@ -1,7 +1,9 @@
 // Place any global data in this file.
 // You can import this data from anywhere in your site by using the `import` keyword.
 
-export const SITE_TITLE = 'Kronuz.github.io';
+// The site's host with its brand casing. The header splits it into name and TLD, and the
+// build writes this casing into visible links (astro.config.mjs).
+export const SITE_TITLE = 'Kronuz.com';
 export const SITE_DESCRIPTION =
 	'Notes, experiments, and write-ups from Germán Méndez Bravo (Kronuz) — Python, C++, and systems at scale.';
 

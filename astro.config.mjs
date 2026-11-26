@@ -25,7 +25,7 @@ import { join, extname } from 'node:path';
 // https://astro.build/config
 export default defineConfig({
 	// Canonical URL of the deployed GitHub Pages site.
-	site: 'https://kronuz.github.io',
+	site: 'https://kronuz.com',
 	// The all-posts dashboard moved from /all/ to /blog/all/ (to sit beside the
 	// projects dashboard at /projects/all/). Keep the old path working.
 	redirects: { '/all': '/blog/all', '/blog/threadpool': '/blog/workpool' },
@@ -169,15 +169,15 @@ export default defineConfig({
 				SocialIcons: './src/components/SocialIcons.astro',
 			},
 		}),
-		// Brand the GitHub Pages host as "Kronuz.github.io" in the built output's *visible*
+		// Brand the host as SITE_TITLE ("Kronuz.com") in the built output's *visible*
 		// URLs (nav and body hrefs). Astro lowercases the host of every
 		// generated absolute URL (new URL() normalizes it), so `site` can't carry the capital
-		// K; GitHub serves the host case-insensitively, so we rewrite it in the built files.
+		// K; hosts are case-insensitive, so we rewrite it in the built files.
 		// BUT machine-read URLs must stay on the canonical lowercase host: the RSS feed +
 		// sitemap (.xml, skipped entirely) and, in HTML, the feed-autodiscovery <link>, <link
 		// rel=canonical>, and og:url/twitter:url meta. A mixed-case host there gets rejected by
 		// case-sensitive feed readers / TLS host checks (Reeder "couldn't find a feed") or
-		// de-duplicated wrong by crawlers. Matching only "//kronuz.github.io" is deliberate.
+		// de-duplicated wrong by crawlers. Matching only "//" + the lowercase host is deliberate.
 		{
 			name: 'kz-brand-host-case',
 			hooks: {
@@ -185,8 +185,8 @@ export default defineConfig({
 					// .xml (feed + sitemap) is never branded; HTML is branded, then the machine
 					// tags below are restored to the lowercase host.
 					const exts = new Set(['.html', '.txt', '.js', '.css', '.json']);
-					const needle = '//kronuz.github.io';
-					const branded = '//Kronuz.github.io';
+					const needle = `//${SITE_TITLE.toLowerCase()}`;
+					const branded = `//${SITE_TITLE}`;
 					const machineTag =
 						/<(?:link|meta)\b[^>]*(?:\brel=["']?(?:canonical|alternate)["']?|type=["']application\/(?:rss|atom)\+xml["']|(?:property|name)=["'](?:og:url|twitter:url)["'])[^>]*>/gi;
 					let files = 0;
@@ -210,7 +210,7 @@ export default defineConfig({
 						}
 					};
 					await walk(fileURLToPath(dir));
-					logger.info(`Branded host casing to Kronuz.github.io in ${files} file(s).`);
+					logger.info(`Branded host casing to ${SITE_TITLE} in ${files} file(s).`);
 				},
 			},
 		},
